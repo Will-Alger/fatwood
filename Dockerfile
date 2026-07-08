@@ -1,6 +1,7 @@
 # Multi-stage build producing a single image: the ASP.NET Core API serving the
-# built React SPA from wwwroot. The same image runs the CLI ingestion mode:
-#   docker compose run --rm api dotnet ResearchDiscovery.Api.dll ingest backfill
+# built React SPA from wwwroot. The same image runs the CLI ingestion mode
+# (args are appended to the entrypoint):
+#   docker compose run --rm api ingest backfill
 
 # --- Stage 1: frontend build ---
 FROM node:22-alpine AS web-build

@@ -68,7 +68,7 @@ next `ingest delta` continues from where it left off.
 
 ```bash
 docker compose up -d --build          # postgres + api (SPA served at :8080)
-docker compose run --rm api dotnet ResearchDiscovery.Api.dll ingest backfill
+docker compose run --rm api ingest backfill   # args go to the image entrypoint
 # then browse http://localhost:8080
 ```
 
