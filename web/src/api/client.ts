@@ -13,10 +13,11 @@ export interface GetPapersParams {
   page: number
   pageSize: number
   sort: SortOrder
+  analyzedOnly: boolean
 }
 
 export function getPapers(
-  { categories, page, pageSize, sort }: GetPapersParams,
+  { categories, page, pageSize, sort, analyzedOnly }: GetPapersParams,
   signal?: AbortSignal,
 ): Promise<PagedResult<PaperDto>> {
   const query = new URLSearchParams({
@@ -26,6 +27,9 @@ export function getPapers(
   })
   if (categories.length > 0) {
     query.set('categories', categories.join(','))
+  }
+  if (analyzedOnly) {
+    query.set('analyzedOnly', 'true')
   }
   return getJson(`/api/papers?${query.toString()}`, signal)
 }

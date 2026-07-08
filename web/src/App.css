@@ -120,8 +120,17 @@ body {
 .toolbar {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 1.25rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
+}
+
+.toolbar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
 }
 
 .toolbar select {
@@ -196,6 +205,74 @@ body {
   color: var(--accent);
   background: var(--accent-soft);
   border-color: transparent;
+}
+
+/* Analysis (Phase 2) */
+
+.badge-score {
+  font-weight: 600;
+  border-color: transparent;
+}
+
+.score-exceptional {
+  color: #05603a;
+  background: #d1fadf;
+}
+
+.score-strong {
+  color: #175cd3;
+  background: #d1e9ff;
+}
+
+.score-workable {
+  color: #93370d;
+  background: #fef0c7;
+}
+
+.score-poor {
+  color: #b42318;
+  background: #fee4e2;
+}
+
+.analysis-panel {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.88rem;
+}
+
+.analysis-summary {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.6rem 1.25rem;
+  margin: 0;
+}
+
+.analysis-grid dt {
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin-bottom: 0.15rem;
+}
+
+.analysis-grid dd {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.analysis-provenance {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .paper-authors {

@@ -1,9 +1,11 @@
+using Anthropic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
+using ResearchDiscovery.Infrastructure.Analysis;
 using ResearchDiscovery.Infrastructure.Arxiv;
 using ResearchDiscovery.Infrastructure.Ingestion;
 using ResearchDiscovery.Infrastructure.Persistence;
@@ -74,8 +76,18 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIngestionService, IngestionService>();
         services.AddScoped<IPaperQueryService, PaperQueryService>();
 
-        // IAnalysisService (Phase 2) intentionally has no registration: the
-        // analysis layer does not exist yet and nothing may depend on it.
+        services.AddOptions<AnalysisOptions>()
+            .Bind(configuration.GetSection(AnalysisOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        // Phase 2 analysis layer. The Anthropic SDK resolves credentials from
+        // the environment (ANTHROPIC_API_KEY); a missing key surfaces as an
+        // auth error on the first analysis call, never at startup, so the
+        // browse/ingestion paths run fine without one.
+        services.AddSingleton(_ => new AnthropicClient());
+        services.AddScoped<IPaperAnalyzer, AnthropicPaperAnalyzer>();
+        services.AddScoped<IAnalysisService, AnalysisService>();
 
         return services;
     }

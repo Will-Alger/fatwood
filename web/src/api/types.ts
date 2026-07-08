@@ -12,6 +12,31 @@ export interface PaperDto {
   absUrl: string
   pdfUrl: string
   doi: string | null
+  analysis: PaperAnalysisDto | null
+}
+
+// Schema v1 of the LLM analysis document (AnalysisContract.SchemaJson).
+export interface AnalysisDetails {
+  summary: string
+  feasibility_score: number
+  feasibility_rationale: string
+  estimated_effort: 'weekend' | 'one_to_two_weeks' | 'about_a_month' | 'multi_month'
+  approach: 'reproduce' | 'extend'
+  approach_rationale: string
+  reference_code_likelihood: 'high' | 'medium' | 'low'
+  resume_signal: string
+  fintech_relevance_score: number
+  extension_idea: string
+  required_skills: string[]
+  composite_score: number
+}
+
+export interface PaperAnalysisDto {
+  compositeScore: number | null
+  model: string
+  schemaVersion: number
+  createdUtc: string
+  details: AnalysisDetails
 }
 
 export interface CategoryDto {
@@ -28,4 +53,4 @@ export interface PagedResult<T> {
   totalPages: number
 }
 
-export type SortOrder = 'published_desc' | 'published_asc'
+export type SortOrder = 'published_desc' | 'published_asc' | 'score_desc'

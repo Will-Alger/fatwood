@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Dtos;
@@ -22,11 +23,27 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             papers = papers.Where(p => p.PaperCategories.Any(pc => codes.Contains(pc.Category.Code)));
         }
 
+        if (query.AnalyzedOnly)
+        {
+            papers = papers.Where(p => p.AnalysisResult != null);
+        }
+
         var totalItems = await papers.CountAsync(ct);
 
-        papers = query.Sort == PaperSortOrder.PublishedAsc
-            ? papers.OrderBy(p => p.PublishedUtc).ThenBy(p => p.Id)
-            : papers.OrderByDescending(p => p.PublishedUtc).ThenByDescending(p => p.Id);
+        papers = query.Sort switch
+        {
+            PaperSortOrder.PublishedAsc =>
+                papers.OrderBy(p => p.PublishedUtc).ThenBy(p => p.Id),
+            // Unanalyzed papers (null score) sort last so a mixed listing still
+            // leads with scored candidates.
+            PaperSortOrder.ScoreDesc =>
+                papers.OrderByDescending(p => p.AnalysisResult != null)
+                    .ThenByDescending(p => p.AnalysisResult!.CompositeScore)
+                    .ThenByDescending(p => p.PublishedUtc)
+                    .ThenByDescending(p => p.Id),
+            _ =>
+                papers.OrderByDescending(p => p.PublishedUtc).ThenByDescending(p => p.Id),
+        };
 
         var rows = await papers
             .Skip((query.Page - 1) * query.PageSize)
@@ -44,6 +61,14 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
                 p.AbsUrl,
                 p.PdfUrl,
                 p.Doi,
+                Analysis = p.AnalysisResult == null ? null : new
+                {
+                    p.AnalysisResult.CompositeScore,
+                    p.AnalysisResult.Model,
+                    p.AnalysisResult.SchemaVersion,
+                    p.AnalysisResult.CreatedUtc,
+                    p.AnalysisResult.ResultJson,
+                },
             })
             .ToListAsync(ct);
 
@@ -59,11 +84,35 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
                 r.UpdatedUtc,
                 r.AbsUrl,
                 r.PdfUrl,
-                r.Doi))
+                r.Doi,
+                r.Analysis == null ? null : new PaperAnalysisDto(
+                    r.Analysis.CompositeScore,
+                    r.Analysis.Model,
+                    r.Analysis.SchemaVersion,
+                    r.Analysis.CreatedUtc,
+                    ParseDetails(r.Analysis.ResultJson))))
             .ToList();
 
         var totalPages = totalItems == 0 ? 0 : (int)Math.Ceiling(totalItems / (double)query.PageSize);
         return new PagedResult<PaperDto>(items, query.Page, query.PageSize, totalItems, totalPages);
+    }
+
+    /// <summary>
+    /// The stored JSON is model-produced and schema-validated at write time,
+    /// but guard parsing anyway so one corrupt row can't break a whole page.
+    /// </summary>
+    private static JsonElement ParseDetails(string resultJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(resultJson);
+            return doc.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            using var empty = JsonDocument.Parse("{}");
+            return empty.RootElement.Clone();
+        }
     }
 
     public async Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync(CancellationToken ct) =>

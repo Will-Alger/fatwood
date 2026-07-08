@@ -24,6 +24,9 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=researchdb;Username=research;Password=devonly
+      # Passed through from the host shell; empty when unset (analysis then
+      # fails with an auth error on first use — browse/ingestion unaffected).
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
       - "8080:8080"
 

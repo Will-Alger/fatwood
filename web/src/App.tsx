@@ -13,9 +13,16 @@ export default function App() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState<SortOrder>('published_desc')
+  const [analyzedOnly, setAnalyzedOnly] = useState(false)
 
   const { categories, error: categoriesError } = useCategories()
-  const { data, loading, error } = usePapers(selectedCategories, page, PAGE_SIZE, sort)
+  const { data, loading, error } = usePapers(
+    selectedCategories,
+    page,
+    PAGE_SIZE,
+    sort,
+    analyzedOnly,
+  )
 
   function handleCategoriesChange(next: string[]) {
     setSelectedCategories(next)
@@ -24,6 +31,11 @@ export default function App() {
 
   function handleSortChange(next: SortOrder) {
     setSort(next)
+    setPage(1)
+  }
+
+  function handleAnalyzedOnlyChange(next: boolean) {
+    setAnalyzedOnly(next)
     setPage(1)
   }
 
@@ -49,7 +61,16 @@ export default function App() {
               >
                 <option value="published_desc">Newest first</option>
                 <option value="published_asc">Oldest first</option>
+                <option value="score_desc">Best project score</option>
               </select>
+            </label>
+            <label className="toolbar-toggle">
+              <input
+                type="checkbox"
+                checked={analyzedOnly}
+                onChange={(e) => handleAnalyzedOnlyChange(e.target.checked)}
+              />{' '}
+              Analyzed only
             </label>
           </div>
           {categoriesError && (
