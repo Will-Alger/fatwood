@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/61noE8SprQQuIqkC7jIaPwdcqdc</id>
+  <title>arXiv Query: search_query=cat:cs.LG AND submittedDate:"202606010000 TO 202606020000"&amp;id_list=&amp;start=0&amp;max_results=5</title>
+  <updated>2026-07-08T03:48:15Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=cat:cs.LG+AND+submittedDate:%22202606010000+TO+202606020000%22&amp;start=0&amp;max_results=5&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>5</opensearch:itemsPerPage>
+  <opensearch:totalResults>247</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2606.09863v1</id>
+    <title>From Confident Closing to Silent Failure: Characterizing False Success in LLM Agents</title>
+    <updated>2026-06-01T00:13:23Z</updated>
+    <link href="https://arxiv.org/abs/2606.09863v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.09863v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM agents can fail silently by asserting task completion when the environment state shows otherwise. We study this failure mode, false success, across two agent benchmarks: 9,876 tau2-bench trajectories from 8 model families and 1,879 AppWorld trajectories from 4 model families with text-independent ground truth. False success is common but varies by setting: 45--48% of failures in single-control tau2-bench domains, 3% in dual-control telecom, and 75.8% among AppWorld self-assessing coding-agent trajectories with explicit status claims. LLM judges fail reliably: no configuration across 5 judges, 5 prompt strategies, and full task specifications exceeds AUROC 0.65 on tau2-bench, and the same judges reach only 0.54 AUROC on AppWorld API-call traces. Judges rely on surface completion proxies -- confident closing language in tau2-bench and coarse action-sequence volume in AppWorld -- rather than verified state changes. Lightweight TF-IDF detectors achieve task-disjoint AUROC 0.83 on tau2-bench and 0.95 on AppWorld, recovering 4--8x more false successes than the best judge at the same flag rate with 3,300x lower latency. These results suggest that production monitoring should use lightweight, domain-calibrated detectors as triage signals rather than relying on LLM judges as the primary monitor for false success.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T00:13:23Z</published>
+    <arxiv:comment>Accepted to FAGEN@ICML2026</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Laksh Advani</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01509v1</id>
+    <title>ProbMoE: Differentiable Probabilistic Routing for Mixture-of-Experts</title>
+    <updated>2026-06-01T00:16:36Z</updated>
+    <link href="https://arxiv.org/abs/2606.01509v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01509v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Mixture-of-Experts (MoE) models scale by activating only a small subset of experts per token. However, training such models remains challenging because top-$k$ routing is discrete and non-differentiable, requiring gradient estimators for expert selection whose design remains a central open problem. We introduce ProbMoE, a probabilistic routing framework that models expert selection as a distribution over cardinality-constrained expert subsets and formulates routing as probabilistic inference in this discrete subset space. We first propose ProbMoE Exact-$k$ routing, which samples $k$-expert subsets in the forward pass, and the backward pass uses gradients through each expert's exact marginal probability as a tractable surrogate for the true gradient. ProbMoE naturally generalizes to a dynamic-$k$ routing setting, where both training and inference constrain the routing cardinality to the same predefined range, allowing adaptive expert allocation per token. Across benchmarks and model backbones, ProbMoE Exact-$k$ achieves strong performance compared to competitive baselines, with improved expert utilization and routing diversity; ProbMoE Dynamic-$k$ achieves comparable performance with fewer activated experts.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T00:16:36Z</published>
+    <arxiv:comment>Accepted at ICML 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Heng Zhao</name>
+    </author>
+    <author>
+      <name>Zilei Shao</name>
+    </author>
+    <author>
+      <name>Guy Van den Broeck</name>
+    </author>
+    <author>
+      <name>Zhe Zeng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01513v1</id>
+    <title>Compliance-Scored Best-of-N Guardrail Orchestration for Multimodal Document Generation in Payments Dispute Defense</title>
+    <updated>2026-06-01T00:24:30Z</updated>
+    <link href="https://arxiv.org/abs/2606.01513v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01513v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>High-stakes enterprise document generation, including financial dispute narratives, compliance notices, and audit summaries, demands schema correctness, policy compliance, and low-latency operation at scale. Prior to a unified guardrail layer, production systems often stitched together separate PII redaction, content moderation, and format validation steps, leading to fragmented logic, slower request paths, and higher operational cost.
+  We present a guardrail orchestration layer for text and image inputs that couples multi-candidate generation with an explicit compliance score used for early exit. The framework runs configurable parallel generation heads, scores candidates against weighted guardrails including PII detection, content moderation, schema constraints, and domain rules, and returns the best-scoring output with selection metadata. The available operational readout reports 5 attempts within 20 seconds and 91 percent compliance.
+  For payments dispute defense summaries, we analyze aggregate operational scenario readouts rather than a randomized A/B test. Variable cohorts show higher count win rates than controls overall, 301/659 versus 536/1548, corresponding to +11.0 percentage points with 95 percent confidence interval [6.6, 15.5] and p &lt; 0.001, and for adjusted item-not-received cases, +7.5 percentage points with 95 percent confidence interval [0.2, 15.7] and p = 0.045. Fraud and local evidence-ranking deltas are directionally positive but not statistically significant from the aggregate count data. We also report reviewer-calibrated Responsible-AI evidence-quality signals from 770 generated-evidence reviews and a 70-case OCR slice, and document the reproducibility boundary through the request interface, scoring logic, pseudocode, and operational evidence boundary.</summary>
+    <category term="cs.DC" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T00:24:30Z</published>
+    <arxiv:comment>8 pages, 7 figures, 4 tables. Preprint. Applied systems paper on compliance-scored guardrail orchestration for multimodal LLM document generation. Contains aggregate operational readouts; not a randomized A/B test</arxiv:comment>
+    <arxiv:primary_category term="cs.DC"/>
+    <author>
+      <name>Nataraj Agaram Sundar</name>
+    </author>
+    <author>
+      <name>Tejas Morabia</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01521v1</id>
+    <title>Fast Generalization after Interpolation via Critically Damped Momentum Optimization</title>
+    <updated>2026-06-01T00:54:45Z</updated>
+    <link href="https://arxiv.org/abs/2606.01521v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01521v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A central problem in machine learning is that models can achieve near-perfect training performance while generalizing substantially less well to unseen examples. This gap is especially acute in high-dimensional, low-sample regimes, where many interpolating solutions exist and optimization must implicitly select among minima with different generalization properties. Following recent theoretical advances on optimization dynamics near the interpolation threshold, we note that the two-regime structure of risk minimization, with loss minimization followed by complexity minimization, motivates a biphasic optimization schedule. We thus theoretically demonstrate that GROKtimizer, a biphasic strategy that combines rapid convergence to interpolation with Critically Damped Momentum (CDM)-based post-interpolation norm minimization, offers a natural solution for selecting low-norm interpolating solutions. Under a local quadratic model of the post-interpolation basin, GROKtimizer provides a quadratic speedup over classical gradient descent, with provable optimality among first-order optimizers. To showcase the applicability of our method, we evaluate GROKtimizer on several synthetic benchmarks common in the classical grokking literature and on various real-world datasets. Finally, we reconcile our findings with the flat-minima hypothesis, highlighting the importance of post-interpolation dynamics in the construction of high-quality, generalizing models.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T00:54:45Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Luca Muscarnera</name>
+    </author>
+    <author>
+      <name>Silas Ruhrberg Estévez</name>
+    </author>
+    <author>
+      <name>Yuanzhang Xiao</name>
+    </author>
+    <author>
+      <name>Mihaela Van der Schaar</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01525v1</id>
+    <title>Semi-Supervised Hyperbolic Hierarchical Clustering with Set-Level Structural Priors</title>
+    <updated>2026-06-01T01:14:00Z</updated>
+    <link href="https://arxiv.org/abs/2606.01525v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01525v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Semi-supervised hierarchical clustering aims to learn a tree structure consistent with data patterns and user-provided supervision. Supervision is usually given as leaf-level relations, such as pairwise must-link/cannot-link constraints or triplet-wise must-link-before constraints. Although useful for regulating local sample relations, such supervision does not directly indicate which samples should form coherent subtrees. Consequently, the non-leaf structure of the learned tree may deviate from the hierarchical organization preferred by ground-truth labels. To address this limitation, we propose a semi-supervised hyperbolic hierarchical clustering method with set-level structural priors. The main contribution is to introduce sets as basic modeling units for hierarchy learning. Each set denotes samples expected to cohere within a subtree and is induced from leaf-level supervision together with a learned constraint-consistent similarity structure. These sets act as soft structural priors for subtree-level supervision, allowing supervision to guide non-leaf hierarchy formation beyond local leaf-level relations. Specifically, we first learn constraint-consistent embeddings to obtain a reliable set partition, then construct constraint-induced sets and estimate inter-set similarities to form set-level structural priors. Finally, these priors are incorporated into a hyperbolic hierarchy objective for continuous tree optimization. Experiments on eleven benchmark datasets and ablation studies show that the proposed method consistently improves label consistency over representative hierarchical clustering baselines while also enhancing similarity-based tree quality.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T01:14:00Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Junjing Zheng</name>
+    </author>
+    <author>
+      <name>Xinyu Zhang</name>
+    </author>
+    <author>
+      <name>Xiangfeng Qiu</name>
+    </author>
+    <author>
+      <name>Chengliang Song</name>
+    </author>
+    <author>
+      <name>Weidong Jiang</name>
+    </author>
+  </entry>
+</feed>

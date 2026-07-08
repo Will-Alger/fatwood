@@ -45,3 +45,6 @@ app.MapFallbackToFile("index.html");
 
 await app.RunAsync();
 return 0;
+
+// Exposes the entry point to WebApplicationFactory in integration tests.
+public partial class Program;

@@ -1,0 +1,295 @@
+:root {
+  --border: #d9dce1;
+  --muted: #5c6470;
+  --accent: #1a56db;
+  --accent-soft: #e8effc;
+  --bg: #f7f8fa;
+  --card-bg: #ffffff;
+  --text: #1c2330;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+}
+
+.app-header {
+  padding: 2rem 0 1.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.app-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+}
+
+.app-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.app-body {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+/* Category filter */
+
+.category-filter {
+  flex: 0 0 250px;
+  position: sticky;
+  top: 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.category-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.category-filter h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.category-filter ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.category-filter li {
+  padding: 0.2rem 0;
+}
+
+.category-filter label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.category-code {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.category-name {
+  color: var(--muted);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.category-count {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Main column */
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.toolbar select {
+  font: inherit;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+}
+
+/* Paper list */
+
+.paper-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: opacity 120ms ease;
+}
+
+.paper-list-refreshing {
+  opacity: 0.55;
+}
+
+.paper-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+}
+
+.paper-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.paper-card h3 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.paper-card h3 a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.paper-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.paper-date {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-right: 0.35rem;
+}
+
+.badge {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.badge-primary {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.paper-authors {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.paper-abstract {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.paper-links {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.paper-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.paper-links a:hover {
+  text-decoration: underline;
+}
+
+/* Pagination */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.pagination button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  cursor: pointer;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pagination button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Shared */
+
+.status {
+  color: var(--muted);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.status-error {
+  color: #b42318;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 800px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .category-filter {
+    position: static;
+    width: 100%;
+    flex: none;
+  }
+}
