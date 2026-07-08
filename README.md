@@ -3,10 +3,11 @@
 A research-to-project discovery tool: browse recent arXiv papers by category to
 find portfolio-project candidates. Phase 1 ingests real paper metadata from the
 official [arXiv API](https://info.arxiv.org/help/api/index.html) into
-PostgreSQL and serves a fast, filterable browse UI. Phase 2 runs an LLM
-(Anthropic `claude-fable-5`) over bounded, admin-selected subsets of papers to
-score their suitability as solo portfolio projects, and surfaces the stored
-analysis in the browse UI (score sort, analyzed-only filter, per-paper detail).
+PostgreSQL and serves a fast, filterable browse UI. Phase 2 runs an
+inexpensive LLM (Anthropic `claude-haiku-4-5` by default) over bounded,
+admin-selected subsets of papers to score their suitability as solo portfolio
+projects, and surfaces the stored analysis in the browse UI (score sort,
+analyzed-only filter, per-paper detail).
 
 **No mock data anywhere in the product path** — every paper row comes from the
 live arXiv API. Tests use saved real responses as fixtures; the running app
@@ -122,12 +123,14 @@ running `ingest delta` on this same image with the scheduler disabled.
 
 ## Analysis (Phase 2)
 
-Analysis calls the Anthropic API with **`claude-fable-5`** (structured
-outputs enforce the JSON contract server-side) and opts into a **server-side
-fallback to `claude-opus-4-8`**: fable-5's safety classifiers can decline
-benign security papers (cs.CR is a target category), and the fallback rescues
-those inside the same API call instead of losing the analysis. If both
-decline, the paper is recorded as declined and skipped.
+Analysis calls the Anthropic API with **`claude-haiku-4-5-20251001`** by
+default — this is a one-call-per-paper batch job across whole categories, so
+the model is deliberately the cheap tier, not a frontier one. Structured
+outputs enforce the JSON contract server-side. If the model declines a paper
+(possible with security papers; cs.CR is a target category), the paper is
+recorded as declined and skipped — that costs nothing. For deployments where
+declines matter, `Analysis:FallbackModel` opts into a server-side fallback
+inside the same API call; if set, pick another inexpensive model.
 
 Set the API key in the environment — it is never read from appsettings:
 
@@ -195,9 +198,9 @@ Everything is configurable via `appsettings.json` or environment variables
 | `Ingestion:Schedule:Enabled` / `TimeUtc` | `true` / `06:30` | daily delta job |
 | `Database:MigrateOnStartup` | `true` | apply migrations at boot |
 | `Admin:ApiKey` | *(empty = admin disabled)* | admin endpoint key |
-| `Analysis:Model` | `claude-fable-5` | analysis model |
-| `Analysis:FallbackModel` | `claude-opus-4-8` | server-side fallback on policy declines |
-| `Analysis:Effort` | `medium` | Anthropic effort level (`low`–`max`) |
+| `Analysis:Model` | `claude-haiku-4-5-20251001` | analysis model (cheap tier — one call per paper) |
+| `Analysis:FallbackModel` | *(empty = no fallback)* | optional server-side fallback on declines |
+| `Analysis:Effort` | *(empty = not sent)* | optional effort level (`low`–`max`), model-dependent |
 | `Analysis:DefaultMaxPapers` | 25 | per-run paper cap when unspecified |
 | `Analysis:MaxOutputTokens` | 16000 | per-call output ceiling (incl. thinking) |
 | `ANTHROPIC_API_KEY` | *(env only)* | Anthropic credential; never in appsettings |
@@ -305,11 +308,13 @@ Decisions the spec left open, made explicitly:
 Made when the analysis layer was built (the Phase 1 seam — `AnalysisResults`
 table, `IAnalysisService` interface — slotted in without schema changes):
 
-1. **`claude-fable-5` with a server-side fallback to `claude-opus-4-8`**
-   (`server-side-fallback` beta). fable-5's safety classifiers target
-   cybersecurity content and can false-positive on benign cs.CR papers; the
-   fallback re-serves declined requests in the same call. Papers declined by
-   the whole chain are counted and skipped, never failed.
+1. **A cheap model (`claude-haiku-4-5`), no fallback by default.** Analysis
+   is one LLM call per paper across whole categories — frontier-model pricing
+   multiplies across the corpus, so the default is the cheapest current
+   tier. Policy declines (possible on cs.CR papers) are counted and skipped
+   at zero cost; `Analysis:FallbackModel` can opt into the
+   `server-side-fallback` beta for deployments where losing those analyses
+   matters — with another inexpensive model, not a frontier one.
 2. **Structured outputs, not prompt-and-parse.** The v1 schema
    (`AnalysisContract.SchemaJson`) is enforced server-side; every field is
    required and numeric ranges live in descriptions (structured outputs
@@ -327,5 +332,6 @@ table, `IAnalysisService` interface — slotted in without schema changes):
 6. **No analysis lease.** The HTTP queue is single-worker (serialized); a
    concurrent CLI run at worst races on the unique `PaperId` index, which is
    caught and skipped. Duplicate token spend is bounded to one paper.
-7. **Effort defaults to `medium`** — abstract-level suitability scoring is
-   bounded judgment work; configurable up to `max` via `Analysis:Effort`.
+7. **Effort is off by default** — the parameter is model-dependent and the
+   default haiku model doesn't need it; `Analysis:Effort` sends it only when
+   set (relevant if a thinking-capable model is configured).

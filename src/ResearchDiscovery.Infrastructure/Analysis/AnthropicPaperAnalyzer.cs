@@ -10,10 +10,11 @@ using ResearchDiscovery.Domain.Entities;
 namespace ResearchDiscovery.Infrastructure.Analysis;
 
 /// <summary>
-/// Calls the Anthropic API (claude-fable-5 by default) to produce the
-/// structured analysis JSON for a single paper. Structured outputs enforce
-/// the schema server-side; a server-side fallback model rescues policy
-/// declines (security papers can trip claude-fable-5's cyber classifiers).
+/// Calls the Anthropic API (an inexpensive model — claude-haiku-4-5 by
+/// default, since this runs once per paper across whole categories) to
+/// produce the structured analysis JSON for a single paper. Structured
+/// outputs enforce the schema server-side; policy declines are skipped, or
+/// rescued by an optional configured fallback model.
 /// </summary>
 public class AnthropicPaperAnalyzer(
     AnthropicClient client,
@@ -27,19 +28,28 @@ public class AnthropicPaperAnalyzer(
         var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
             AnalysisContract.SchemaJson)!;
 
+        // Effort is only sent when configured (not every model supports it);
+        // the fallback chain is only wired up when a fallback model is
+        // configured — the default is no fallback, so a decline just skips
+        // the paper, which costs nothing.
+        var useFallback = opts.FallbackModel is { Length: > 0 };
+
         var parameters = new MessageCreateParams
         {
             Model = opts.Model,
             MaxTokens = opts.MaxOutputTokens,
-            // claude-fable-5: thinking is always on and must not be configured;
-            // effort is the depth/cost control.
-            Betas = ["server-side-fallback-2026-06-01"],
-            Fallbacks = [new() { Model = opts.FallbackModel }],
-            OutputConfig = new BetaOutputConfig
-            {
-                Effort = opts.Effort,
-                Format = new BetaJsonOutputFormat { Schema = schema },
-            },
+            Betas = useFallback ? ["server-side-fallback-2026-06-01"] : null,
+            Fallbacks = useFallback ? [new() { Model = opts.FallbackModel! }] : null,
+            OutputConfig = opts.Effort is { Length: > 0 } effort
+                ? new BetaOutputConfig
+                {
+                    Effort = effort,
+                    Format = new BetaJsonOutputFormat { Schema = schema },
+                }
+                : new BetaOutputConfig
+                {
+                    Format = new BetaJsonOutputFormat { Schema = schema },
+                },
             System = AnalysisContract.SystemPrompt,
             Messages =
             [
@@ -61,8 +71,9 @@ public class AnthropicPaperAnalyzer(
         var response = await client.Beta.Messages.Create(parameters, cancellationToken: ct);
 
         // Check stop_reason before touching content: a refusal can arrive with
-        // an empty content array. A refusal here means the fallback chain also
-        // declined — skip the paper rather than failing the run.
+        // an empty content array. A refusal (from the model, or from the whole
+        // chain when a fallback is configured) skips the paper rather than
+        // failing the run.
         if ($"{response.StopReason}" == "refusal")
         {
             logger.LogWarning(

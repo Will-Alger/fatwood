@@ -17,28 +17,36 @@ public class AnalysisOptions
     /// </summary>
     public const int CurrentSchemaVersion = 1;
 
-    [Required]
-    public string Model { get; set; } = "claude-fable-5";
-
     /// <summary>
-    /// Server-side fallback model. claude-fable-5 runs safety classifiers that
-    /// can decline benign security papers (cs.CR is a target category), so a
-    /// fallback keeps those analyses from silently failing.
+    /// Analysis runs one LLM call per paper across whole categories, so the
+    /// default is deliberately a cheap model, not a frontier one.
     /// </summary>
     [Required]
-    public string FallbackModel { get; set; } = "claude-opus-4-8";
+    public string Model { get; set; } = "claude-haiku-4-5-20251001";
 
-    /// <summary>Anthropic effort level: low | medium | high | xhigh | max.</summary>
+    /// <summary>
+    /// Optional server-side fallback model for policy declines; empty
+    /// disables the fallback (the default — declined papers are counted and
+    /// skipped, which costs nothing). If enabled, pick another inexpensive
+    /// model: this is a per-paper batch job.
+    /// </summary>
+    public string? FallbackModel { get; set; }
+
+    /// <summary>
+    /// Optional Anthropic effort level (low | medium | high | xhigh | max).
+    /// Only sent when set — not every model supports the parameter; the
+    /// default haiku model does not need it.
+    /// </summary>
     [RegularExpression("^(low|medium|high|xhigh|max)$")]
-    public string Effort { get; set; } = "medium";
+    public string? Effort { get; set; }
 
     /// <summary>Cap applied when a run does not specify MaxPapers explicitly.</summary>
     [Range(1, 500)]
     public int DefaultMaxPapers { get; set; } = 25;
 
     /// <summary>
-    /// Per-request output ceiling. Thinking tokens count against this on
-    /// claude-fable-5, so it needs headroom beyond the JSON itself.
+    /// Per-request output ceiling. Generous headroom is free (only produced
+    /// tokens are billed) and keeps a thinking-enabled model configurable.
     /// </summary>
     [Range(1024, 64000)]
     public int MaxOutputTokens { get; set; } = 16000;
