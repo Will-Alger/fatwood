@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ResearchDiscovery.Api/ResearchDiscovery.Api.csproj" />
+    <Project Path="src/ResearchDiscovery.Application/ResearchDiscovery.Application.csproj" />
+    <Project Path="src/ResearchDiscovery.Domain/ResearchDiscovery.Domain.csproj" />
+    <Project Path="src/ResearchDiscovery.Infrastructure/ResearchDiscovery.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ResearchDiscovery.IntegrationTests/ResearchDiscovery.IntegrationTests.csproj" />
+    <Project Path="tests/ResearchDiscovery.UnitTests/ResearchDiscovery.UnitTests.csproj" />
+  </Folder>
+</Solution>
