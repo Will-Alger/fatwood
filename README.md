@@ -121,12 +121,64 @@ On Azure Container Apps, keep `minReplicas: 1` (scale-to-zero would kill the
 in-process scheduler). The production-grade evolution is an ACA cron **Job**
 running `ingest delta` on this same image with the scheduler disabled.
 
-## Analysis (Phase 2)
+## Personalized discovery (Phase 2)
 
-Analysis calls the Anthropic API with **`claude-haiku-4-5-20251001`** by
-default — this is a one-call-per-paper batch job across whole categories, so
-the model is deliberately the cheap tier, not a frontier one. Structured
-outputs enforce the JSON contract server-side. If the model declines a paper
+Phase 2 turns the corpus into personalized recommendations. The design rule
+throughout: **the LLM never filters the corpus** — it compiles search intent
+(one cheap call per search) and analyzes ranked survivors (one call per
+paper), while the sift itself runs on free local embeddings. Full design:
+`docs/phase-2-redesign.md`.
+
+### Profile
+
+Your experience and goals live in a single versioned profile (Settings UI, or
+`PUT /api/admin/settings/profile`). Analysis is a paper × person judgment, so
+every saved edit bumps the profile version and marks existing analyses stale;
+they re-run on the next analysis pass (nothing is deleted).
+
+### Local embeddings (zero tokens)
+
+Every paper's title + abstract is embedded with a local all-MiniLM-L6-v2
+model (ONNX Runtime; ~90 MB of model files download automatically on first
+use into `Embeddings:ModelDirectory`). Vectors are stored as portable float32
+bytes — no pgvector, so the SQL Server swap still holds — and ranked by an
+in-memory cosine index. Ingestion embeds new papers automatically; backfill
+the corpus once with:
+
+```bash
+dotnet run --project src/ResearchDiscovery.Api -- embed
+```
+
+### Smart search (Discover tab)
+
+Describe what you want in plain language — career goals included. One LLM
+call compiles it into a **search plan**: an interpretation line, concrete
+research topics (the embedding anchor), category filters, a date window, and
+an optional no-public-code filter. The plan renders as editable chips;
+editing a chip re-executes the plan **without another LLM call**, because
+`POST /api/search` takes plans, not prose (`POST /api/search/compile`, admin
+key required, is the only endpoint that spends tokens).
+
+Exploration guardrails are structural: relevance is the only ranking signal,
+experience similarity merely annotates hits ("close to home" / "stretch"),
+and every result set reserves wildcard slots — high-relevance papers sampled
+from *outside* your experience cluster.
+
+### Model selection & cost visibility
+
+Every LLM step has a UI-selectable model (Settings → Models per step),
+validated against the config-driven registry in `Llm:Models`, which carries
+per-MTok pricing so action buttons show live dollar estimates ("Analyze top
+25 — est. $0.05"). Bulk steps default to the cheapest tier.
+
+## Analysis
+
+Analysis evaluates each paper **for you specifically** (contract v2):
+feasibility counts only hard blockers — unfamiliar languages or frameworks
+are explicitly *not* blockers — plus a learning bridge (what you'd learn and
+how long), goal alignment against your stated goals, a personalized resume
+story, and an extension idea that plays to your strengths. Structured outputs
+enforce the JSON contract server-side. If the model declines a paper
 (possible with security papers; cs.CR is a target category), the paper is
 recorded as declined and skipped — that costs nothing. For deployments where
 declines matter, `Analysis:FallbackModel` opts into a server-side fallback
@@ -159,6 +211,15 @@ curl -X POST -H "X-Admin-Api-Key: $KEY" -H "Content-Type: application/json" \
 curl -H "X-Admin-Api-Key: $KEY" http://host/api/admin/analysis/coverage # per-category counts
 ```
 
+Selection runs (what the UI's "Analyze top N" button calls) analyze an
+explicit paper set instead of a category sweep:
+
+```bash
+curl -X POST -H "X-Admin-Api-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"arxivIds":["2506.00764","2506.01509"]}' \
+  http://host/api/admin/analysis/selection                              # 202
+```
+
 Runs execute on a background queue (202 + poll coverage) because each paper
 is one LLM call. Each result is persisted immediately, so a cancelled run
 keeps completed work. Cost control is structural: analysis only ever runs
@@ -168,12 +229,13 @@ and re-runs skip papers that already have a current-schema analysis.
 ### What gets stored
 
 One `AnalysisResults` row per paper (1:1, unique FK): the raw structured JSON
-(`ResultJson`, schema v1 — feasibility, effort, reproduce-vs-extend guidance,
-reference-code likelihood, resume/fintech signal, one concrete extension
-idea, required skills), a denormalized `CompositeScore` (0–100) for sorting,
-and the model that produced it (the fallback's ID when it served the
-request). Bumping `AnalysisOptions.CurrentSchemaVersion` makes stale rows
-eligible for re-analysis.
+(`ResultJson`, schema v2 — feasibility with hard blockers, learning bridge,
+effort, reproduce-vs-extend guidance, reference-code likelihood, goal
+alignment, personalized resume signal, one concrete extension idea, required
+skills), a denormalized `CompositeScore` (0–100) for sorting, the model that
+produced it (the fallback's ID when it served the request), and the profile
+version it was judged against. Bumping `AnalysisOptions.CurrentSchemaVersion`
+or editing the profile makes stale rows eligible for re-analysis.
 
 ### Browse integration
 
@@ -198,7 +260,10 @@ Everything is configurable via `appsettings.json` or environment variables
 | `Ingestion:Schedule:Enabled` / `TimeUtc` | `true` / `06:30` | daily delta job |
 | `Database:MigrateOnStartup` | `true` | apply migrations at boot |
 | `Admin:ApiKey` | *(empty = admin disabled)* | admin endpoint key |
-| `Analysis:Model` | `claude-haiku-4-5-20251001` | analysis model (cheap tier — one call per paper) |
+| `Llm:Models` | haiku 4.5 / sonnet 5 / opus 4.8 | model registry (allowlist + $/MTok pricing) |
+| `Llm:Defaults` | haiku for all steps | default model per step (UI can override per step) |
+| `Embeddings:Enabled` | `true` | local embedding pass on/off |
+| `Embeddings:ModelDirectory` | `models/all-MiniLM-L6-v2` | where downloaded model files live |
 | `Analysis:FallbackModel` | *(empty = no fallback)* | optional server-side fallback on declines |
 | `Analysis:Effort` | *(empty = not sent)* | optional effort level (`low`–`max`), model-dependent |
 | `Analysis:DefaultMaxPapers` | 25 | per-run paper cap when unspecified |

@@ -55,10 +55,15 @@ Rank by similarity to the SearchPlan anchorText.
   goal-relevance papers sampled from OUTSIDE the experience cluster
   (diversity sampling). Serendipity is structural, not opt-in.
 
-### 4. Enrichment — Papers With Code
-Free API, keyed by arXiv ID: does public code exist? Better than LLM
-guessing. Enables the contribution angle: relevant + no code + feasible =
-reproduction gap. Stored per paper; badge in UI; `codeExists` filterable.
+### 4. Enrichment — advertised code links
+**Implementation note: Papers With Code shut down in mid-2025**, so the
+free-API lookup planned here isn't available. Instead, ingestion extracts
+repository URLs (github/gitlab/bitbucket/huggingface) that authors advertise
+in the arXiv comment field or abstract — cheap, deterministic, and honest
+about being only what authors chose to advertise. Stored as `Paper.CodeUrl`;
+badge in UI; `requireNoCode` filterable for reproduction-gap hunting.
+Limitation: absence of an advertised link ≠ no code exists; the analysis
+step's `reference_code_likelihood` covers the rest.
 
 ### 5. Personalized analysis — LLM call site #2
 Reuses the branch's plumbing (AnalysisResults table, queue, CLI/admin
