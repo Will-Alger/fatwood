@@ -48,14 +48,16 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Server-side build: no Docker setup on the runner, layers cached in ACR.
-      - name: Build and push image (ACR build)
+      # Runner-side build: ACR Tasks (az acr build) is not permitted on free
+      # subscriptions, so build with the runner's Docker and push via the
+      # OIDC-authenticated ACR login.
+      - name: Build and push image
         run: |
-          az acr build \
-            --registry "${{ vars.ACR_NAME }}" \
-            --image "$IMAGE_REPO:${{ github.sha }}" \
-            --image "$IMAGE_REPO:latest" \
-            .
+          az acr login --name "${{ vars.ACR_NAME }}"
+          IMAGE_BASE="${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO"
+          docker build -t "$IMAGE_BASE:${{ github.sha }}" -t "$IMAGE_BASE:latest" .
+          docker push "$IMAGE_BASE:${{ github.sha }}"
+          docker push "$IMAGE_BASE:latest"
 
       - name: Run schema migrations (one-off job)
         run: |
