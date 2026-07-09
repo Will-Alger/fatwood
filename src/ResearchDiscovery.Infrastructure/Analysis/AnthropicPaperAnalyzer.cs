@@ -33,41 +33,57 @@ public class AnthropicPaperAnalyzer(
 
         var useFallback = opts.FallbackModel is { Length: > 0 };
 
-        var parameters = new MessageCreateParams
-        {
-            Model = model.Id,
-            MaxTokens = opts.MaxOutputTokens,
-            Betas = useFallback ? ["server-side-fallback-2026-06-01"] : null,
-            Fallbacks = useFallback ? [new() { Model = opts.FallbackModel! }] : null,
-            OutputConfig = opts.Effort is { Length: > 0 } effort
-                ? new BetaOutputConfig
-                {
-                    Effort = effort,
-                    Format = new BetaJsonOutputFormat { Schema = schema },
-                }
-                : new BetaOutputConfig
-                {
-                    Format = new BetaJsonOutputFormat { Schema = schema },
-                },
-            System = AnalysisContract.SystemPrompt,
-            Messages =
-            [
-                new()
-                {
-                    Role = Role.User,
-                    Content = AnalysisContract.BuildUserPrompt(
-                        profileDescription,
-                        paper.ArxivId,
-                        paper.Title,
-                        paper.Authors,
-                        paper.PrimaryCategory?.Code ?? "unknown",
-                        paper.PaperCategories.Select(pc => pc.Category.Code),
-                        paper.PublishedUtc,
-                        paper.CodeUrl,
-                        paper.Abstract),
-                },
-            ],
-        };
+        var outputConfig = opts.Effort is { Length: > 0 } effort
+            ? new BetaOutputConfig
+            {
+                Effort = effort,
+                Format = new BetaJsonOutputFormat { Schema = schema },
+            }
+            : new BetaOutputConfig
+            {
+                Format = new BetaJsonOutputFormat { Schema = schema },
+            };
+
+        List<BetaMessageParam> messages =
+        [
+            new()
+            {
+                Role = Role.User,
+                Content = AnalysisContract.BuildUserPrompt(
+                    profileDescription,
+                    paper.ArxivId,
+                    paper.Title,
+                    paper.Authors,
+                    paper.PrimaryCategory?.Code ?? "unknown",
+                    paper.PaperCategories.Select(pc => pc.Category.Code),
+                    paper.PublishedUtc,
+                    paper.CodeUrl,
+                    paper.Abstract),
+            },
+        ];
+
+        // The fallback fields are only present when a fallback is configured:
+        // an assigned property is serialized even when null, and the API
+        // rejects a `fallbacks` field without its beta flag.
+        var parameters = useFallback
+            ? new MessageCreateParams
+            {
+                Model = model.Id,
+                MaxTokens = opts.MaxOutputTokens,
+                OutputConfig = outputConfig,
+                System = AnalysisContract.SystemPrompt,
+                Messages = messages,
+                Betas = ["server-side-fallback-2026-06-01"],
+                Fallbacks = [new() { Model = opts.FallbackModel! }],
+            }
+            : new MessageCreateParams
+            {
+                Model = model.Id,
+                MaxTokens = opts.MaxOutputTokens,
+                OutputConfig = outputConfig,
+                System = AnalysisContract.SystemPrompt,
+                Messages = messages,
+            };
 
         var response = await client.Beta.Messages.Create(parameters, cancellationToken: ct);
 
