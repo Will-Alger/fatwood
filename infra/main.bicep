@@ -35,6 +35,24 @@ param adminApiKey string
 @description('Anthropic API key for LLM steps. May be empty — the app runs without analysis until set.')
 param anthropicApiKey string = ''
 
+// ------------------------------------------------------- Entra ID Easy Auth
+// When authClientId is set, Container Apps authentication (Easy Auth) fronts
+// EVERY request: unauthenticated visitors are 302-redirected to Microsoft
+// login before anything reaches the container. Empty (the first deploy,
+// before the app registration exists) means no authConfig is created.
+@description('Client id of the Entra app registration used for sign-in. Empty disables Easy Auth (bootstrap deploy only).')
+param authClientId string = ''
+
+@secure()
+@description('Client secret of the Entra app registration. Required when authClientId is set; re-supply on every infra deploy.')
+param authClientSecret string = ''
+
+@description('Tenant accepted for sign-in. Defaults to the deployment tenant.')
+param authTenantId string = ''
+
+var authEnabled = !empty(authClientId)
+var effectiveAuthTenant = empty(authTenantId) ? tenant().tenantId : authTenantId
+
 // ------------------------------------------------------------------- scaling
 @description('Postgres compute SKU. Smallest burstable by default; e.g. Standard_D2ds_v5 for production.')
 param pgSkuName string = 'Standard_B1ms'
@@ -158,6 +176,12 @@ resource secretAnthropicKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   properties: { value: anthropicApiKey }
 }
 
+resource secretAuthClient 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (authEnabled) {
+  parent: keyVault
+  name: 'auth-client-secret'
+  properties: { value: authClientSecret }
+}
+
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
   name: '${baseName}-pg-${suffix}'
   location: location
@@ -222,6 +246,18 @@ var registries = [
   { server: acr.properties.loginServer, identity: appIdentity.id }
 ]
 
+// The app (not the jobs) also carries the Easy Auth client secret when auth
+// is wired; authConfigs resolves it via clientSecretSettingName.
+var appSecrets = authEnabled
+  ? concat(kvSecrets, [
+      {
+        name: 'auth-client-secret'
+        keyVaultUrl: '${keyVault.properties.vaultUri}secrets/auth-client-secret'
+        identity: appIdentity.id
+      }
+    ])
+  : kvSecrets
+
 resource api 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${baseName}-api'
   location: location
@@ -238,7 +274,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
       }
       registries: registries
-      secrets: kvSecrets
+      secrets: appSecrets
     }
     template: {
       containers: [
@@ -271,6 +307,35 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
   dependsOn: [acrPull, kvSecretsUser]
+}
+
+// Entra ID login in front of the entire site: unauthenticated requests are
+// redirected to Microsoft login (302), never passed through anonymously.
+// User allow-listing lives on the Entra service principal ("assignment
+// required" + explicit user assignments), not here.
+resource apiAuth 'Microsoft.App/containerApps/authConfigs@2024-03-01' = if (authEnabled) {
+  parent: api
+  name: 'current'
+  properties: {
+    platform: { enabled: true }
+    globalValidation: {
+      unauthenticatedClientAction: 'RedirectToLoginPage'
+      redirectToProvider: 'azureactivedirectory'
+    }
+    identityProviders: {
+      azureActiveDirectory: {
+        enabled: true
+        registration: {
+          openIdIssuer: 'https://login.microsoftonline.com/${effectiveAuthTenant}/v2.0'
+          clientId: authClientId
+          clientSecretSettingName: 'auth-client-secret'
+        }
+        validation: {
+          allowedAudiences: ['api://${authClientId}']
+        }
+      }
+    }
+  }
 }
 
 // One-off schema migration job: CD updates its image, starts it, and waits
