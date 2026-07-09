@@ -306,7 +306,10 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
-  dependsOn: [acrPull, kvSecretsUser]
+  // The secret resources are explicit dependencies: referencing only the
+  // vault URI would let the app provision before the secrets exist, and the
+  // ACA data plane resolves them at provision time.
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAdminKey, secretAnthropicKey]
 }
 
 // Entra ID login in front of the entire site: unauthenticated requests are
@@ -372,7 +375,7 @@ resource migrateJob 'Microsoft.App/jobs@2024-03-01' = {
       ]
     }
   }
-  dependsOn: [acrPull, kvSecretsUser]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAdminKey, secretAnthropicKey]
 }
 
 // Daily delta ingestion as an ACA cron job on the same image (the README's
@@ -416,7 +419,7 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
       ]
     }
   }
-  dependsOn: [acrPull, kvSecretsUser]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAdminKey, secretAnthropicKey]
 }
 
 output acrLoginServer string = acr.properties.loginServer
