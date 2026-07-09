@@ -19,8 +19,8 @@ param location string = 'eastus2'
 @maxLength(10)
 param baseName string = 'rdisc'
 
-@description('Container image for the API (and jobs). First deploy uses the public placeholder because ACR is empty until CD pushes; CD then pins real tags.')
-param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+@description('Container image for the API (and jobs). The bootstrap default is a public sample that, like the real app, listens on 8080 (the ingress target port — a port-80 placeholder never passes readiness); CD then pins real ACR tags.')
+param containerImage string = 'mcr.microsoft.com/dotnet/samples:aspnetapp'
 
 // ---------------------------------------------------------------- secrets in
 @secure()
