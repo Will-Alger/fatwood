@@ -141,6 +141,20 @@ public class ArxivAtomParserTests
         Assert.Throws<FormatException>(() => ArxivAtomParser.Parse("<html><body>oops</body></html>"));
     }
 
+    [Theory]
+    [InlineData("Code: https://github.com/acme/widget.", "https://github.com/acme/widget")]
+    [InlineData("Accepted at ICML. Code at https://github.com/a/b, data elsewhere",
+        "https://github.com/a/b")]
+    [InlineData("See https://gitlab.com/group/proj for the implementation",
+        "https://gitlab.com/group/proj")]
+    [InlineData("Models at https://huggingface.co/org/model", "https://huggingface.co/org/model")]
+    [InlineData("No links here at all", null)]
+    [InlineData("Visit https://example.com/not-a-repo", null)]
+    public void ExtractCodeUrl_FindsAdvertisedRepositories(string text, string? expected)
+    {
+        Assert.Equal(expected, ArxivAtomParser.ExtractCodeUrl(text));
+    }
+
     [Fact]
     public void Parse_PrimaryCategoryMissingFromCategoryList_IsPrepended()
     {

@@ -20,6 +20,13 @@ public static partial class ArxivAtomParser
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRegex();
 
+    // Authors commonly advertise code in the comment ("Code: https://github.com/...")
+    // or the abstract. Papers With Code shut down in 2025, so this extraction is
+    // the code-availability signal: cheap, deterministic, and honest about being
+    // only what the authors chose to advertise.
+    [GeneratedRegex(@"https?://(?:www\.)?(?:github\.com|gitlab\.com|bitbucket\.org|huggingface\.co)/[^\s""'<>,;)\]}]+", RegexOptions.IgnoreCase)]
+    private static partial Regex CodeUrlRegex();
+
     public static ArxivPage Parse(string atomXml)
     {
         var doc = XDocument.Parse(atomXml);
@@ -98,6 +105,9 @@ public static partial class ArxivAtomParser
 
         var doi = (string?)entry.Element(ArxivNs + "doi");
 
+        var comment = (string?)entry.Element(ArxivNs + "comment") ?? string.Empty;
+        var codeUrl = ExtractCodeUrl($"{comment} {summary}");
+
         return new ArxivEntry(
             arxivId,
             version,
@@ -110,7 +120,21 @@ public static partial class ArxivAtomParser
             updated,
             absUrl,
             pdfUrl,
-            string.IsNullOrWhiteSpace(doi) ? null : doi);
+            string.IsNullOrWhiteSpace(doi) ? null : doi,
+            codeUrl);
+    }
+
+    /// <summary>First advertised repository URL in the text, trailing punctuation trimmed.</summary>
+    public static string? ExtractCodeUrl(string text)
+    {
+        var match = CodeUrlRegex().Match(text);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var url = match.Value.TrimEnd('.', ':');
+        return url.Length <= 512 ? url : null;
     }
 
     private static string NormalizeWhitespace(string value) =>

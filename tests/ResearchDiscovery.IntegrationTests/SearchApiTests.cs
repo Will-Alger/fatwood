@@ -1,0 +1,145 @@
+using System.Net;
+using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using ResearchDiscovery.Application.Abstractions;
+using ResearchDiscovery.Domain.Entities;
+using ResearchDiscovery.Infrastructure.Persistence;
+using Xunit;
+
+namespace ResearchDiscovery.IntegrationTests;
+
+/// <summary>
+/// Exercises the deterministic search path end-to-end over Sqlite with the
+/// stub embedder: rank ordering, plan filters, and the admin posture of the
+/// compile endpoint. No LLM, no network, no model download.
+/// </summary>
+public class SearchApiTests
+{
+    private static byte[] ToBytes(float[] vector)
+    {
+        var bytes = new byte[vector.Length * sizeof(float)];
+        Buffer.BlockCopy(vector, 0, bytes, 0, bytes.Length);
+        return bytes;
+    }
+
+    /// <summary>Seeds papers plus stub-embedder vectors matching the configured model version.</summary>
+    private static async Task SeedWithEmbeddingsAsync(ApiFactory factory)
+    {
+        await factory.SeedAsync(TestData.SeedPapersAsync);
+        await factory.SeedAsync(async db =>
+        {
+            var papers = await db.Papers.ToListAsync();
+            foreach (var paper in papers)
+            {
+                db.PaperEmbeddings.Add(new PaperEmbedding
+                {
+                    PaperId = paper.Id,
+                    ModelVersion = "all-MiniLM-L6-v2",
+                    Vector = ToBytes(ApiFactory.StubTextEmbedder.Embed(
+                        $"{paper.Title}. {paper.Abstract}")),
+                    CreatedUtc = DateTimeOffset.UtcNow,
+                });
+            }
+        });
+    }
+
+    private static object PlanBody(
+        string anchorText,
+        string[]? categories = null,
+        bool? requireNoCode = null) =>
+        new
+        {
+            plan = new
+            {
+                interpretation = "test",
+                anchorText,
+                categories = categories ?? [],
+                dateWindowDays = (int?)null,
+                requireNoCode,
+            },
+            limit = 10,
+        };
+
+    [Fact]
+    public async Task Search_RanksTheTopicallyClosestPaperFirst()
+    {
+        using var factory = new ApiFactory();
+        await SeedWithEmbeddingsAsync(factory);
+        using var client = factory.CreateClient();
+
+        // The seed set has "Newest ML paper" (cs.LG) and "Security paper" (cs.CR);
+        // an anchor made of the ML paper's own words must rank it first.
+        var response = await client.PostAsJsonAsync(
+            "/api/search", PlanBody("Newest ML paper abstract"));
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<SearchResultView>();
+        Assert.NotNull(result);
+        Assert.True(result.Hits.Count >= 2);
+        Assert.Equal("2501.00001", result.Hits[0].Paper.ArxivId);
+        Assert.True(result.Hits[0].MatchScore >= result.Hits[^1].MatchScore);
+    }
+
+    [Fact]
+    public async Task Search_CategoryFilterRestrictsCandidates()
+    {
+        using var factory = new ApiFactory();
+        await SeedWithEmbeddingsAsync(factory);
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/search", PlanBody("paper", categories: ["cs.CR"]));
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<SearchResultView>();
+        Assert.NotNull(result);
+        Assert.All(result.Hits, h => Assert.Contains("cs.CR", h.Paper.Categories));
+        Assert.Equal(2, result.TotalCandidates);
+    }
+
+    [Fact]
+    public async Task Search_MissingAnchor_Returns400()
+    {
+        using var factory = new ApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/search", PlanBody(""));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Compile_WithoutAdminKey_Returns404()
+    {
+        using var factory = new ApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/search/compile", new { query = "x" });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Compile_WithKey_ReturnsPlanFromCompiler()
+    {
+        using var factory = new ApiFactory { AdminApiKey = "k" };
+        await SeedWithEmbeddingsAsync(factory);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
+
+        var response = await client.PostAsJsonAsync(
+            "/api/search/compile", new { query = "fintech projects" });
+        response.EnsureSuccessStatusCode();
+
+        var plan = await response.Content.ReadFromJsonAsync<SearchPlan>();
+        Assert.NotNull(plan);
+        Assert.Contains("fintech projects", plan.Interpretation);
+    }
+
+    private sealed record SearchHitView(
+        Application.Dtos.PaperDto Paper, float MatchScore, bool IsWildcard, string? ExperienceProximity);
+
+    private sealed record SearchResultView(
+        SearchPlan Plan, List<SearchHitView> Hits, int TotalCandidates);
+}

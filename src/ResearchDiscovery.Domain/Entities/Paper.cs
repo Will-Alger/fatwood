@@ -35,6 +35,13 @@ public class Paper
 
     public string? Doi { get; set; }
 
+    /// <summary>
+    /// Code repository URL extracted from the arXiv comment/abstract, when the
+    /// authors advertised one. Null means none was advertised — code may still
+    /// exist elsewhere.
+    /// </summary>
+    public string? CodeUrl { get; set; }
+
     public DateTimeOffset FirstIngestedUtc { get; set; }
 
     public DateTimeOffset LastSeenUtc { get; set; }
@@ -42,4 +49,6 @@ public class Paper
     public ICollection<PaperCategory> PaperCategories { get; set; } = new List<PaperCategory>();
 
     public AnalysisResult? AnalysisResult { get; set; }
+
+    public PaperEmbedding? Embedding { get; set; }
 }

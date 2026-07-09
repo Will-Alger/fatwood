@@ -19,6 +19,7 @@ public class PaperConfiguration : IEntityTypeConfiguration<Paper>
         builder.Property(p => p.AbsUrl).HasMaxLength(512).IsRequired();
         builder.Property(p => p.PdfUrl).HasMaxLength(512).IsRequired();
         builder.Property(p => p.Doi).HasMaxLength(255);
+        builder.Property(p => p.CodeUrl).HasMaxLength(512);
 
         // Backs the default browse sort (newest first) with a stable tiebreaker.
         builder.HasIndex(p => new { p.PublishedUtc, p.Id }).IsDescending(true, true);

@@ -12,6 +12,34 @@ export interface PaperDto {
   absUrl: string
   pdfUrl: string
   doi: string | null
+  analysis: PaperAnalysisDto | null
+  codeUrl: string | null
+}
+
+// Schema v2 of the LLM analysis document (AnalysisContract.SchemaJson):
+// personalized paper × person evaluation.
+export interface AnalysisDetails {
+  summary: string
+  feasibility_score: number
+  hard_blockers: string[]
+  learning_bridge: string
+  estimated_effort: 'weekend' | 'one_to_two_weeks' | 'about_a_month' | 'multi_month'
+  approach: 'reproduce' | 'extend'
+  approach_rationale: string
+  reference_code_likelihood: 'high' | 'medium' | 'low'
+  goal_alignment_score: number
+  resume_signal: string
+  extension_idea: string
+  required_skills: string[]
+  composite_score: number
+}
+
+export interface PaperAnalysisDto {
+  compositeScore: number | null
+  model: string
+  schemaVersion: number
+  createdUtc: string
+  details: AnalysisDetails
 }
 
 export interface CategoryDto {
@@ -28,4 +56,59 @@ export interface PagedResult<T> {
   totalPages: number
 }
 
-export type SortOrder = 'published_desc' | 'published_asc'
+export type SortOrder = 'published_desc' | 'published_asc' | 'score_desc'
+
+// --- Smart search ---
+
+export interface SearchPlan {
+  interpretation: string
+  anchorText: string
+  categories: string[]
+  dateWindowDays: number | null
+  requireNoCode: boolean | null
+}
+
+export interface SearchHit {
+  paper: PaperDto
+  matchScore: number
+  isWildcard: boolean
+  experienceProximity: 'close' | 'stretch' | null
+}
+
+export interface SearchResult {
+  plan: SearchPlan
+  hits: SearchHit[]
+  totalCandidates: number
+}
+
+// --- Settings ---
+
+export interface LlmModelView {
+  id: string
+  displayName: string
+  inputPerMTok: number
+  outputPerMTok: number
+}
+
+export interface LlmAssignmentView {
+  step: string
+  modelId: string
+  isDefault: boolean
+}
+
+export interface LlmSettingsView {
+  registry: LlmModelView[]
+  assignments: LlmAssignmentView[]
+  estAnalysisInputTokensPerPaper: number
+  estAnalysisOutputTokensPerPaper: number
+  estCompileInputTokens: number
+  estCompileOutputTokens: number
+}
+
+export interface ProfileView {
+  experienceSummary: string
+  goals: string
+  weeklyHours: number | null
+  version: number
+  updatedUtc: string | null
+}

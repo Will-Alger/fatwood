@@ -20,7 +20,8 @@ public sealed record ArxivEntry(
     DateTimeOffset Updated,
     string AbsUrl,
     string PdfUrl,
-    string? Doi);
+    string? Doi,
+    string? CodeUrl = null);
 
 public sealed record ArxivPage(int TotalResults, IReadOnlyList<ArxivEntry> Entries);
 

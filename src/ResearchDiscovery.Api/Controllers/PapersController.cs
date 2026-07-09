@@ -23,6 +23,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = DefaultPageSize,
         [FromQuery] string sort = "published_desc",
+        [FromQuery] bool analyzedOnly = false,
         CancellationToken ct = default)
     {
         if (page < 1)
@@ -35,13 +36,14 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         {
             "published_desc" => PaperSortOrder.PublishedDesc,
             "published_asc" => PaperSortOrder.PublishedAsc,
+            "score_desc" => PaperSortOrder.ScoreDesc,
             _ => null,
         };
 
         if (sortOrder is null)
         {
             return Problem(statusCode: StatusCodes.Status400BadRequest,
-                detail: "sort must be one of: published_desc, published_asc.");
+                detail: "sort must be one of: published_desc, published_asc, score_desc.");
         }
 
         // Unknown category codes simply match nothing they know; stale
@@ -52,7 +54,8 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
             .ToList();
 
         var result = await queryService.GetPapersAsync(
-            new PaperListQuery(codes, page, Math.Clamp(pageSize, 1, MaxPageSize), sortOrder.Value),
+            new PaperListQuery(
+                codes, page, Math.Clamp(pageSize, 1, MaxPageSize), sortOrder.Value, analyzedOnly),
             ct);
 
         return Ok(result);

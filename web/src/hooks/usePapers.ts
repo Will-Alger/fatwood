@@ -13,6 +13,7 @@ export function usePapers(
   page: number,
   pageSize: number,
   sort: SortOrder,
+  analyzedOnly: boolean,
 ): UsePapersState {
   const [state, setState] = useState<UsePapersState>({
     data: null,
@@ -28,7 +29,13 @@ export function usePapers(
     setState((prev) => ({ ...prev, loading: true, error: null }))
 
     getPapers(
-      { categories: categoriesKey ? categoriesKey.split(',') : [], page, pageSize, sort },
+      {
+        categories: categoriesKey ? categoriesKey.split(',') : [],
+        page,
+        pageSize,
+        sort,
+        analyzedOnly,
+      },
       controller.signal,
     )
       .then((data) => setState({ data, loading: false, error: null }))
@@ -42,7 +49,7 @@ export function usePapers(
       })
 
     return () => controller.abort()
-  }, [categoriesKey, page, pageSize, sort])
+  }, [categoriesKey, page, pageSize, sort, analyzedOnly])
 
   return state
 }
