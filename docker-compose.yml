@@ -27,6 +27,10 @@ services:
       # Passed through from the host shell; empty when unset (analysis then
       # fails with an auth error on first use — browse/ingestion unaffected).
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Dev-only admin key enabling the admin surface (settings, profile,
+      # smart-search compile, analysis triggers). Paste the same value into
+      # the UI's Settings panel. Use a real secret outside local dev.
+      Admin__ApiKey: ${ADMIN_API_KEY:-local-dev-admin}
     ports:
       - "8080:8080"
 
