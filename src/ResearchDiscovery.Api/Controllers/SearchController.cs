@@ -49,6 +49,16 @@ public class SearchController(
         {
             return Problem(statusCode: StatusCodes.Status502BadGateway, detail: ex.Message);
         }
+        catch (Anthropic.Exceptions.AnthropicUnauthorizedException)
+        {
+            return Problem(statusCode: StatusCodes.Status502BadGateway,
+                detail: "The Anthropic API rejected the credentials. Set ANTHROPIC_API_KEY in the API's environment.");
+        }
+        catch (Anthropic.Exceptions.AnthropicApiException ex)
+        {
+            return Problem(statusCode: StatusCodes.Status502BadGateway,
+                detail: $"The Anthropic API call failed: {ex.Message}");
+        }
     }
 
     public sealed record SearchRequest(SearchPlan Plan, int? Limit);
