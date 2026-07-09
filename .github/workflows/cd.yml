@@ -1,0 +1,116 @@
+# CD: build the image in ACR, run schema migrations as a one-off Container
+# Apps job, then roll the API and the ingest cron job to the new image.
+#
+# Auth is OIDC federated credentials — no long-lived cloud secrets in GitHub.
+# Required GitHub SECRETS (identity of the deployer, not credentials):
+#   AZURE_CLIENT_ID        app registration (client) id
+#   AZURE_TENANT_ID        Entra tenant id
+#   AZURE_SUBSCRIPTION_ID  target subscription id
+# Required GitHub VARIABLES (from `az deployment group create` outputs):
+#   AZURE_RESOURCE_GROUP   e.g. rg-researchdiscovery
+#   ACR_NAME               e.g. rdiscacrabc123def456
+#   CONTAINERAPP_NAME      e.g. rdisc-api
+#   MIGRATE_JOB_NAME       e.g. rdisc-migrate
+#   INGEST_JOB_NAME        e.g. rdisc-ingest-delta (unset to skip)
+# The federated credential on the app registration must have subject
+#   repo:<OWNER>/<REPO>:ref:refs/heads/main
+# (issuer https://token.actions.githubusercontent.com, audience
+# api://AzureADTokenExchange) — see DEPLOY.md.
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC token for azure/login
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false # never cancel a deploy mid-migration
+
+env:
+  IMAGE_REPO: researchdiscovery/api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Server-side build: no Docker setup on the runner, layers cached in ACR.
+      - name: Build and push image (ACR build)
+        run: |
+          az acr build \
+            --registry "${{ vars.ACR_NAME }}" \
+            --image "$IMAGE_REPO:${{ github.sha }}" \
+            --image "$IMAGE_REPO:latest" \
+            .
+
+      - name: Run schema migrations (one-off job)
+        run: |
+          set -euo pipefail
+          IMAGE="${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO:${{ github.sha }}"
+
+          az containerapp job update \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.MIGRATE_JOB_NAME }}" \
+            --image "$IMAGE" \
+            --output none
+
+          EXECUTION=$(az containerapp job start \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.MIGRATE_JOB_NAME }}" \
+            --query name -o tsv)
+          echo "Migration execution: $EXECUTION"
+
+          # Poll to completion; fail the deploy if migrations fail.
+          for i in $(seq 1 60); do
+            STATUS=$(az containerapp job execution show \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --name "${{ vars.MIGRATE_JOB_NAME }}" \
+              --job-execution-name "$EXECUTION" \
+              --query properties.status -o tsv)
+            echo "  status: $STATUS"
+            case "$STATUS" in
+              Succeeded) exit 0 ;;
+              Failed|Stopped) echo "Migration job $STATUS"; exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "Timed out waiting for migration job"; exit 1
+
+      - name: Deploy API
+        run: |
+          az containerapp update \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.CONTAINERAPP_NAME }}" \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO:${{ github.sha }}" \
+            --output none
+
+      - name: Roll ingest cron job to new image
+        if: vars.INGEST_JOB_NAME != ''
+        run: |
+          az containerapp job update \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.INGEST_JOB_NAME }}" \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO:${{ github.sha }}" \
+            --output none
+
+      - name: Deployment summary
+        run: |
+          FQDN=$(az containerapp show \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.CONTAINERAPP_NAME }}" \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Deployed $IMAGE_REPO:${{ github.sha }} -> https://$FQDN" >> "$GITHUB_STEP_SUMMARY"

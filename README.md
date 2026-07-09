@@ -321,18 +321,22 @@ dotnet test
   and the LLM (`IPaperAnalyzer`) are stubbed in tests so they never leave the
   process.
 
-## Deployment notes (Azure Container Apps)
+## Deployment (Azure Container Apps)
+
+The full deployment story lives in [DEPLOY.md](DEPLOY.md): Bicep IaC under
+`infra/`, GitHub Actions CI/CD under `.github/workflows/` (OIDC federated
+login — no cloud secrets in GitHub), Key Vault-backed secrets, and schema
+migrations via the [EF migration bundle](https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying#bundles)
+baked into the image (`Database__MigrateOnStartup=false` in the cloud).
+Highlights:
 
 - Single image (this repo's `Dockerfile`): API + built SPA, no CORS needed.
-- Secrets (`ConnectionStrings__Default`, `Admin__ApiKey`) as ACA secrets
-  referenced from env vars; nothing sensitive is committed.
+- Secrets (`ConnectionStrings__Default`, `Admin__ApiKey`, `ANTHROPIC_API_KEY`)
+  flow Key Vault → ACA secret refs via managed identity; nothing sensitive is
+  committed.
 - Database: Azure Database for PostgreSQL Flexible Server.
-- A standard Azure DevOps pipeline maps directly: `Docker@2` build+push to ACR,
-  then `AzureContainerApps@1` deploy. Config is entirely env-driven.
-- For production migrations, prefer a pipeline step running an
-  [EF migration bundle](https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying#bundles)
-  and set `Database__MigrateOnStartup=false`; migrate-on-startup is fine for a
-  single replica.
+- The API scales to zero; the daily delta runs as an ACA cron **job** on the
+  same image with the in-process scheduler disabled.
 
 ## Design decisions & assumptions
 
