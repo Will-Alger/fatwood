@@ -4,19 +4,21 @@ using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Domain.Entities;
 using ResearchDiscovery.Infrastructure.Persistence;
+using ResearchDiscovery.Infrastructure.Profile;
 
 namespace ResearchDiscovery.Infrastructure.Analysis;
 
 /// <summary>
-/// Orchestrates one bounded analysis run: selects the newest not-yet-analyzed
-/// papers in a single category, analyzes them one at a time, and persists
-/// each result immediately so a cancelled run keeps its progress. Re-running
-/// is idempotent — papers with a current-schema analysis are never re-sent
-/// to the model, so no tokens are spent twice.
+/// Orchestrates bounded analysis runs — a category sweep or an explicit
+/// selection (the top slice of a search). Results cache per (paper, schema
+/// version, profile version): re-running is idempotent, and editing the
+/// profile invalidates without deleting (rows re-analyze on demand). Each
+/// result persists immediately so a cancelled run keeps its progress.
 /// </summary>
 public class AnalysisService(
     AppDbContext db,
     IPaperAnalyzer analyzer,
+    ProfileService profileService,
     ILogger<AnalysisService> logger) : IAnalysisService
 {
     public async Task<AnalysisSummary> AnalyzeAsync(AnalysisRequest request, CancellationToken ct)
@@ -28,13 +30,11 @@ public class AnalysisService(
             throw new UnknownCategoryException(request.CategoryCode);
         }
 
-        var candidates = db.Papers
-            .Include(p => p.PrimaryCategory)
-            .Include(p => p.PaperCategories).ThenInclude(pc => pc.Category)
-            .Include(p => p.AnalysisResult)
-            .Where(p => p.PaperCategories.Any(pc => pc.Category.Code == request.CategoryCode))
-            .Where(p => p.AnalysisResult == null
-                || p.AnalysisResult.SchemaVersion < AnalysisOptions.CurrentSchemaVersion);
+        var profile = await profileService.GetAsync(ct);
+        var profileVersion = profile?.Version ?? 0;
+
+        var candidates = SelectStale(profileVersion)
+            .Where(p => p.PaperCategories.Any(pc => pc.Category.Code == request.CategoryCode));
 
         if (request.Since is { } since)
         {
@@ -48,8 +48,45 @@ public class AnalysisService(
             .ToListAsync(ct);
 
         logger.LogInformation(
-            "Analysis run for {Category}: {Count} paper(s) selected (max {Max}, since {Since})",
-            request.CategoryCode, papers.Count, request.MaxPapers, request.Since);
+            "Analysis run for {Category}: {Count} paper(s) selected (max {Max}, since {Since}, profile v{ProfileVersion})",
+            request.CategoryCode, papers.Count, request.MaxPapers, request.Since, profileVersion);
+
+        return await RunAsync(request.CategoryCode, papers, profile, ct);
+    }
+
+    public async Task<AnalysisSummary> AnalyzeSelectionAsync(
+        IReadOnlyList<string> arxivIds, CancellationToken ct)
+    {
+        var ids = arxivIds.Distinct(StringComparer.Ordinal).ToList();
+        var profile = await profileService.GetAsync(ct);
+        var profileVersion = profile?.Version ?? 0;
+
+        var papers = await SelectStale(profileVersion)
+            .Where(p => ids.Contains(p.ArxivId))
+            .ToListAsync(ct);
+
+        logger.LogInformation(
+            "Selection analysis: {Stale} of {Requested} paper(s) need analysis (profile v{ProfileVersion})",
+            papers.Count, ids.Count, profileVersion);
+
+        return await RunAsync("selection", papers, profile, ct);
+    }
+
+    /// <summary>Papers whose analysis is missing or stale for the current schema + profile.</summary>
+    private IQueryable<Paper> SelectStale(int profileVersion) =>
+        db.Papers
+            .Include(p => p.PrimaryCategory)
+            .Include(p => p.PaperCategories).ThenInclude(pc => pc.Category)
+            .Include(p => p.AnalysisResult)
+            .Where(p => p.AnalysisResult == null
+                || p.AnalysisResult.SchemaVersion < AnalysisOptions.CurrentSchemaVersion
+                || p.AnalysisResult.ProfileVersion != profileVersion);
+
+    private async Task<AnalysisSummary> RunAsync(
+        string label, List<Paper> papers, UserProfile? profile, CancellationToken ct)
+    {
+        var profileDescription = ProfileService.Describe(profile);
+        var profileVersion = profile?.Version ?? 0;
 
         var analyzed = 0;
         var declined = 0;
@@ -61,7 +98,8 @@ public class AnalysisService(
 
             try
             {
-                var analysis = await analyzer.AnalyzeAsync(paper, ct);
+                var analysis = await analyzer.AnalyzeAsync(
+                    paper, profileDescription, profileVersion, ct);
                 if (analysis is null)
                 {
                     declined++;
@@ -71,6 +109,7 @@ public class AnalysisService(
                 if (paper.AnalysisResult is { } stale)
                 {
                     stale.SchemaVersion = analysis.SchemaVersion;
+                    stale.ProfileVersion = analysis.ProfileVersion;
                     stale.Model = analysis.Model;
                     stale.ResultJson = analysis.ResultJson;
                     stale.CompositeScore = analysis.CompositeScore;
@@ -82,6 +121,7 @@ public class AnalysisService(
                     {
                         PaperId = paper.Id,
                         SchemaVersion = analysis.SchemaVersion,
+                        ProfileVersion = analysis.ProfileVersion,
                         Model = analysis.Model,
                         ResultJson = analysis.ResultJson,
                         CompositeScore = analysis.CompositeScore,
@@ -119,6 +159,6 @@ public class AnalysisService(
             }
         }
 
-        return new AnalysisSummary(request.CategoryCode, papers.Count, analyzed, declined, failed);
+        return new AnalysisSummary(label, papers.Count, analyzed, declined, failed);
     }
 }

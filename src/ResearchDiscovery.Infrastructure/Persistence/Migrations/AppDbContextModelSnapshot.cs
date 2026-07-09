@@ -45,6 +45,9 @@ namespace ResearchDiscovery.Infrastructure.Persistence.Migrations
                     b.Property<long>("PaperId")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("ProfileVersion")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ResultJson")
                         .IsRequired()
                         .HasColumnType("text");
@@ -164,6 +167,25 @@ namespace ResearchDiscovery.Infrastructure.Persistence.Migrations
                     b.ToTable("IngestionRuns");
                 });
 
+            modelBuilder.Entity("ResearchDiscovery.Domain.Entities.LlmStepConfig", b =>
+                {
+                    b.Property<string>("Step")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Step");
+
+                    b.ToTable("LlmStepConfigs");
+                });
+
             modelBuilder.Entity("ResearchDiscovery.Domain.Entities.Paper", b =>
                 {
                     b.Property<long>("Id")
@@ -189,6 +211,10 @@ namespace ResearchDiscovery.Infrastructure.Persistence.Migrations
                     b.Property<string>("Authors")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("CodeUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("Doi")
                         .HasMaxLength(255)
@@ -249,6 +275,55 @@ namespace ResearchDiscovery.Infrastructure.Persistence.Migrations
                     b.ToTable("PaperCategories");
                 });
 
+            modelBuilder.Entity("ResearchDiscovery.Domain.Entities.PaperEmbedding", b =>
+                {
+                    b.Property<long>("PaperId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<byte[]>("Vector")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("PaperId");
+
+                    b.ToTable("PaperEmbeddings");
+                });
+
+            modelBuilder.Entity("ResearchDiscovery.Domain.Entities.UserProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ExperienceSummary")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Goals")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WeeklyHours")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserProfiles");
+                });
+
             modelBuilder.Entity("ResearchDiscovery.Domain.Entities.AnalysisResult", b =>
                 {
                     b.HasOne("ResearchDiscovery.Domain.Entities.Paper", "Paper")
@@ -301,6 +376,17 @@ namespace ResearchDiscovery.Infrastructure.Persistence.Migrations
                     b.Navigation("Paper");
                 });
 
+            modelBuilder.Entity("ResearchDiscovery.Domain.Entities.PaperEmbedding", b =>
+                {
+                    b.HasOne("ResearchDiscovery.Domain.Entities.Paper", "Paper")
+                        .WithOne("Embedding")
+                        .HasForeignKey("ResearchDiscovery.Domain.Entities.PaperEmbedding", "PaperId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Paper");
+                });
+
             modelBuilder.Entity("ResearchDiscovery.Domain.Entities.Category", b =>
                 {
                     b.Navigation("PaperCategories");
@@ -309,6 +395,8 @@ namespace ResearchDiscovery.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ResearchDiscovery.Domain.Entities.Paper", b =>
                 {
                     b.Navigation("AnalysisResult");
+
+                    b.Navigation("Embedding");
 
                     b.Navigation("PaperCategories");
                 });

@@ -14,15 +14,9 @@ public class AnalysisOptions
     /// <summary>
     /// Version of the analysis JSON contract produced by the current code.
     /// Bump when the schema changes; stale rows can then be re-analyzed.
+    /// v2 = personalized (profile-aware) contract.
     /// </summary>
-    public const int CurrentSchemaVersion = 1;
-
-    /// <summary>
-    /// Analysis runs one LLM call per paper across whole categories, so the
-    /// default is deliberately a cheap model, not a frontier one.
-    /// </summary>
-    [Required]
-    public string Model { get; set; } = "claude-haiku-4-5-20251001";
+    public const int CurrentSchemaVersion = 2;
 
     /// <summary>
     /// Optional server-side fallback model for policy declines; empty

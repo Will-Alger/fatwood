@@ -10,17 +10,22 @@ public class AnalysisQueueHostedService(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await foreach (var request in queue.DequeueAllAsync(stoppingToken))
+        await foreach (var job in queue.DequeueAllAsync(stoppingToken))
         {
             try
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var analysis = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
 
-                var summary = await analysis.AnalyzeAsync(request, stoppingToken);
+                var summary = job switch
+                {
+                    AnalysisJob.Category c => await analysis.AnalyzeAsync(c.Request, stoppingToken),
+                    AnalysisJob.Selection s => await analysis.AnalyzeSelectionAsync(s.ArxivIds, stoppingToken),
+                    _ => throw new InvalidOperationException($"Unknown job type {job.GetType().Name}"),
+                };
 
                 logger.LogInformation(
-                    "Admin-triggered analysis of {Category} finished: " +
+                    "Admin-triggered analysis of {Label} finished: " +
                     "selected {Selected}, analyzed {Analyzed}, declined {Declined}, failed {Failed}",
                     summary.CategoryCode, summary.PapersSelected, summary.PapersAnalyzed,
                     summary.PapersDeclined, summary.PapersFailed);
@@ -37,7 +42,7 @@ public class AnalysisQueueHostedService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Admin-triggered analysis of {Category} failed", request.CategoryCode);
+                logger.LogError(ex, "Admin-triggered analysis job failed");
             }
         }
     }

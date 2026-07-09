@@ -16,6 +16,12 @@ public class AnalysisResult
     /// <summary>Version of the analysis JSON contract, for forward migration.</summary>
     public int SchemaVersion { get; set; }
 
+    /// <summary>
+    /// UserProfile.Version this analysis was produced against. Analyses go
+    /// stale when the profile changes (0 = pre-personalization rows).
+    /// </summary>
+    public int ProfileVersion { get; set; }
+
     /// <summary>Model identifier that produced the analysis.</summary>
     public required string Model { get; set; }
 

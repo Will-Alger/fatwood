@@ -20,6 +20,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<AnalysisResult> AnalysisResults => Set<AnalysisResult>();
 
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+
+    public DbSet<LlmStepConfig> LlmStepConfigs => Set<LlmStepConfig>();
+
+    public DbSet<PaperEmbedding> PaperEmbeddings => Set<PaperEmbedding>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

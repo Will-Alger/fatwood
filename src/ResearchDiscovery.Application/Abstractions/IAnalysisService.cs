@@ -8,6 +8,14 @@ namespace ResearchDiscovery.Application.Abstractions;
 public interface IAnalysisService
 {
     Task<AnalysisSummary> AnalyzeAsync(AnalysisRequest request, CancellationToken ct);
+
+    /// <summary>
+    /// Analyzes a specific set of papers (typically the top slice of a search)
+    /// rather than a category sweep. Papers with a current analysis (same
+    /// schema and profile version) are skipped — no tokens are spent twice.
+    /// </summary>
+    Task<AnalysisSummary> AnalyzeSelectionAsync(
+        IReadOnlyList<string> arxivIds, CancellationToken ct);
 }
 
 public sealed record AnalysisRequest(

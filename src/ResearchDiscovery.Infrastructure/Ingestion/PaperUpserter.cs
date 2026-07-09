@@ -138,6 +138,7 @@ public class PaperUpserter(
             AbsUrl = entry.AbsUrl,
             PdfUrl = entry.PdfUrl,
             Doi = entry.Doi,
+            CodeUrl = entry.CodeUrl,
             FirstIngestedUtc = now,
             LastSeenUtc = now,
             PaperCategories = entry.Categories
@@ -165,7 +166,8 @@ public class PaperUpserter(
             paper.UpdatedUtc != entry.Updated ||
             paper.AbsUrl != entry.AbsUrl ||
             paper.PdfUrl != entry.PdfUrl ||
-            paper.Doi != entry.Doi;
+            paper.Doi != entry.Doi ||
+            paper.CodeUrl != entry.CodeUrl;
 
         paper.LatestVersion = entry.Version;
         paper.Title = entry.Title;
@@ -177,6 +179,7 @@ public class PaperUpserter(
         paper.AbsUrl = entry.AbsUrl;
         paper.PdfUrl = entry.PdfUrl;
         paper.Doi = entry.Doi;
+        paper.CodeUrl = entry.CodeUrl;
         paper.LastSeenUtc = now;
 
         var targetIds = entry.Categories.Select(code => categoryIdCache[code]).ToHashSet();

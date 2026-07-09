@@ -14,7 +14,8 @@ public sealed record PaperDto(
     string AbsUrl,
     string PdfUrl,
     string? Doi,
-    PaperAnalysisDto? Analysis = null);
+    PaperAnalysisDto? Analysis = null,
+    string? CodeUrl = null);
 
 /// <summary>
 /// Stored analysis surfaced to the browse UI. Details is the structured JSON

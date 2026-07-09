@@ -20,6 +20,7 @@ public class IngestionService(
     PaperUpserter upserter,
     IIngestionLockManager lockManager,
     IDbContextFactory<AppDbContext> dbFactory,
+    IPaperEmbeddingService embeddingService,
     IOptions<ArxivOptions> arxivOptions,
     IOptions<IngestionOptions> ingestionOptions,
     ILogger<IngestionService> logger) : IIngestionService
@@ -87,6 +88,24 @@ public class IngestionService(
             logger.LogInformation(
                 "Ingestion run {RunId} ({Trigger}) finished: fetched {Fetched}, added {Added}, updated {Updated}, failed categories: {FailedCount}",
                 run.Id, trigger, fetched, added, updated, errors.Count);
+
+            // Embed newly ingested papers so search stays current. Embedding
+            // failures never fail the ingestion run — the `embed` CLI can
+            // always catch up later.
+            if (added > 0 || updated > 0)
+            {
+                try
+                {
+                    await embeddingService.EmbedMissingAsync(ct);
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Post-ingestion embedding failed; run `embed` to catch up");
+                }
+            }
 
             return new IngestionRunSummary(run.Id, status, fetched, added, updated, error);
         }

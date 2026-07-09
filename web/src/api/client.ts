@@ -1,12 +1,80 @@
-import type { CategoryDto, PagedResult, PaperDto, SortOrder } from './types'
+import type {
+  CategoryDto,
+  LlmSettingsView,
+  PagedResult,
+  PaperDto,
+  ProfileView,
+  SearchPlan,
+  SearchResult,
+  SortOrder,
+} from './types'
 
-async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, { signal })
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} ${response.statusText}`)
+const ADMIN_KEY_STORAGE = 'researchDiscovery.adminKey'
+
+export function getAdminKey(): string {
+  return localStorage.getItem(ADMIN_KEY_STORAGE) ?? ''
+}
+
+export function setAdminKey(key: string) {
+  if (key) {
+    localStorage.setItem(ADMIN_KEY_STORAGE, key)
+  } else {
+    localStorage.removeItem(ADMIN_KEY_STORAGE)
   }
+}
+
+function adminHeaders(): Record<string, string> {
+  const key = getAdminKey()
+  return key ? { 'X-Admin-Api-Key': key } : {}
+}
+
+async function parseError(response: Response): Promise<Error> {
+  let detail = `${response.status} ${response.statusText}`
+  try {
+    const body = await response.json()
+    if (typeof body?.detail === 'string') detail = body.detail
+  } catch {
+    // Non-JSON error body — keep the status text.
+  }
+  if (response.status === 404 && getAdminKey() === '') {
+    detail = 'Admin features are disabled. Set the admin API key in Settings.'
+  }
+  if (response.status === 401) {
+    detail = 'Admin API key is incorrect. Update it in Settings.'
+  }
+  return new Error(detail)
+}
+
+async function getJson<T>(url: string, signal?: AbortSignal, admin = false): Promise<T> {
+  const response = await fetch(url, {
+    signal,
+    headers: admin ? adminHeaders() : undefined,
+  })
+  if (!response.ok) throw await parseError(response)
   return (await response.json()) as T
 }
+
+async function sendJson<T>(
+  method: 'POST' | 'PUT',
+  url: string,
+  body: unknown,
+  options: { admin?: boolean; signal?: AbortSignal } = {},
+): Promise<T> {
+  const response = await fetch(url, {
+    method,
+    signal: options.signal,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.admin ? adminHeaders() : {}),
+    },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) throw await parseError(response)
+  if (response.status === 204) return undefined as T
+  return (await response.json()) as T
+}
+
+// --- Browse ---
 
 export interface GetPapersParams {
   categories: string[]
@@ -36,4 +104,51 @@ export function getPapers(
 
 export function getCategories(signal?: AbortSignal): Promise<CategoryDto[]> {
   return getJson('/api/categories', signal)
+}
+
+// --- Smart search ---
+
+export function compileSearch(query: string, signal?: AbortSignal): Promise<SearchPlan> {
+  return sendJson('POST', '/api/search/compile', { query }, { admin: true, signal })
+}
+
+export function runSearch(
+  plan: SearchPlan,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  return sendJson('POST', '/api/search', { plan, limit }, { signal })
+}
+
+// --- Analysis ---
+
+export function analyzeSelection(arxivIds: string[]): Promise<{ message: string }> {
+  return sendJson('POST', '/api/admin/analysis/selection', { arxivIds }, { admin: true })
+}
+
+// --- Settings ---
+
+export function getLlmSettings(signal?: AbortSignal): Promise<LlmSettingsView> {
+  return getJson('/api/admin/settings/llm', signal, true)
+}
+
+export function setLlmAssignment(step: string, modelId: string): Promise<void> {
+  return sendJson('PUT', '/api/admin/settings/llm', { step, modelId }, { admin: true })
+}
+
+export function getProfile(signal?: AbortSignal): Promise<ProfileView> {
+  return getJson('/api/admin/settings/profile', signal, true)
+}
+
+export function saveProfile(
+  experienceSummary: string,
+  goals: string,
+  weeklyHours: number | null,
+): Promise<ProfileView> {
+  return sendJson(
+    'PUT',
+    '/api/admin/settings/profile',
+    { experienceSummary, goals, weeklyHours },
+    { admin: true },
+  )
 }

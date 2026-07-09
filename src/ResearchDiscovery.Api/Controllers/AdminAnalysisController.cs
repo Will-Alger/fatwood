@@ -59,7 +59,7 @@ public class AdminAnalysisController(
             request.MaxPapers ?? options.Value.DefaultMaxPapers,
             request.SinceDays is { } d and > 0 ? DateTimeOffset.UtcNow.AddDays(-d) : null);
 
-        if (!queue.TryEnqueue(job))
+        if (!queue.TryEnqueue(new AnalysisJob.Category(job)))
         {
             return Problem(statusCode: StatusCodes.Status429TooManyRequests,
                 detail: "The analysis queue is full; try again once queued runs complete.");
@@ -68,6 +68,41 @@ public class AdminAnalysisController(
         return Accepted(value: new
         {
             message = $"Analysis run for {job.CategoryCode} queued ({job.MaxPapers} paper cap).",
+            checkStatusAt = "/api/admin/analysis/coverage",
+        });
+    }
+
+    public sealed record SelectionRequest(IReadOnlyList<string> ArxivIds);
+
+    /// <summary>
+    /// Analyzes an explicit paper set — the "Analyze top N" action on search
+    /// results. Already-current analyses are skipped server-side, so the
+    /// enqueued set costs at most its stale members.
+    /// </summary>
+    [HttpPost("selection")]
+    public IActionResult TriggerSelection([FromBody] SelectionRequest request)
+    {
+        if (request.ArxivIds is not { Count: > 0 })
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "arxivIds must be a non-empty list.");
+        }
+
+        if (request.ArxivIds.Count > 200)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "At most 200 papers per selection run.");
+        }
+
+        if (!queue.TryEnqueue(new AnalysisJob.Selection(request.ArxivIds)))
+        {
+            return Problem(statusCode: StatusCodes.Status429TooManyRequests,
+                detail: "The analysis queue is full; try again once queued runs complete.");
+        }
+
+        return Accepted(value: new
+        {
+            message = $"Selection analysis queued ({request.ArxivIds.Count} paper(s)).",
             checkStatusAt = "/api/admin/analysis/coverage",
         });
     }

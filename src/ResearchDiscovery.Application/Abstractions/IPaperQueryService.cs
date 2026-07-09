@@ -23,5 +23,9 @@ public interface IPaperQueryService
 {
     Task<PagedResult<PaperDto>> GetPapersAsync(PaperListQuery query, CancellationToken ct);
 
+    /// <summary>DTOs for a specific id set (search results); keyed by paper id.</summary>
+    Task<IReadOnlyDictionary<long, PaperDto>> GetPapersByIdsAsync(
+        IReadOnlyCollection<long> paperIds, CancellationToken ct);
+
     Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync(CancellationToken ct);
 }

@@ -19,6 +19,11 @@ if (args.Length > 0 && args[0].Equals("analyze", StringComparison.OrdinalIgnoreC
     return await AnalyzeCommandRunner.RunAsync(args);
 }
 
+if (args.Length > 0 && args[0].Equals("embed", StringComparison.OrdinalIgnoreCase))
+{
+    return await EmbedCommandRunner.RunAsync();
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);

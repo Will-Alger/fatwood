@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ResearchDiscovery.Application.Abstractions;
+using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Persistence;
 using Xunit;
 
@@ -34,7 +35,7 @@ public class AnalysisServiceTests
             {
                 Assert.Equal(50m, r.CompositeScore);
                 Assert.Equal("stub-model", r.Model);
-                Assert.Equal(1, r.SchemaVersion);
+                Assert.Equal(AnalysisOptions.CurrentSchemaVersion, r.SchemaVersion);
             });
         }
 

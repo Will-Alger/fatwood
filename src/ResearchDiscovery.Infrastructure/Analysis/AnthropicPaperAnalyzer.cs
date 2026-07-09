@@ -10,33 +10,32 @@ using ResearchDiscovery.Domain.Entities;
 namespace ResearchDiscovery.Infrastructure.Analysis;
 
 /// <summary>
-/// Calls the Anthropic API (an inexpensive model — claude-haiku-4-5 by
-/// default, since this runs once per paper across whole categories) to
-/// produce the structured analysis JSON for a single paper. Structured
-/// outputs enforce the schema server-side; policy declines are skipped, or
-/// rescued by an optional configured fallback model.
+/// LLM call site #2: the personalized per-paper analysis. The model comes from
+/// the UI-configurable per-step settings (default: a cheap model — this runs
+/// once per paper over ranked slices). Structured outputs enforce the schema
+/// server-side; policy declines are counted and skipped, or rescued by an
+/// optional configured fallback model.
 /// </summary>
 public class AnthropicPaperAnalyzer(
     AnthropicClient client,
+    ILlmSettingsService settings,
     IOptions<AnalysisOptions> options,
     ILogger<AnthropicPaperAnalyzer> logger) : IPaperAnalyzer
 {
-    public async Task<PaperAnalysis?> AnalyzeAsync(Paper paper, CancellationToken ct)
+    public async Task<PaperAnalysis?> AnalyzeAsync(
+        Paper paper, string? profileDescription, int profileVersion, CancellationToken ct)
     {
         var opts = options.Value;
+        var model = await settings.GetModelForStepAsync(LlmOptions.StepPaperAnalysis, ct);
 
         var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
             AnalysisContract.SchemaJson)!;
 
-        // Effort is only sent when configured (not every model supports it);
-        // the fallback chain is only wired up when a fallback model is
-        // configured — the default is no fallback, so a decline just skips
-        // the paper, which costs nothing.
         var useFallback = opts.FallbackModel is { Length: > 0 };
 
         var parameters = new MessageCreateParams
         {
-            Model = opts.Model,
+            Model = model.Id,
             MaxTokens = opts.MaxOutputTokens,
             Betas = useFallback ? ["server-side-fallback-2026-06-01"] : null,
             Fallbacks = useFallback ? [new() { Model = opts.FallbackModel! }] : null,
@@ -57,12 +56,14 @@ public class AnthropicPaperAnalyzer(
                 {
                     Role = Role.User,
                     Content = AnalysisContract.BuildUserPrompt(
+                        profileDescription,
                         paper.ArxivId,
                         paper.Title,
                         paper.Authors,
                         paper.PrimaryCategory?.Code ?? "unknown",
                         paper.PaperCategories.Select(pc => pc.Category.Code),
                         paper.PublishedUtc,
+                        paper.CodeUrl,
                         paper.Abstract),
                 },
             ],
@@ -104,6 +105,7 @@ public class AnthropicPaperAnalyzer(
             resultJson,
             decimal.Round(compositeScore, 2),
             $"{response.Model}",
-            AnalysisOptions.CurrentSchemaVersion);
+            AnalysisOptions.CurrentSchemaVersion,
+            profileVersion);
     }
 }

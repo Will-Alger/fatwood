@@ -44,15 +44,17 @@ public class AnalysisContractTests
     }
 
     [Fact]
-    public void UserPrompt_ContainsAllPaperFields()
+    public void UserPrompt_ContainsAllPaperFieldsAndProfile()
     {
         var prompt = AnalysisContract.BuildUserPrompt(
+            "Experience: 3 years fullstack.\nGoals: fintech in NYC.",
             "2501.12345",
             "A Great Paper",
             "Ada Lovelace; Alan Turing",
             "cs.LG",
             ["cs.LG", "q-fin.TR"],
             new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero),
+            "https://github.com/example/repo",
             "We prove things.");
 
         Assert.Contains("2501.12345", prompt);
@@ -61,5 +63,25 @@ public class AnalysisContractTests
         Assert.Contains("cs.LG, q-fin.TR", prompt);
         Assert.Contains("2026-06-01", prompt);
         Assert.Contains("We prove things.", prompt);
+        Assert.Contains("3 years fullstack", prompt);
+        Assert.Contains("https://github.com/example/repo", prompt);
+    }
+
+    [Fact]
+    public void UserPrompt_WithoutProfile_FallsBackToGeneralist()
+    {
+        var prompt = AnalysisContract.BuildUserPrompt(
+            null,
+            "2501.12345",
+            "A Great Paper",
+            "Ada Lovelace",
+            "cs.LG",
+            ["cs.LG"],
+            new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero),
+            null,
+            "We prove things.");
+
+        Assert.Contains("generalist software engineer", prompt);
+        Assert.Contains("none advertised", prompt);
     }
 }

@@ -7,9 +7,13 @@ using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Analysis;
 using ResearchDiscovery.Infrastructure.Arxiv;
+using ResearchDiscovery.Infrastructure.Embeddings;
 using ResearchDiscovery.Infrastructure.Ingestion;
+using ResearchDiscovery.Infrastructure.Llm;
 using ResearchDiscovery.Infrastructure.Persistence;
+using ResearchDiscovery.Infrastructure.Profile;
 using ResearchDiscovery.Infrastructure.Queries;
+using ResearchDiscovery.Infrastructure.Search;
 
 namespace ResearchDiscovery.Infrastructure.DependencyInjection;
 
@@ -88,6 +92,32 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(_ => new AnthropicClient());
         services.AddScoped<IPaperAnalyzer, AnthropicPaperAnalyzer>();
         services.AddScoped<IAnalysisService, AnalysisService>();
+
+        // Personalized discovery: LLM registry/settings, profile, local
+        // embeddings, and the search pipeline.
+        services.AddOptions<LlmOptions>()
+            .Bind(configuration.GetSection(LlmOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<EmbeddingOptions>()
+            .Bind(configuration.GetSection(EmbeddingOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddSingleton<ILlmSettingsService, LlmSettingsService>();
+        services.AddSingleton<ProfileService>();
+
+        // The embedder is a singleton: it owns the loaded ONNX session. The
+        // named client is only used to download model files on first use.
+        services.AddHttpClient(OnnxTextEmbedder.HttpClientName, client =>
+            client.Timeout = TimeSpan.FromMinutes(10));
+        services.AddSingleton<ITextEmbedder, OnnxTextEmbedder>();
+        services.AddSingleton<IEmbeddingIndex, InMemoryEmbeddingIndex>();
+        services.AddSingleton<IPaperEmbeddingService, PaperEmbeddingService>();
+
+        services.AddScoped<ISearchService, SearchService>();
+        services.AddScoped<ISearchPlanCompiler, AnthropicSearchPlanCompiler>();
 
         return services;
     }

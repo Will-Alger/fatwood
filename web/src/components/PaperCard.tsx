@@ -24,10 +24,17 @@ function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
       <p className="analysis-summary">{d.summary}</p>
       <dl className="analysis-grid">
         <div>
-          <dt>Feasibility</dt>
+          <dt>Feasibility for you</dt>
           <dd>
-            {d.feasibility_score}/10 — {d.feasibility_rationale}
+            {d.feasibility_score}/10
+            {d.hard_blockers.length > 0
+              ? ` — blockers: ${d.hard_blockers.join('; ')}`
+              : ' — no hard blockers'}
           </dd>
+        </div>
+        <div>
+          <dt>Learning bridge</dt>
+          <dd>{d.learning_bridge}</dd>
         </div>
         <div>
           <dt>Effort</dt>
@@ -44,12 +51,12 @@ function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
           <dd>{d.reference_code_likelihood} likelihood it already exists</dd>
         </div>
         <div>
-          <dt>Resume signal</dt>
-          <dd>{d.resume_signal}</dd>
+          <dt>Goal alignment</dt>
+          <dd>{d.goal_alignment_score}/10</dd>
         </div>
         <div>
-          <dt>Fintech relevance</dt>
-          <dd>{d.fintech_relevance_score}/10</dd>
+          <dt>Resume signal</dt>
+          <dd>{d.resume_signal}</dd>
         </div>
         <div>
           <dt>Extension idea</dt>
@@ -72,7 +79,14 @@ function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
   )
 }
 
-export function PaperCard({ paper }: { paper: PaperDto }) {
+export interface PaperCardProps {
+  paper: PaperDto
+  matchScore?: number
+  isWildcard?: boolean
+  experienceProximity?: 'close' | 'stretch' | null
+}
+
+export function PaperCard({ paper, matchScore, isWildcard, experienceProximity }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
 
@@ -91,19 +105,42 @@ export function PaperCard({ paper }: { paper: PaperDto }) {
       : `${paper.abstract.slice(0, ABSTRACT_PREVIEW_LENGTH).trimEnd()}…`
 
   return (
-    <article className="paper-card">
+    <article className={isWildcard ? 'paper-card paper-card-wildcard' : 'paper-card'}>
       <h3>
         <a href={paper.absUrl} target="_blank" rel="noreferrer">
           {paper.title}
         </a>
       </h3>
       <div className="paper-meta">
+        {isWildcard && (
+          <span
+            className="badge badge-wildcard"
+            title="Outside your usual territory but highly relevant to this search — deliberate serendipity"
+          >
+            ✦ wildcard
+          </span>
+        )}
         {score !== null && (
           <span
             className={`badge badge-score ${scoreTier(score)}`}
-            title="Solo-project suitability score (0–100)"
+            title="Personalized project-fit score (0–100)"
           >
             ★ {Math.round(score)}
+          </span>
+        )}
+        {matchScore !== undefined && (
+          <span className="badge badge-match" title="Relevance to this search">
+            {Math.round(matchScore * 100)}% match
+          </span>
+        )}
+        {experienceProximity === 'close' && (
+          <span className="badge badge-close" title="Close to your existing experience">
+            close to home
+          </span>
+        )}
+        {experienceProximity === 'stretch' && (
+          <span className="badge badge-stretch" title="A stretch beyond your experience — bigger learning bridge">
+            stretch
           </span>
         )}
         <span className="paper-date">{published}</span>
@@ -135,6 +172,11 @@ export function PaperCard({ paper }: { paper: PaperDto }) {
         {paper.doi && (
           <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
             DOI
+          </a>
+        )}
+        {paper.codeUrl && (
+          <a href={paper.codeUrl} target="_blank" rel="noreferrer" title="Code advertised by the authors">
+            Code ↗
           </a>
         )}
         {paper.analysis && (

@@ -370,3 +370,265 @@ body {
     flex: none;
   }
 }
+
+/* Header + tabs */
+
+.app-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.app-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.tab {
+  font: inherit;
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tab-active {
+  background: var(--card-bg);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Discover */
+
+.discover {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.search-box {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.search-box textarea {
+  flex: 1;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.search-box button,
+.results-header button,
+.settings-panel button:not(.link-button) {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.search-box button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.plan-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.plan-interpretation {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+}
+
+.plan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  background: var(--bg);
+}
+
+.chip button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.chip select {
+  font: inherit;
+  font-size: 0.82rem;
+  border: none;
+  background: transparent;
+}
+
+.chip-toggle {
+  cursor: pointer;
+}
+
+.plan-anchor {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.plan-anchor textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Search badges */
+
+.badge-match {
+  color: var(--accent);
+  border-color: transparent;
+  background: var(--accent-soft);
+}
+
+.badge-wildcard {
+  color: #7a2e8d;
+  background: #f5e8fa;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.badge-close {
+  color: #05603a;
+  background: #e6f4ee;
+  border-color: transparent;
+}
+
+.badge-stretch {
+  color: #93370d;
+  background: #fdf0e3;
+  border-color: transparent;
+}
+
+.paper-card-wildcard {
+  border-color: #d5b3e0;
+}
+
+.status-notice {
+  color: #05603a;
+}
+
+/* Settings */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 33, 0.45);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 10;
+}
+
+.settings-panel {
+  width: min(440px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--card-bg);
+  padding: 1.25rem 1.5rem 3rem;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.settings-panel h3 {
+  margin: 1.4rem 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.settings-hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.settings-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.settings-row input[type='password'] {
+  flex: 1;
+}
+
+.settings-model-row {
+  justify-content: space-between;
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
+}
+
+.settings-panel label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+
+.settings-panel textarea,
+.settings-panel input[type='password'],
+.settings-panel input[type='number'],
+.settings-panel select {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.settings-model-row select {
+  width: auto;
+  margin-top: 0;
+}

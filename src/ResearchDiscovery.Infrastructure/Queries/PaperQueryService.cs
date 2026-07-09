@@ -45,57 +45,92 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
                 papers.OrderByDescending(p => p.PublishedUtc).ThenByDescending(p => p.Id),
         };
 
-        var rows = await papers
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(p => new
-            {
-                p.ArxivId,
-                p.Title,
-                p.Abstract,
-                p.Authors,
-                PrimaryCategory = p.PrimaryCategory.Code,
-                Categories = p.PaperCategories.Select(pc => pc.Category.Code).ToList(),
-                p.PublishedUtc,
-                p.UpdatedUtc,
-                p.AbsUrl,
-                p.PdfUrl,
-                p.Doi,
-                Analysis = p.AnalysisResult == null ? null : new
-                {
-                    p.AnalysisResult.CompositeScore,
-                    p.AnalysisResult.Model,
-                    p.AnalysisResult.SchemaVersion,
-                    p.AnalysisResult.CreatedUtc,
-                    p.AnalysisResult.ResultJson,
-                },
-            })
+        var rows = await ProjectRows(
+                papers.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize))
             .ToListAsync(ct);
 
-        var items = rows
-            .Select(r => new PaperDto(
-                r.ArxivId,
-                r.Title,
-                r.Abstract,
-                r.Authors.Split("; ", StringSplitOptions.RemoveEmptyEntries),
-                r.PrimaryCategory,
-                r.Categories,
-                r.PublishedUtc,
-                r.UpdatedUtc,
-                r.AbsUrl,
-                r.PdfUrl,
-                r.Doi,
-                r.Analysis == null ? null : new PaperAnalysisDto(
-                    r.Analysis.CompositeScore,
-                    r.Analysis.Model,
-                    r.Analysis.SchemaVersion,
-                    r.Analysis.CreatedUtc,
-                    ParseDetails(r.Analysis.ResultJson))))
-            .ToList();
+        var items = rows.Select(r => ToDto(r)).ToList();
 
         var totalPages = totalItems == 0 ? 0 : (int)Math.Ceiling(totalItems / (double)query.PageSize);
         return new PagedResult<PaperDto>(items, query.Page, query.PageSize, totalItems, totalPages);
     }
+
+    public async Task<IReadOnlyDictionary<long, PaperDto>> GetPapersByIdsAsync(
+        IReadOnlyCollection<long> paperIds, CancellationToken ct)
+    {
+        var ids = paperIds.ToList();
+        var rows = await ProjectRows(
+                db.Papers.AsNoTracking().Where(p => ids.Contains(p.Id)))
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(r => r.Id, r => ToDto(r));
+    }
+
+    private static IQueryable<PaperRow> ProjectRows(IQueryable<Domain.Entities.Paper> papers) =>
+        papers.Select(p => new PaperRow(
+            p.Id,
+            p.ArxivId,
+            p.Title,
+            p.Abstract,
+            p.Authors,
+            p.PrimaryCategory.Code,
+            p.PaperCategories.Select(pc => pc.Category.Code).ToList(),
+            p.PublishedUtc,
+            p.UpdatedUtc,
+            p.AbsUrl,
+            p.PdfUrl,
+            p.Doi,
+            p.CodeUrl,
+            p.AnalysisResult == null ? null : new AnalysisRow(
+                p.AnalysisResult.CompositeScore,
+                p.AnalysisResult.Model,
+                p.AnalysisResult.SchemaVersion,
+                p.AnalysisResult.CreatedUtc,
+                p.AnalysisResult.ResultJson)));
+
+    private static PaperDto ToDto(PaperRow r) =>
+        new(
+            r.ArxivId,
+            r.Title,
+            r.Abstract,
+            r.Authors.Split("; ", StringSplitOptions.RemoveEmptyEntries),
+            r.PrimaryCategory,
+            r.Categories,
+            r.PublishedUtc,
+            r.UpdatedUtc,
+            r.AbsUrl,
+            r.PdfUrl,
+            r.Doi,
+            r.Analysis == null ? null : new PaperAnalysisDto(
+                r.Analysis.CompositeScore,
+                r.Analysis.Model,
+                r.Analysis.SchemaVersion,
+                r.Analysis.CreatedUtc,
+                ParseDetails(r.Analysis.ResultJson)),
+            r.CodeUrl);
+
+    private sealed record PaperRow(
+        long Id,
+        string ArxivId,
+        string Title,
+        string Abstract,
+        string Authors,
+        string PrimaryCategory,
+        List<string> Categories,
+        DateTimeOffset PublishedUtc,
+        DateTimeOffset UpdatedUtc,
+        string AbsUrl,
+        string PdfUrl,
+        string? Doi,
+        string? CodeUrl,
+        AnalysisRow? Analysis);
+
+    private sealed record AnalysisRow(
+        decimal? CompositeScore,
+        string Model,
+        int SchemaVersion,
+        DateTimeOffset CreatedUtc,
+        string ResultJson);
 
     /// <summary>
     /// The stored JSON is model-produced and schema-validated at write time,
