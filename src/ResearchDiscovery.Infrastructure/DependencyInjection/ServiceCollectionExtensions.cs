@@ -79,6 +79,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IIngestionLockManager, DbIngestionLockManager>();
         services.AddScoped<IIngestionService, IngestionService>();
         services.AddScoped<IPaperQueryService, PaperQueryService>();
+        services.AddScoped<IBookmarkService, BookmarkService>();
 
         services.AddOptions<AnalysisOptions>()
             .Bind(configuration.GetSection(AnalysisOptions.SectionName))

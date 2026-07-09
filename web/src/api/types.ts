@@ -14,6 +14,7 @@ export interface PaperDto {
   doi: string | null
   analysis: PaperAnalysisDto | null
   codeUrl: string | null
+  isBookmarked: boolean
 }
 
 // Schema v2 of the LLM analysis document (AnalysisContract.SchemaJson):

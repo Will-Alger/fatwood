@@ -16,7 +16,8 @@ public sealed record PaperListQuery(
     int Page,
     int PageSize,
     PaperSortOrder Sort,
-    bool AnalyzedOnly = false);
+    bool AnalyzedOnly = false,
+    bool BookmarkedOnly = false);
 
 /// <summary>Read-only browse queries. Serves exclusively from the database; never touches arXiv.</summary>
 public interface IPaperQueryService

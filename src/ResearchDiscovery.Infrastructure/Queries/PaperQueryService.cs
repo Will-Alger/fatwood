@@ -28,6 +28,11 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             papers = papers.Where(p => p.AnalysisResult != null);
         }
 
+        if (query.BookmarkedOnly)
+        {
+            papers = papers.Where(p => p.Bookmark != null);
+        }
+
         var totalItems = await papers.CountAsync(ct);
 
         papers = query.Sort switch
@@ -81,6 +86,7 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             p.PdfUrl,
             p.Doi,
             p.CodeUrl,
+            p.Bookmark != null,
             p.AnalysisResult == null ? null : new AnalysisRow(
                 p.AnalysisResult.CompositeScore,
                 p.AnalysisResult.Model,
@@ -107,7 +113,8 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
                 r.Analysis.SchemaVersion,
                 r.Analysis.CreatedUtc,
                 ParseDetails(r.Analysis.ResultJson)),
-            r.CodeUrl);
+            r.CodeUrl,
+            r.IsBookmarked);
 
     private sealed record PaperRow(
         long Id,
@@ -123,6 +130,7 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
         string PdfUrl,
         string? Doi,
         string? CodeUrl,
+        bool IsBookmarked,
         AnalysisRow? Analysis);
 
     private sealed record AnalysisRow(

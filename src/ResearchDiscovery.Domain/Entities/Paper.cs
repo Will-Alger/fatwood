@@ -51,4 +51,6 @@ public class Paper
     public AnalysisResult? AnalysisResult { get; set; }
 
     public PaperEmbedding? Embedding { get; set; }
+
+    public Bookmark? Bookmark { get; set; }
 }

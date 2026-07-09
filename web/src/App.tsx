@@ -23,6 +23,7 @@ export default function App() {
   const [page, setPage] = useState(1)
   const [sort, setSort] = useState<SortOrder>('published_desc')
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
+  const [bookmarkedOnly, setBookmarkedOnly] = useState(false)
 
   const { categories, error: categoriesError } = useCategories()
   const { data, loading, error } = usePapers(
@@ -31,6 +32,7 @@ export default function App() {
     PAGE_SIZE,
     sort,
     analyzedOnly,
+    bookmarkedOnly,
   )
 
   useEffect(() => {
@@ -119,6 +121,17 @@ export default function App() {
                   onChange={(e) => handleAnalyzedOnlyChange(e.target.checked)}
                 />{' '}
                 Analyzed only
+              </label>
+              <label className="toolbar-toggle">
+                <input
+                  type="checkbox"
+                  checked={bookmarkedOnly}
+                  onChange={(e) => {
+                    setBookmarkedOnly(e.target.checked)
+                    setPage(1)
+                  }}
+                />{' '}
+                ★ Bookmarked
               </label>
             </div>
             {categoriesError && (

@@ -15,7 +15,8 @@ public sealed record PaperDto(
     string PdfUrl,
     string? Doi,
     PaperAnalysisDto? Analysis = null,
-    string? CodeUrl = null);
+    string? CodeUrl = null,
+    bool IsBookmarked = false);
 
 /// <summary>
 /// Stored analysis surfaced to the browse UI. Details is the structured JSON

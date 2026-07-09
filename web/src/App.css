@@ -161,10 +161,41 @@ body {
   padding: 1.1rem 1.25rem;
 }
 
+.paper-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
 .paper-card h3 {
   margin: 0 0 0.4rem;
   font-size: 1.05rem;
   line-height: 1.35;
+}
+
+.bookmark-button {
+  border: none;
+  background: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 0.1rem 0.2rem;
+  flex-shrink: 0;
+}
+
+.bookmark-button:hover {
+  color: #b7791f;
+}
+
+.bookmark-on {
+  color: #d69e2e;
+}
+
+.bookmark-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .paper-card h3 a {

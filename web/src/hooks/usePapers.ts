@@ -14,6 +14,7 @@ export function usePapers(
   pageSize: number,
   sort: SortOrder,
   analyzedOnly: boolean,
+  bookmarkedOnly: boolean,
 ): UsePapersState {
   const [state, setState] = useState<UsePapersState>({
     data: null,
@@ -35,6 +36,7 @@ export function usePapers(
         pageSize,
         sort,
         analyzedOnly,
+        bookmarkedOnly,
       },
       controller.signal,
     )
@@ -49,7 +51,7 @@ export function usePapers(
       })
 
     return () => controller.abort()
-  }, [categoriesKey, page, pageSize, sort, analyzedOnly])
+  }, [categoriesKey, page, pageSize, sort, analyzedOnly, bookmarkedOnly])
 
   return state
 }

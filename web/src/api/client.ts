@@ -82,10 +82,11 @@ export interface GetPapersParams {
   pageSize: number
   sort: SortOrder
   analyzedOnly: boolean
+  bookmarkedOnly: boolean
 }
 
 export function getPapers(
-  { categories, page, pageSize, sort, analyzedOnly }: GetPapersParams,
+  { categories, page, pageSize, sort, analyzedOnly, bookmarkedOnly }: GetPapersParams,
   signal?: AbortSignal,
 ): Promise<PagedResult<PaperDto>> {
   const query = new URLSearchParams({
@@ -99,7 +100,17 @@ export function getPapers(
   if (analyzedOnly) {
     query.set('analyzedOnly', 'true')
   }
+  if (bookmarkedOnly) {
+    query.set('bookmarkedOnly', 'true')
+  }
   return getJson(`/api/papers?${query.toString()}`, signal)
+}
+
+export async function setBookmark(arxivId: string, bookmarked: boolean): Promise<void> {
+  const response = await fetch(`/api/papers/${encodeURIComponent(arxivId)}/bookmark`, {
+    method: bookmarked ? 'PUT' : 'DELETE',
+  })
+  if (!response.ok) throw await parseError(response)
 }
 
 export function getCategories(signal?: AbortSignal): Promise<CategoryDto[]> {

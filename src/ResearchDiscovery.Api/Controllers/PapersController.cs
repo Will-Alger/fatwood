@@ -20,6 +20,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetPapers(
         [FromQuery] string? categories,
+        [FromQuery] bool bookmarkedOnly = false,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = DefaultPageSize,
         [FromQuery] string sort = "published_desc",
@@ -55,9 +56,35 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
 
         var result = await queryService.GetPapersAsync(
             new PaperListQuery(
-                codes, page, Math.Clamp(pageSize, 1, MaxPageSize), sortOrder.Value, analyzedOnly),
+                codes, page, Math.Clamp(pageSize, 1, MaxPageSize), sortOrder.Value,
+                analyzedOnly, bookmarkedOnly),
             ct);
 
         return Ok(result);
+    }
+
+    /// <summary>Bookmarks a paper. Idempotent; user state, not corpus data.</summary>
+    [HttpPut("{arxivId}/bookmark")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> AddBookmark(
+        string arxivId, [FromServices] IBookmarkService bookmarks, CancellationToken ct) =>
+        SetBookmarkAsync(arxivId, true, bookmarks, ct);
+
+    [HttpDelete("{arxivId}/bookmark")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Task<IActionResult> RemoveBookmark(
+        string arxivId, [FromServices] IBookmarkService bookmarks, CancellationToken ct) =>
+        SetBookmarkAsync(arxivId, false, bookmarks, ct);
+
+    private async Task<IActionResult> SetBookmarkAsync(
+        string arxivId, bool bookmarked, IBookmarkService bookmarks, CancellationToken ct)
+    {
+        var found = await bookmarks.SetAsync(arxivId, bookmarked, ct);
+        return found
+            ? NoContent()
+            : Problem(statusCode: StatusCodes.Status404NotFound,
+                detail: $"No paper with arXiv id '{arxivId}'.");
     }
 }

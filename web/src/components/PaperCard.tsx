@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { setBookmark } from '../api/client'
 import type { PaperAnalysisDto, PaperDto } from '../api/types'
 
 const ABSTRACT_PREVIEW_LENGTH = 400
@@ -89,6 +90,21 @@ export interface PaperCardProps {
 export function PaperCard({ paper, matchScore, isWildcard, experienceProximity }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
+  const [bookmarked, setBookmarked] = useState(paper.isBookmarked)
+  const [bookmarkBusy, setBookmarkBusy] = useState(false)
+
+  async function toggleBookmark() {
+    const next = !bookmarked
+    setBookmarked(next) // optimistic
+    setBookmarkBusy(true)
+    try {
+      await setBookmark(paper.arxivId, next)
+    } catch {
+      setBookmarked(!next) // roll back on failure
+    } finally {
+      setBookmarkBusy(false)
+    }
+  }
 
   const score = paper.analysis?.compositeScore ?? null
 
@@ -106,11 +122,23 @@ export function PaperCard({ paper, matchScore, isWildcard, experienceProximity }
 
   return (
     <article className={isWildcard ? 'paper-card paper-card-wildcard' : 'paper-card'}>
-      <h3>
-        <a href={paper.absUrl} target="_blank" rel="noreferrer">
-          {paper.title}
-        </a>
-      </h3>
+      <div className="paper-title-row">
+        <h3>
+          <a href={paper.absUrl} target="_blank" rel="noreferrer">
+            {paper.title}
+          </a>
+        </h3>
+        <button
+          type="button"
+          className={bookmarked ? 'bookmark-button bookmark-on' : 'bookmark-button'}
+          disabled={bookmarkBusy}
+          onClick={() => void toggleBookmark()}
+          title={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
+          aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
+        >
+          {bookmarked ? '★' : '☆'}
+        </button>
+      </div>
       <div className="paper-meta">
         {isWildcard && (
           <span
