@@ -5,6 +5,7 @@ namespace ResearchDiscovery.Api.Hosting;
 /// <summary>Executes admin-triggered analysis jobs from the in-process queue.</summary>
 public class AnalysisQueueHostedService(
     AnalysisJobQueue queue,
+    AnalysisProgressTracker tracker,
     IServiceScopeFactory scopeFactory,
     ILogger<AnalysisQueueHostedService> logger) : BackgroundService
 {
@@ -12,6 +13,7 @@ public class AnalysisQueueHostedService(
     {
         await foreach (var job in queue.DequeueAllAsync(stoppingToken))
         {
+            tracker.Begin();
             try
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
@@ -43,6 +45,10 @@ public class AnalysisQueueHostedService(
             catch (Exception ex)
             {
                 logger.LogError(ex, "Admin-triggered analysis job failed");
+            }
+            finally
+            {
+                tracker.End();
             }
         }
     }

@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   analyzeSelection,
   compileSearch,
   getAdminKey,
+  getAnalysisStatus,
   runSearch,
 } from '../api/client'
 import type { LlmSettingsView, SearchPlan, SearchResult } from '../api/types'
@@ -10,6 +11,15 @@ import { PaperCard } from './PaperCard'
 
 const RESULT_LIMIT = 30
 const ANALYZE_TOP_N = 25
+const POLL_INTERVAL_MS = 3000
+const POLL_TIMEOUT_MS = 6 * 60_000
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+interface AnalyzingState {
+  total: number
+  done: number
+}
 
 interface DiscoverProps {
   llmSettings: LlmSettingsView | null
@@ -17,11 +27,23 @@ interface DiscoverProps {
 
 export function Discover({ llmSettings }: DiscoverProps) {
   const [query, setQuery] = useState('')
-  const [plan, setPlan] = useState<SearchPlan | null>(null)
+  const [lastCompiledQuery, setLastCompiledQuery] = useState<string | null>(null)
+  const [plan, setPlanState] = useState<SearchPlan | null>(null)
   const [result, setResult] = useState<SearchResult | null>(null)
   const [busy, setBusy] = useState<'compile' | 'search' | null>(null)
+  const [analyzing, setAnalyzing] = useState<AnalyzingState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<'match' | 'score'>('match')
+  const [analyzedOnly, setAnalyzedOnly] = useState(false)
+
+  // The poll loop refreshes whatever plan is current when it finishes, even
+  // if the user edited chips mid-analysis.
+  const planRef = useRef<SearchPlan | null>(null)
+  function setPlan(next: SearchPlan | null) {
+    planRef.current = next
+    setPlanState(next)
+  }
 
   const hasAdminKey = getAdminKey() !== ''
 
@@ -51,13 +73,23 @@ export function Discover({ llmSettings }: DiscoverProps) {
     }
   }
 
-  async function handleCompile() {
-    if (!query.trim()) return
+  async function handleSearch() {
+    const trimmed = query.trim()
+    if (!trimmed) return
+
+    // Re-running the same text re-executes the existing plan — deterministic
+    // and free. Only genuinely new text goes back through the LLM compiler.
+    if (trimmed === lastCompiledQuery && planRef.current) {
+      await executePlan(planRef.current)
+      return
+    }
+
     setBusy('compile')
     setError(null)
     setNotice(null)
     try {
-      const compiled = await compileSearch(query.trim())
+      const compiled = await compileSearch(trimmed)
+      setLastCompiledQuery(trimmed)
       setPlan(compiled)
       await executePlan(compiled)
     } catch (err) {
@@ -74,19 +106,83 @@ export function Discover({ llmSettings }: DiscoverProps) {
   }
 
   async function handleAnalyzeTop() {
-    if (!result) return
+    if (!result || analyzing) return
     const ids = result.hits.slice(0, ANALYZE_TOP_N).map((h) => h.paper.arxivId)
     setError(null)
+    setNotice(null)
     try {
-      const response = await analyzeSelection(ids)
-      setNotice(
-        `${response.message} Papers with a current analysis are skipped. ` +
-          'Re-run the search in a few minutes to see scores.',
-      )
+      await analyzeSelection(ids)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not queue analysis')
+      return
     }
+
+    setAnalyzing({ total: ids.length, done: 0 })
+    void pollAnalysis(ids)
   }
+
+  async function pollAnalysis(ids: string[]) {
+    const started = Date.now()
+    let lastDone = -1
+    let idleRounds = 0
+    let finalDone = 0
+
+    while (Date.now() - started < POLL_TIMEOUT_MS) {
+      await sleep(POLL_INTERVAL_MS)
+      let status
+      try {
+        status = await getAnalysisStatus(ids)
+      } catch {
+        continue // transient poll failure — keep going
+      }
+
+      finalDone = status.analyzed.length
+      setAnalyzing({ total: ids.length, done: finalDone })
+
+      if (finalDone >= ids.length) break
+
+      // Queue idle and the count stopped moving: the remainder was declined,
+      // failed, or was already current — done either way.
+      if (!status.active) {
+        idleRounds = finalDone === lastDone ? idleRounds + 1 : 0
+        if (idleRounds >= 2) break
+      } else {
+        idleRounds = 0
+      }
+      lastDone = finalDone
+    }
+
+    setAnalyzing(null)
+    setNotice(
+      finalDone >= ids.length
+        ? `All ${ids.length} papers analyzed.`
+        : `${finalDone} of ${ids.length} papers analyzed (the rest were declined, failed, or timed out).`,
+    )
+
+    // Refresh scores in place by re-executing the current plan — no LLM call,
+    // deterministic, so the result list stays stable. Then lead with the
+    // best-scored projects, which is what the user paid for.
+    if (planRef.current) {
+      await executePlan(planRef.current)
+    }
+    setSortBy('score')
+  }
+
+  const displayedHits = useMemo(() => {
+    if (!result) return []
+    let hits = result.hits
+    if (analyzedOnly) {
+      hits = hits.filter((h) => h.paper.analysis !== null)
+    }
+    if (sortBy === 'score') {
+      hits = [...hits].sort((a, b) => {
+        const scoreA = a.paper.analysis?.compositeScore ?? -1
+        const scoreB = b.paper.analysis?.compositeScore ?? -1
+        return scoreB - scoreA || b.matchScore - a.matchScore
+      })
+    }
+    return hits
+  }, [result, sortBy, analyzedOnly])
 
   const analyzeCount = Math.min(ANALYZE_TOP_N, result?.hits.length ?? 0)
   const estimateText =
@@ -103,7 +199,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
-              void handleCompile()
+              void handleSearch()
             }
           }}
           placeholder='Describe what you&apos;re after — e.g. "projects to boost my chances at fintech companies when moving to NYC; I have 3 years fullstack experience"'
@@ -112,9 +208,13 @@ export function Discover({ llmSettings }: DiscoverProps) {
         <button
           type="button"
           disabled={busy !== null || !query.trim() || !hasAdminKey}
-          onClick={() => void handleCompile()}
+          onClick={() => void handleSearch()}
         >
-          {busy === 'compile' ? 'Compiling…' : 'Search'}
+          {busy === 'compile'
+            ? 'Compiling…'
+            : query.trim() === lastCompiledQuery && plan
+              ? 'Refresh'
+              : 'Search'}
         </button>
       </div>
 
@@ -175,7 +275,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
             <textarea
               value={plan.anchorText}
               onChange={(e) => setPlan({ ...plan, anchorText: e.target.value })}
-              onBlur={() => plan && void executePlan(plan)}
+              onBlur={() => planRef.current && void executePlan(planRef.current)}
               rows={3}
             />
           </details>
@@ -184,23 +284,61 @@ export function Discover({ llmSettings }: DiscoverProps) {
 
       {error && <p className="status status-error">{error}</p>}
       {notice && <p className="status status-notice">{notice}</p>}
-      {busy === 'search' && <p className="status">Ranking…</p>}
+      {busy === 'search' && !result && <p className="status">Ranking…</p>}
 
-      {result && busy === null && (
+      {analyzing && (
+        <div className="analysis-progress">
+          <div className="analysis-progress-track">
+            <div
+              className="analysis-progress-fill"
+              style={{ width: `${Math.round((analyzing.done / analyzing.total) * 100)}%` }}
+            />
+          </div>
+          <span>
+            Analyzing {analyzing.done}/{analyzing.total} papers… results refresh automatically
+            when done
+          </span>
+        </div>
+      )}
+
+      {result && (
         <>
           <div className="results-header">
             <span>
-              {result.hits.length} of {result.totalCandidates.toLocaleString()} matching papers
+              {displayedHits.length} of {result.totalCandidates.toLocaleString()} matching papers
             </span>
-            {hasAdminKey && analyzeCount > 0 && (
-              <button type="button" onClick={() => void handleAnalyzeTop()}>
-                Analyze top {analyzeCount}
-                {estimateText}
-              </button>
-            )}
+            <div className="results-controls">
+              <label>
+                Sort{' '}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'match' | 'score')}
+                >
+                  <option value="match">Best match</option>
+                  <option value="score">Best project score</option>
+                </select>
+              </label>
+              <label className="toolbar-toggle">
+                <input
+                  type="checkbox"
+                  checked={analyzedOnly}
+                  onChange={(e) => setAnalyzedOnly(e.target.checked)}
+                />{' '}
+                Analyzed only
+              </label>
+              {hasAdminKey && analyzeCount > 0 && (
+                <button
+                  type="button"
+                  disabled={analyzing !== null}
+                  onClick={() => void handleAnalyzeTop()}
+                >
+                  {analyzing ? 'Analyzing…' : `Analyze top ${analyzeCount}${estimateText}`}
+                </button>
+              )}
+            </div>
           </div>
-          <div className="paper-list">
-            {result.hits.map((hit) => (
+          <div className={busy === 'search' ? 'paper-list paper-list-refreshing' : 'paper-list'}>
+            {displayedHits.map((hit) => (
               <PaperCard
                 key={hit.paper.arxivId}
                 paper={hit.paper}
@@ -210,6 +348,12 @@ export function Discover({ llmSettings }: DiscoverProps) {
               />
             ))}
           </div>
+          {displayedHits.length === 0 && analyzedOnly && result.hits.length > 0 && (
+            <p className="status">
+              None of these results are analyzed yet — run &quot;Analyze top {analyzeCount}&quot;
+              or untick the filter.
+            </p>
+          )}
           {result.hits.length === 0 && (
             <p className="status">
               No results. If the corpus was just ingested, run the embedding pass

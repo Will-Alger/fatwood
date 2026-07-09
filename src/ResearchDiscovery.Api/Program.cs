@@ -36,6 +36,7 @@ builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
 builder.Services.AddHostedService<DailyIngestionHostedService>();
 builder.Services.AddSingleton<AnalysisJobQueue>();
+builder.Services.AddSingleton<AnalysisProgressTracker>();
 builder.Services.AddHostedService<AnalysisQueueHostedService>();
 
 var app = builder.Build();

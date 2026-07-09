@@ -92,10 +92,12 @@ export default function App() {
         </nav>
       </header>
 
-      {tab === 'discover' ? (
+      {/* Both panes stay mounted so switching tabs never loses state
+          (search results, filters, scroll positions). */}
+      <div style={{ display: tab === 'discover' ? undefined : 'none' }}>
         <Discover llmSettings={llmSettings} />
-      ) : (
-        <div className="app-body">
+      </div>
+      <div className="app-body" style={{ display: tab === 'browse' ? undefined : 'none' }}>
           <CategoryFilter
             categories={categories}
             selected={selectedCategories}
@@ -145,8 +147,7 @@ export default function App() {
               onPageChange={setPage}
             />
           </main>
-        </div>
-      )}
+      </div>
 
       {settingsOpen && (
         <SettingsPanel

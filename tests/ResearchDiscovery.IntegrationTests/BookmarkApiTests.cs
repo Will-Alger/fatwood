@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using ResearchDiscovery.Application.Dtos;
 using Xunit;
 
@@ -55,4 +56,39 @@ public class BookmarkApiTests
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    private sealed record AnalysisStatusView(bool Active, List<string> Analyzed);
+
+    [Fact]
+    public async Task AnalysisStatus_ReportsWhichPapersHaveCurrentAnalyses()
+    {
+        using var factory = new ApiFactory();
+        await factory.SeedAsync(TestData.SeedPapersAsync);
+        using var client = factory.CreateClient();
+
+        // Nothing analyzed yet.
+        var before = await client.PostAsJsonAsync("/api/papers/analysis-status",
+            new { arxivIds = new[] { "2501.00001", "2501.00002" } });
+        before.EnsureSuccessStatusCode();
+        var beforeView = await before.Content.ReadFromJsonAsync<AnalysisStatusView>();
+        Assert.NotNull(beforeView);
+        Assert.False(beforeView.Active);
+        Assert.Empty(beforeView.Analyzed);
+
+        // Analyze cs.LG (both seeded cs.LG papers) via the stubbed analyzer.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var service = scope.ServiceProvider
+                .GetRequiredService<Application.Abstractions.IAnalysisService>();
+            await service.AnalyzeSelectionAsync(["2501.00001"], CancellationToken.None);
+        }
+
+        var after = await client.PostAsJsonAsync("/api/papers/analysis-status",
+            new { arxivIds = new[] { "2501.00001", "2501.00002" } });
+        after.EnsureSuccessStatusCode();
+        var afterView = await after.Content.ReadFromJsonAsync<AnalysisStatusView>();
+        Assert.NotNull(afterView);
+        Assert.Equal(["2501.00001"], afterView.Analyzed);
+    }
 }
+

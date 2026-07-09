@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ResearchDiscovery.Api.Hosting;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Dtos;
+using ResearchDiscovery.Application.Options;
+using ResearchDiscovery.Infrastructure.Persistence;
+using ResearchDiscovery.Infrastructure.Profile;
 
 namespace ResearchDiscovery.Api.Controllers;
 
@@ -86,5 +91,47 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
             ? NoContent()
             : Problem(statusCode: StatusCodes.Status404NotFound,
                 detail: $"No paper with arXiv id '{arxivId}'.");
+    }
+
+    public sealed record AnalysisStatusRequest(IReadOnlyList<string> ArxivIds);
+
+    public sealed record AnalysisStatusView(bool Active, IReadOnlyList<string> Analyzed);
+
+    /// <summary>
+    /// Which of the given papers already have a current analysis (schema +
+    /// profile version), plus whether an analysis job is running. Read-only,
+    /// DB-only — this is what the UI's progress bar polls after "Analyze
+    /// top N". A paper that never appears in Analyzed while Active is false
+    /// was declined or failed.
+    /// </summary>
+    [HttpPost("analysis-status")]
+    [ProducesResponseType<AnalysisStatusView>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAnalysisStatus(
+        [FromBody] AnalysisStatusRequest request,
+        [FromServices] AppDbContext db,
+        [FromServices] ProfileService profileService,
+        [FromServices] AnalysisProgressTracker tracker,
+        CancellationToken ct)
+    {
+        if (request.ArxivIds is not { Count: > 0 and <= 500 })
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "arxivIds must contain between 1 and 500 entries.");
+        }
+
+        var profile = await profileService.GetAsync(ct);
+        var profileVersion = profile?.Version ?? 0;
+        var ids = request.ArxivIds.ToList();
+
+        var analyzed = await db.Papers
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.ArxivId)
+                && p.AnalysisResult != null
+                && p.AnalysisResult.SchemaVersion >= AnalysisOptions.CurrentSchemaVersion
+                && p.AnalysisResult.ProfileVersion == profileVersion)
+            .Select(p => p.ArxivId)
+            .ToListAsync(ct);
+
+        return Ok(new AnalysisStatusView(tracker.Active, analyzed));
     }
 }

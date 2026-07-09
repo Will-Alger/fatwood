@@ -137,6 +137,18 @@ export function analyzeSelection(arxivIds: string[]): Promise<{ message: string 
   return sendJson('POST', '/api/admin/analysis/selection', { arxivIds }, { admin: true })
 }
 
+export interface AnalysisStatus {
+  active: boolean
+  analyzed: string[]
+}
+
+export function getAnalysisStatus(
+  arxivIds: string[],
+  signal?: AbortSignal,
+): Promise<AnalysisStatus> {
+  return sendJson('POST', '/api/papers/analysis-status', { arxivIds }, { signal })
+}
+
 // --- Settings ---
 
 export function getLlmSettings(signal?: AbortSignal): Promise<LlmSettingsView> {
