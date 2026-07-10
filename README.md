@@ -48,45 +48,13 @@ The end-to-end path from natural-language intent to ranked, personalized
 results — and the offline loop that keeps the ranking honest. LLM calls are
 marked; everything else is deterministic and token-free.
 
-```mermaid
-flowchart TD
-    subgraph corpus["Corpus (built ahead of time, ops-only)"]
-        arxiv["arXiv Atom API"] -->|"1 req/3s, retries,<br/>per-category high-water mark"| upsert["Idempotent upsert"]
-        upsert --> pg[("PostgreSQL<br/>~21k real papers")]
-        pg --> embedder["Local ONNX embedder<br/>all-MiniLM-L6-v2, 384d<br/>(title + abstract)"]
-        embedder --> vecs[("Paper vectors<br/>float32, provider-portable")]
-    end
+![Architecture: query → staged retrieval → results, with telemetry feeding the offline quality loop](docs/architecture.svg)
 
-    subgraph search["Search (per query)"]
-        user(["Natural-language intent<br/>+ saved profile"]) --> compiler["Query compiler — LLM call #35;1<br/>intent → concrete research topics"]
-        compiler --> plan["SearchPlan (editable chips)<br/>anchor topics · categories ·<br/>date window · code filter"]
-        plan -->|"edits re-run token-free"| filters
-        filters["Stage 0 — SQL filters<br/>categories · date · has-code"] --> rank
-        pg --> filters
-        vecs -.->|"in-memory cosine index"| rank["Stage 1 — dense retrieval<br/>whole-intent + best-topic blend<br/>(multi-anchor)"]
-        rank --> fuse["Stage 1b — BM25 lexical index<br/>fused via Reciprocal Rank Fusion<br/>(exact terminology dense search blurs)"]
-        fuse --> blend["Stage 2 — signal blend (config)<br/>recency · has-code · citations"]
-        blend --> rerank["Stage 3 — cross-encoder rerank<br/>(flag, local ONNX; off by default —<br/>measured as a wash here)"]
-        rerank --> wildcards["Wildcard slots — 2 high-relevance papers<br/>from OUTSIDE the experience cluster<br/>(exploration guardrail: experience<br/>similarity never ranks or gates)"]
-        wildcards --> results(["Ranked results<br/>match% · close-to-home/stretch badges"])
-    end
+The diagram source lives in [`docs/architecture.mmd`](docs/architecture.mmd);
+re-render after editing with:
 
-    enrich["enrich CLI — citations (Semantic Scholar)<br/>+ GitHub stars (quality priors)"] --> pg
-
-    results -->|"opt-in, top N only"| analysis["Personalized analysis — LLM call #35;2 per paper<br/>learnable ≠ blocker · learning bridge ·<br/>goal alignment · project score (cached per profile version)"]
-
-    results -->|"every product search"| telemetry[("Telemetry (append-only)<br/>SearchEvents: plan + ranked results<br/>InteractionEvents: bookmark/analyze<br/>joined to (search, rank)")]
-    analysis -.->|"analyze = strong signal"| telemetry
-
-    subgraph eval["Offline quality loop (eval/, CLI-only)"]
-        queries["queries.json<br/>frozen personas + plans"] --> score["eval search — token-free<br/>nDCG@10 · Recall@50 · MRR"]
-        judgments["judgments.json<br/>LLM-judged ground truth (call #35;3)"] --> score
-        telemetry --> bias["eval bias — skew report:<br/>category/recency/length vs pool ·<br/>comfort-zone drift · wildcard yield ·<br/>position bias in attention"]
-        telemetry --> adopt["eval adopt — real logged<br/>queries join the eval set"]
-        adopt --> queries
-        score --> tune["eval tune — offline weight grid<br/>(recency · code bonus); prints best,<br/>a human applies via config"]
-        score -->|"regression gate for every ranking change"| rank
-    end
+```bash
+npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.svg -b transparent
 ```
 
 ## Prerequisites
