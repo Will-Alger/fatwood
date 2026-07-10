@@ -464,6 +464,20 @@ similarity; the MS MARCO cross-encoder needs a natural-language query (the
 plan's interpretation), not the topic list, and even then is a wash here —
 the flag exists (`Ranking__UseReranker`) but stays off.
 
+**Embedding model**: bge-small-en-v1.5 replaced all-MiniLM-L6-v2 after the
+bake-off (0.623 nDCG on a strictly larger judgment set vs MiniLM's 0.614 on
+the smaller prior set; external retrieval benchmarks agree on the ordering).
+bge requires the query-side instruction prefix (`Embeddings:QueryPrefix`) —
+documents embed without it. Swapping models re-embeds the corpus
+(`dotnet run -- embed`); vectors are keyed by `ModelVersion`.
+
+**Tune verdict on the final stack**: pure similarity beats every
+recency/code/citation blend — the multi-anchor + hybrid stack absorbed the
+small recency gain measured on the old ranker, and citation weighting
+actively hurts on a 90-day corpus (most papers have ~0 citations, so the
+signal just promotes older papers regardless of fit). Citations and stars
+stay in the DB as analysis context and future learning-to-rank features.
+
 **Interleaving experiments**: set `Ranking__InterleaveCandidate=true` plus a
 `Ranking:Candidate` profile (same flags/weights shape) and product searches
 team-draft the two rankers' results, tagging each slot A/B. Your bookmarks

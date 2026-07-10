@@ -142,23 +142,26 @@ public static class EvalCommandRunner
     private static void PrintTuneResults(IReadOnlyList<EvalRunner.TuneResult> results)
     {
         Console.WriteLine();
-        Console.WriteLine($"{"recency",8} {"halfLife",9} {"codeBonus",10} {"nDCG@10",8} {"Recall@50",10} {"MRR",6}");
-        Console.WriteLine(new string('-', 58));
+        Console.WriteLine(
+            $"{"recency",8} {"halfLife",9} {"codeBonus",10} {"citation",9} {"nDCG@10",8} {"Recall@50",10} {"MRR",6}");
+        Console.WriteLine(new string('-', 68));
         foreach (var r in results)
         {
             var marker = r.Weights.IsPureSimilarity ? "  <- current default" : string.Empty;
             Console.WriteLine(
                 $"{r.Weights.RecencyWeight,8:0.00} {r.Weights.RecencyHalfLifeDays,8}d {r.Weights.CodeBonus,10:0.00} " +
+                $"{r.Weights.CitationWeight,9:0.00} " +
                 $"{Fmt(r.MeanNdcg10),8} {Fmt(r.MeanRecall50),10} {Fmt(r.MeanMrr),6}{marker}");
         }
 
-        Console.WriteLine(new string('-', 58));
+        Console.WriteLine(new string('-', 68));
         var best = results[0];
         Console.WriteLine(best.Weights.IsPureSimilarity
             ? "Pure similarity is already the best measured blend — change nothing."
             : $"Best blend: Ranking__RecencyWeight={best.Weights.RecencyWeight:0.00} " +
               $"Ranking__RecencyHalfLifeDays={best.Weights.RecencyHalfLifeDays} " +
-              $"Ranking__CodeBonus={best.Weights.CodeBonus:0.00} — apply via configuration " +
+              $"Ranking__CodeBonus={best.Weights.CodeBonus:0.00} " +
+              $"Ranking__CitationWeight={best.Weights.CitationWeight:0.00} — apply via configuration " +
               "if the delta is worth it; nothing is applied automatically.");
     }
 

@@ -166,9 +166,11 @@ public class TelemetryApiTests
                 interaction = await db.InteractionEvents.SingleOrDefaultAsync(
                     i => i.Type == InteractionType.AnalyzedFromSearch);
             }
-            catch (InvalidOperationException) when (attempt < 9)
+            catch (Exception ex) when (attempt < 9 &&
+                ex is InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
             {
-                // transient provider contention — retry
+                // "database is locked" / provider contention while the
+                // enqueued analysis job shares the in-memory connection — retry
             }
 
             if (interaction is null)
