@@ -3,11 +3,14 @@ using ResearchDiscovery.Application.Options;
 
 namespace ResearchDiscovery.Application.Abstractions;
 
+/// <param name="Variant">Interleaving team ("A" control / "B" candidate) when
+/// the search ran an interleaved ranker experiment; null otherwise.</param>
 public sealed record SearchHit(
     PaperDto Paper,
     float MatchScore,
     bool IsWildcard,
-    string? ExperienceProximity);
+    string? ExperienceProximity,
+    string? Variant = null);
 
 public sealed record SearchResult(
     SearchPlan Plan,

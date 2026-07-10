@@ -29,6 +29,11 @@ if (args.Length > 0 && args[0].Equals("eval", StringComparison.OrdinalIgnoreCase
     return await EvalCommandRunner.RunAsync(args);
 }
 
+if (args.Length > 0 && args[0].Equals("enrich", StringComparison.OrdinalIgnoreCase))
+{
+    return await EnrichCommandRunner.RunAsync(args);
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);

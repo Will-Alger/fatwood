@@ -153,11 +153,31 @@ public class TelemetryApiTests
             new { arxivIds = new[] { topArxivId }, searchEventId });
         response.EnsureSuccessStatusCode();
 
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        // The interaction row is written before the 202 returns, but the
+        // enqueued analysis job runs concurrently on the shared in-memory
+        // Sqlite — retry briefly so provider-level contention can't flake us.
+        InteractionEvent? interaction = null;
+        for (var attempt = 0; attempt < 10 && interaction is null; attempt++)
+        {
+            try
+            {
+                await using var scope = factory.Services.CreateAsyncScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                interaction = await db.InteractionEvents.SingleOrDefaultAsync(
+                    i => i.Type == InteractionType.AnalyzedFromSearch);
+            }
+            catch (InvalidOperationException) when (attempt < 9)
+            {
+                // transient provider contention — retry
+            }
 
-        var interaction = await db.InteractionEvents.SingleAsync(
-            i => i.Type == InteractionType.AnalyzedFromSearch);
+            if (interaction is null)
+            {
+                await Task.Delay(100);
+            }
+        }
+
+        Assert.NotNull(interaction);
         Assert.Equal(searchEventId, interaction.SearchEventId);
         Assert.Equal(1, interaction.Rank);
     }

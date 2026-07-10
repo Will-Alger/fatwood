@@ -52,4 +52,11 @@ public class SearchEventResult
 
     /// <summary>Experience proximity annotation at display time: "close", "stretch", or null.</summary>
     public string? Proximity { get; set; }
+
+    /// <summary>
+    /// Interleaving team ("A" = control ranker, "B" = candidate) when the
+    /// search ran an interleaved experiment; null otherwise. Interactions on
+    /// tagged slots are votes — `eval bias` tallies the match.
+    /// </summary>
+    public string? Variant { get; set; }
 }

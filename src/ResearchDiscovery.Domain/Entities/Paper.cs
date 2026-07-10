@@ -53,4 +53,6 @@ public class Paper
     public PaperEmbedding? Embedding { get; set; }
 
     public Bookmark? Bookmark { get; set; }
+
+    public PaperSignal? Signal { get; set; }
 }

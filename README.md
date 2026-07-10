@@ -63,10 +63,15 @@ flowchart TD
         plan -->|"edits re-run token-free"| filters
         filters["Stage 0 — SQL filters<br/>categories · date · has-code"] --> rank
         pg --> filters
-        vecs -.->|"in-memory cosine index"| rank["Stage 1 — relevance rank<br/>anchor vector × paper vectors"]
-        rank --> wildcards["Wildcard slots — 2 high-relevance papers<br/>from OUTSIDE the experience cluster<br/>(exploration guardrail: experience<br/>similarity never ranks or gates)"]
+        vecs -.->|"in-memory cosine index"| rank["Stage 1 — dense retrieval<br/>whole-intent + best-topic blend<br/>(multi-anchor)"]
+        rank --> fuse["Stage 1b — BM25 lexical index<br/>fused via Reciprocal Rank Fusion<br/>(exact terminology dense search blurs)"]
+        fuse --> blend["Stage 2 — signal blend (config)<br/>recency · has-code · citations"]
+        blend --> rerank["Stage 3 — cross-encoder rerank<br/>(flag, local ONNX; off by default —<br/>measured as a wash here)"]
+        rerank --> wildcards["Wildcard slots — 2 high-relevance papers<br/>from OUTSIDE the experience cluster<br/>(exploration guardrail: experience<br/>similarity never ranks or gates)"]
         wildcards --> results(["Ranked results<br/>match% · close-to-home/stretch badges"])
     end
+
+    enrich["enrich CLI — citations (Semantic Scholar)<br/>+ GitHub stars (quality priors)"] --> pg
 
     results -->|"opt-in, top N only"| analysis["Personalized analysis — LLM call #35;2 per paper<br/>learnable ≠ blocker · learning bridge ·<br/>goal alignment · project score (cached per profile version)"]
 
@@ -427,13 +432,49 @@ dotnet run --project src/ResearchDiscovery.Api -- eval tune \
   into `eval/queries.json`, so the harness measures the query distribution
   that actually happens. Run `eval judge` afterwards to grade their pools.
 - **`eval tune`** grid-searches the ranking blend (`Ranking` config:
-  similarity + recency half-life decay + has-code bonus; default is pure
-  similarity, bit-for-bit the original ranker) against the judged ground
-  truth and prints the table. **Detect automatically, tweak deliberately**:
-  nothing is ever applied by the tool — a human reads the table, weighs the
-  delta, and sets `Ranking__RecencyWeight` etc. in configuration. That
-  human-in-the-loop gate is what prevents the classic self-reinforcing
-  feedback loop (ranker learns from clicks on what it chose to show).
+  similarity + recency half-life decay + has-code bonus + citations) against
+  the judged ground truth and prints the table. **Detect automatically,
+  tweak deliberately**: nothing is ever applied by the tool — a human reads
+  the table, weighs the delta, and sets `Ranking__RecencyWeight` etc. in
+  configuration. That human-in-the-loop gate is what prevents the classic
+  self-reinforcing feedback loop (ranker learns from clicks on what it chose
+  to show).
+- **`eval audit`** estimates missed gems per query from the judged random
+  samples: if r of n uniformly-sampled unreturned candidates are relevant,
+  the pool hides ≈ (r/n) × (candidates − head) more. Wide error bars at
+  small n — track the trend across ranker versions, not the count.
+
+### The retrieval stack (and how it was chosen)
+
+Every stage is a `Ranking` config flag measured against the harness before
+becoming a default. The 2026-07 campaign, all configs scored on the same
+~2,500-judgment ground truth:
+
+| config | nDCG@10 | Recall@50 | MRR |
+|---|---|---|---|
+| single-anchor cosine (original) | 0.523 | 0.530 | 0.897 |
+| multi-anchor only | 0.520 | 0.564 | 0.790 |
+| hybrid BM25 only | 0.594 | 0.590 | 1.000 |
+| **multi-anchor + hybrid (default)** | **0.614** | **0.606** | **1.000** |
+| + cross-encoder rerank | 0.612 | 0.599 | 0.929 |
+
+Notes that the numbers forced: pure per-topic max-sim was a big LOSS (0.38
+nDCG — single-topic tunnel vision) until blended 50/50 with whole-intent
+similarity; the MS MARCO cross-encoder needs a natural-language query (the
+plan's interpretation), not the topic list, and even then is a wash here —
+the flag exists (`Ranking__UseReranker`) but stays off.
+
+**Interleaving experiments**: set `Ranking__InterleaveCandidate=true` plus a
+`Ranking:Candidate` profile (same flags/weights shape) and product searches
+team-draft the two rankers' results, tagging each slot A/B. Your bookmarks
+and analyses become votes; `eval bias` prints the scoreboard. Eval runs never
+interleave. The "not interested" ✕ on result cards is the negative-label
+counterpart.
+
+**Signal enrichment** (`enrich` CLI, ops-only): citation counts via Semantic
+Scholar's batch API for the whole corpus, and GitHub stars for papers
+advertising a repo (`enrich --stars`, needs `GITHUB_TOKEN`). Signals feed the
+blend's `CitationWeight` and are refreshed after 14 days on re-run.
 
 ## Deployment (Azure Container Apps)
 

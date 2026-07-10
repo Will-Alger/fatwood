@@ -8,6 +8,7 @@ using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Analysis;
 using ResearchDiscovery.Infrastructure.Arxiv;
 using ResearchDiscovery.Infrastructure.Embeddings;
+using ResearchDiscovery.Infrastructure.Enrichment;
 using ResearchDiscovery.Infrastructure.Eval;
 using ResearchDiscovery.Infrastructure.Ingestion;
 using ResearchDiscovery.Infrastructure.Llm;
@@ -119,6 +120,15 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEmbeddingIndex, InMemoryEmbeddingIndex>();
         services.AddSingleton<IPaperEmbeddingService, PaperEmbeddingService>();
 
+        // Hybrid retrieval + reranking stages (config-flagged; both local, no
+        // tokens). The cross-encoder only downloads its model when first used.
+        services.AddOptions<CrossEncoderOptions>()
+            .Bind(configuration.GetSection(CrossEncoderOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<ILexicalIndex, InMemoryLexicalIndex>();
+        services.AddSingleton<ICrossEncoder, OnnxCrossEncoder>();
+
         services.AddOptions<RankingOptions>()
             .Bind(configuration.GetSection(RankingOptions.SectionName))
             .ValidateDataAnnotations()
@@ -130,6 +140,11 @@ public static class ServiceCollectionExtensions
         // Product telemetry: searches + interactions, logged from the API
         // surface only (the eval CLI must never write here).
         services.AddScoped<ISearchTelemetry, SearchTelemetryService>();
+
+        // Signal enrichment (CLI-only): citations + stars.
+        services.AddHttpClient(PaperSignalEnricher.HttpClientName,
+            client => client.Timeout = TimeSpan.FromSeconds(60));
+        services.AddSingleton<PaperSignalEnricher>();
 
         // Offline search-quality harness (CLI-only; never on a request path).
         services.AddScoped<IRelevanceJudge, AnthropicRelevanceJudge>();

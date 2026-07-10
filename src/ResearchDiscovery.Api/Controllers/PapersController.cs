@@ -122,6 +122,26 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Explicit negative feedback from search results. Purely a telemetry
+    /// write — it doesn't (yet) filter anything server-side; the client hides
+    /// the card locally. Negatives are the counterweight that keeps implicit
+    /// labels from only ever saying "more of the same".
+    /// </summary>
+    [HttpPost("{arxivId}/not-interested")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> NotInterested(
+        string arxivId,
+        [FromServices] ISearchTelemetry telemetry,
+        [FromQuery] long? searchEventId,
+        [FromQuery] int? rank,
+        CancellationToken ct)
+    {
+        await telemetry.LogInteractionAsync(
+            arxivId, Domain.Entities.InteractionType.NotInterested, searchEventId, rank, ct);
+        return NoContent();
+    }
+
     public sealed record AnalysisStatusRequest(IReadOnlyList<string> ArxivIds);
 
     public sealed record AnalysisStatusView(bool Active, IReadOnlyList<string> Analyzed);

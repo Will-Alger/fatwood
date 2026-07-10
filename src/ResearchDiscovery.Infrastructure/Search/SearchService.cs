@@ -9,10 +9,17 @@ using ResearchDiscovery.Infrastructure.Profile;
 namespace ResearchDiscovery.Infrastructure.Search;
 
 /// <summary>
-/// Executes a SearchPlan with zero LLM calls: SQL filters narrow the corpus,
-/// the embedding index ranks by relevance to the plan's anchor text, and
-/// wildcard slots inject high-relevance papers from OUTSIDE the user's
-/// experience cluster.
+/// Executes a SearchPlan with zero LLM calls through a staged pipeline —
+/// every stage beyond stage 1 is config-flagged OFF until the eval harness
+/// proves it beats the baseline:
+///
+///   Stage 0: SQL filters narrow the corpus (categories/date/code).
+///   Stage 1: dense retrieval — single-anchor cosine, or per-topic max-sim
+///            (UseMultiAnchor) so multi-topic queries aren't averaged away.
+///   Stage 1b: BM25 lexical retrieval fused via Reciprocal Rank Fusion
+///            (UseHybrid) — exact terminology embeddings blur.
+///   Stage 2: signal blend (recency / code / citations; default pure cosine).
+///   Stage 3: cross-encoder rerank of the pool head (UseReranker).
 ///
 /// Exploration guardrails (deliberate, load-bearing):
 /// - Relevance is the ONLY ranking signal. Experience similarity never gates
@@ -20,40 +27,66 @@ namespace ResearchDiscovery.Infrastructure.Search;
 /// - Wildcards are structural serendipity: the least experience-similar papers
 ///   from the high-relevance pool, so the user's comfort zone can't silently
 ///   narrow what they see.
+///
+/// Interleaving: when Ranking:InterleaveCandidate is on, PRODUCT searches
+/// (never eval runs) team-draft two rankers' results and tag each slot A/B,
+/// so real interactions arbitrate between them.
 /// </summary>
 public class SearchService(
     AppDbContext db,
     ITextEmbedder embedder,
     IEmbeddingIndex index,
+    ILexicalIndex lexicalIndex,
+    ICrossEncoder crossEncoder,
     IPaperQueryService queryService,
     ProfileService profileService,
     IOptions<RankingOptions> rankingOptions,
+    IOptions<EmbeddingOptions> embeddingOptions,
     ILogger<SearchService> logger) : ISearchService
 {
     private const int WildcardSlots = 2;
     private const int PoolMultiplier = 5;
     private const float CloseToHomeThreshold = 0.45f;
     private const float StretchThreshold = 0.25f;
+    private const int RrfK = 60;
 
     public async Task<SearchResult> SearchAsync(
         SearchPlan plan, int limit, CancellationToken ct, RankingWeights? weights = null)
     {
         limit = Math.Clamp(limit, 1, 200);
-        weights ??= rankingOptions.Value.ToWeights();
+        var options = rankingOptions.Value;
+
+        // An explicit weights override (the offline tuner) evaluates ONE
+        // ranker: config flags still apply, interleaving never does.
+        var isTuningRun = weights is not null;
 
         // Stage 0: deterministic SQL filters.
-        var candidates = FilterCandidates(db.Papers.AsNoTracking(), plan);
+        var candidateIds = (await FilterCandidates(db.Papers.AsNoTracking(), plan)
+            .Select(p => p.Id)
+            .ToListAsync(ct))
+            .ToHashSet();
 
-        var candidateIds = (await candidates.Select(p => p.Id).ToListAsync(ct)).ToHashSet();
         if (candidateIds.Count == 0)
         {
             return new SearchResult(plan, [], 0);
         }
 
-        // Stage 1: embedding rank over the candidates (local model, no tokens).
-        var queryVector = await embedder.EmbedAsync(plan.AnchorText, ct);
-        var pool = await index.TopAsync(
-            queryVector, Math.Max(limit * PoolMultiplier, limit + 50), candidateIds, ct);
+        var poolSize = Math.Max(limit * PoolMultiplier, limit + 50);
+
+        List<(ScoredPaper Paper, string? Variant)> pool;
+        if (!isTuningRun && options.InterleaveCandidate && options.Candidate is not null)
+        {
+            var control = await RankAsync(plan, poolSize, candidateIds, options, options.ToWeights(), ct);
+            var candidate = await RankAsync(
+                plan, poolSize, candidateIds, options.Candidate, options.Candidate.ToWeights(), ct);
+            pool = TeamDraftInterleave(control, candidate, poolSize);
+        }
+        else
+        {
+            var ranked = await RankAsync(
+                plan, poolSize, candidateIds, options, weights ?? options.ToWeights(), ct);
+            pool = ranked.Select(p => (p, (string?)null)).ToList();
+        }
 
         if (pool.Count == 0)
         {
@@ -63,15 +96,6 @@ public class SearchService(
             return new SearchResult(plan, [], candidateIds.Count);
         }
 
-        // Optional signal blend: re-order the pool by weighted score before
-        // selection. The default weights are pure similarity, which skips this
-        // entirely — the original ranker, bit-for-bit. MatchScore stays the
-        // raw cosine either way; the blend changes order, not evidence.
-        if (!weights.IsPureSimilarity)
-        {
-            pool = await BlendAsync(pool, weights, ct);
-        }
-
         // Experience annotation + wildcards need the profile's experience vector.
         var profile = await profileService.GetAsync(ct);
         IReadOnlyDictionary<long, float>? experienceScores = null;
@@ -79,10 +103,14 @@ public class SearchService(
         {
             var experienceVector = await embedder.EmbedAsync(profile!.ExperienceSummary, ct);
             experienceScores = await index.ScoreAsync(
-                pool.Select(s => s.PaperId), experienceVector, ct);
+                pool.Select(s => s.Paper.PaperId), experienceVector, ct);
         }
 
-        var selection = SelectWithWildcards(pool, limit, experienceScores);
+        var variantByPaper = pool
+            .Where(p => p.Variant is not null)
+            .ToDictionary(p => p.Paper.PaperId, p => p.Variant);
+        var selection = SelectWithWildcards(
+            pool.Select(p => p.Paper).ToList(), limit, experienceScores);
 
         var dtos = await queryService.GetPapersByIdsAsync(
             selection.Select(s => s.Paper.PaperId).ToList(), ct);
@@ -93,25 +121,143 @@ public class SearchService(
                 dtos[s.Paper.PaperId],
                 s.Paper.Score,
                 s.IsWildcard,
-                Proximity(experienceScores, s.Paper.PaperId)))
+                Proximity(experienceScores, s.Paper.PaperId),
+                variantByPaper.GetValueOrDefault(s.Paper.PaperId)))
             .ToList();
 
         return new SearchResult(plan, hits, candidateIds.Count);
     }
 
     /// <summary>
-    /// Weighted re-order of the relevance pool: cosine similarity blended with
-    /// recency (exponential half-life decay from publication) and a flat
-    /// has-code bonus. Fetches only the pool's metadata (≤ limit×5 rows).
+    /// Runs stages 1–3 for one ranking profile. The returned Score is always
+    /// the dense cosine (max-sim under multi-anchor) — the UI's match%
+    /// evidence — while the ORDER carries the full pipeline's opinion.
     /// </summary>
-    private async Task<IReadOnlyList<ScoredPaper>> BlendAsync(
-        IReadOnlyList<ScoredPaper> pool, RankingWeights weights, CancellationToken ct)
+    private async Task<List<ScoredPaper>> RankAsync(
+        SearchPlan plan,
+        int poolSize,
+        IReadOnlySet<long> candidateIds,
+        RankingProfile profile,
+        RankingWeights weights,
+        CancellationToken ct)
+    {
+        // Stage 1: dense retrieval. Multi-anchor scores each paper as the
+        // average of whole-intent similarity and its best single-topic match.
+        var queryPrefix = embeddingOptions.Value.QueryPrefix;
+        var primaryVector = await embedder.EmbedAsync(queryPrefix + plan.AnchorText, ct);
+
+        var topicVectors = new List<float[]>();
+        if (profile.UseMultiAnchor)
+        {
+            var topics = SplitAnchors(plan.AnchorText);
+            if (topics.Count >= 2)
+            {
+                foreach (var topic in topics)
+                {
+                    topicVectors.Add(await embedder.EmbedAsync(queryPrefix + topic, ct));
+                }
+            }
+        }
+
+        var pool = (await index.TopMultiAsync(
+            primaryVector, topicVectors, poolSize, candidateIds, ct)).ToList();
+        var anchorVectors = new List<float[]> { primaryVector };
+        anchorVectors.AddRange(topicVectors);
+
+        // Stage 1b: lexical fusion.
+        if (profile.UseHybrid)
+        {
+            var lexical = await lexicalIndex.TopAsync(plan.AnchorText, poolSize, candidateIds, ct);
+            pool = await FuseAsync(pool, lexical, anchorVectors, poolSize, ct);
+        }
+
+        if (pool.Count == 0)
+        {
+            return pool;
+        }
+
+        // Stage 2: signal blend.
+        if (!weights.IsPureSimilarity)
+        {
+            pool = await BlendAsync(pool, weights, ct);
+        }
+
+        // Stage 3: cross-encoder rerank of the head.
+        if (profile.UseReranker)
+        {
+            pool = await RerankHeadAsync(plan, pool, rankingOptions.Value.RerankDepth, ct);
+        }
+
+        return pool;
+    }
+
+    /// <summary>
+    /// Reciprocal Rank Fusion: score = Σ 1/(60 + rank) across both lists.
+    /// Papers surfaced only lexically get their dense cosine computed so the
+    /// UI's match% stays meaningful for every hit.
+    /// </summary>
+    private async Task<List<ScoredPaper>> FuseAsync(
+        IReadOnlyList<ScoredPaper> dense,
+        IReadOnlyList<ScoredPaper> lexical,
+        IReadOnlyList<float[]> anchorVectors,
+        int poolSize,
+        CancellationToken ct)
+    {
+        var rrf = new Dictionary<long, double>();
+        for (var i = 0; i < dense.Count; i++)
+        {
+            rrf[dense[i].PaperId] = rrf.GetValueOrDefault(dense[i].PaperId) + 1.0 / (RrfK + i + 1);
+        }
+
+        for (var i = 0; i < lexical.Count; i++)
+        {
+            rrf[lexical[i].PaperId] = rrf.GetValueOrDefault(lexical[i].PaperId) + 1.0 / (RrfK + i + 1);
+        }
+
+        var cosineById = dense.ToDictionary(d => d.PaperId, d => d.Score);
+        var lexOnly = lexical
+            .Select(l => l.PaperId)
+            .Where(id => !cosineById.ContainsKey(id))
+            .ToList();
+
+        if (lexOnly.Count > 0)
+        {
+            foreach (var vector in anchorVectors)
+            {
+                var scores = await index.ScoreAsync(lexOnly, vector, ct);
+                foreach (var (id, score) in scores)
+                {
+                    cosineById[id] = Math.Max(cosineById.GetValueOrDefault(id, float.MinValue), score);
+                }
+            }
+        }
+
+        return rrf
+            .OrderByDescending(kv => kv.Value)
+            .Take(poolSize)
+            .Select(kv => new ScoredPaper(kv.Key, cosineById.GetValueOrDefault(kv.Key)))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Weighted re-order of the relevance pool: cosine similarity blended with
+    /// recency (exponential half-life decay), a flat has-code bonus, and
+    /// log-scaled citations (saturating at 1000). Fetches only pool metadata.
+    /// </summary>
+    private async Task<List<ScoredPaper>> BlendAsync(
+        List<ScoredPaper> pool, RankingWeights weights, CancellationToken ct)
     {
         var ids = pool.Select(p => p.PaperId).ToHashSet();
         var meta = await db.Papers
             .AsNoTracking()
             .Where(p => ids.Contains(p.Id))
-            .Select(p => new { p.Id, p.PublishedUtc, HasCode = p.CodeUrl != null })
+            .Select(p => new
+            {
+                p.Id,
+                p.PublishedUtc,
+                HasCode = p.CodeUrl != null,
+                Citations = p.Signal != null ? p.Signal.CitationCount : null,
+            })
             .ToDictionaryAsync(p => p.Id, ct);
 
         var now = DateTimeOffset.UtcNow;
@@ -120,20 +266,134 @@ public class SearchService(
             {
                 if (!meta.TryGetValue(p.PaperId, out var m))
                 {
-                    return (Paper: p, Blended: weights.SimilarityWeight * p.Score);
+                    return (Paper: p, Blended: (double)(weights.SimilarityWeight * p.Score));
                 }
 
                 var ageDays = Math.Max(0, (now - m.PublishedUtc).TotalDays);
                 var recency = Math.Pow(2, -ageDays / weights.RecencyHalfLifeDays);
+                var citations = m.Citations is { } c and > 0
+                    ? Math.Min(1, Math.Log(1 + c) / Math.Log(1001))
+                    : 0;
                 var blended = weights.SimilarityWeight * p.Score
-                    + weights.RecencyWeight * (float)recency
-                    + (m.HasCode ? weights.CodeBonus : 0f);
+                    + weights.RecencyWeight * recency
+                    + (m.HasCode ? weights.CodeBonus : 0)
+                    + weights.CitationWeight * citations;
                 return (Paper: p, Blended: blended);
             })
             .OrderByDescending(x => x.Blended)
             .ThenByDescending(x => x.Paper.Score)
             .Select(x => x.Paper)
             .ToList();
+    }
+
+    private async Task<List<ScoredPaper>> RerankHeadAsync(
+        SearchPlan plan, List<ScoredPaper> pool, int depth, CancellationToken ct)
+    {
+        var head = pool.Take(Math.Min(depth, pool.Count)).ToList();
+        var tail = pool.Skip(head.Count).ToList();
+
+        var ids = head.Select(h => h.PaperId).ToHashSet();
+        var texts = await db.Papers
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .Select(p => new { p.Id, Text = p.Title + ". " + p.Abstract })
+            .ToDictionaryAsync(p => p.Id, p => p.Text, ct);
+
+        // MS MARCO cross-encoders are trained on natural-language queries;
+        // the interpretation sentence matches that distribution far better
+        // than the comma-separated anchor topic list (measured: topic-list
+        // query DEGRADED nDCG@10 0.617 → 0.608).
+        var query = string.IsNullOrWhiteSpace(plan.Interpretation)
+            ? plan.AnchorText
+            : plan.Interpretation;
+        var passages = head.Select(h => texts.GetValueOrDefault(h.PaperId, string.Empty)).ToList();
+        var scores = await crossEncoder.ScoreAsync(query, passages, ct);
+
+        var reranked = head
+            .Select((paper, i) => (Paper: paper, CeScore: scores[i]))
+            .OrderByDescending(x => x.CeScore)
+            .Select(x => x.Paper)
+            .ToList();
+
+        reranked.AddRange(tail);
+        return reranked;
+    }
+
+    /// <summary>
+    /// Team-draft interleaving: teams alternate (random first pick per round)
+    /// drafting their best not-yet-taken paper. Interactions on A-slots vs
+    /// B-slots are votes between the rankers.
+    /// </summary>
+    internal static List<(ScoredPaper Paper, string? Variant)> TeamDraftInterleave(
+        IReadOnlyList<ScoredPaper> control,
+        IReadOnlyList<ScoredPaper> candidate,
+        int limit,
+        Func<bool>? coinFlip = null)
+    {
+        coinFlip ??= () => Random.Shared.Next(2) == 0;
+        var taken = new HashSet<long>();
+        var result = new List<(ScoredPaper, string?)>(limit);
+        var ai = 0;
+        var bi = 0;
+
+        while (result.Count < limit && (ai < control.Count || bi < candidate.Count))
+        {
+            var aFirst = coinFlip();
+            foreach (var team in aFirst ? new[] { "A", "B" } : ["B", "A"])
+            {
+                if (result.Count >= limit)
+                {
+                    break;
+                }
+
+                if (team == "A")
+                {
+                    while (ai < control.Count && taken.Contains(control[ai].PaperId))
+                    {
+                        ai++;
+                    }
+
+                    if (ai < control.Count)
+                    {
+                        taken.Add(control[ai].PaperId);
+                        result.Add((control[ai], "A"));
+                        ai++;
+                    }
+                }
+                else
+                {
+                    while (bi < candidate.Count && taken.Contains(candidate[bi].PaperId))
+                    {
+                        bi++;
+                    }
+
+                    if (bi < candidate.Count)
+                    {
+                        taken.Add(candidate[bi].PaperId);
+                        result.Add((candidate[bi], "B"));
+                        bi++;
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Anchor text is a comma-separated topic list by construction (the
+    /// compiler's contract); each topic becomes its own query vector. Falls
+    /// back to the whole text when there's nothing to split.
+    /// </summary>
+    internal static List<string> SplitAnchors(string anchorText)
+    {
+        var topics = anchorText
+            .Split([',', ';', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(t => t.Length >= 3)
+            .Take(20)
+            .ToList();
+
+        return topics.Count >= 2 ? topics : [anchorText];
     }
 
     /// <summary>

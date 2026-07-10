@@ -34,6 +34,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<InteractionEvent> InteractionEvents => Set<InteractionEvent>();
 
+    public DbSet<PaperSignal> PaperSignals => Set<PaperSignal>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

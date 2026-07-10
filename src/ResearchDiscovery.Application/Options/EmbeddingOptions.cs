@@ -31,6 +31,13 @@ public class EmbeddingOptions
     [Required]
     public string ModelDirectory { get; set; } = "models/all-MiniLM-L6-v2";
 
+    /// <summary>
+    /// Prefix prepended to SEARCH QUERIES only (never documents). Some models
+    /// (e.g. bge) are trained with an instruction prefix on the query side;
+    /// MiniLM uses none, hence the empty default.
+    /// </summary>
+    public string QueryPrefix { get; set; } = string.Empty;
+
     [Range(16, 512)]
     public int MaxSequenceTokens { get; set; } = 256;
 

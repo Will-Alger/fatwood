@@ -45,6 +45,47 @@ public class InMemoryEmbeddingIndex(
             .ToList();
     }
 
+    public async Task<IReadOnlyList<ScoredPaper>> TopMultiAsync(
+        float[] primary,
+        IReadOnlyList<float[]> topics,
+        int n,
+        IReadOnlySet<long>? restrictTo,
+        CancellationToken ct)
+    {
+        if (topics.Count == 0)
+        {
+            return await TopAsync(primary, n, restrictTo, ct);
+        }
+
+        var vectors = await GetVectorsAsync(ct);
+        var scored = new List<ScoredPaper>(restrictTo?.Count ?? vectors.Count);
+
+        foreach (var (paperId, vector) in vectors)
+        {
+            if (restrictTo is not null && !restrictTo.Contains(paperId))
+            {
+                continue;
+            }
+
+            var bestTopic = float.MinValue;
+            foreach (var topic in topics)
+            {
+                var score = Dot(topic, vector);
+                if (score > bestTopic)
+                {
+                    bestTopic = score;
+                }
+            }
+
+            scored.Add(new ScoredPaper(paperId, (Dot(primary, vector) + bestTopic) / 2));
+        }
+
+        return scored
+            .OrderByDescending(s => s.Score)
+            .Take(n)
+            .ToList();
+    }
+
     public async Task<IReadOnlyDictionary<long, float>> ScoreAsync(
         IEnumerable<long> paperIds, float[] query, CancellationToken ct)
     {

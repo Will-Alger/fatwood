@@ -17,6 +17,7 @@ public class PaperEmbeddingService(
     IDbContextFactory<AppDbContext> dbFactory,
     ITextEmbedder embedder,
     IEmbeddingIndex index,
+    ILexicalIndex lexicalIndex,
     IOptions<EmbeddingOptions> options,
     ILogger<PaperEmbeddingService> logger) : IPaperEmbeddingService
 {
@@ -108,7 +109,10 @@ public class PaperEmbeddingService(
 
         if (embedded > 0)
         {
+            // The corpus changed (embed runs follow every ingest), so both
+            // in-memory indexes reload on next use.
             index.Invalidate();
+            lexicalIndex.Invalidate();
         }
 
         logger.LogInformation("Embedding run finished: embedded {Embedded}, failed {Failed}",

@@ -5,6 +5,10 @@ public enum InteractionType
     Bookmarked,
     Unbookmarked,
     AnalyzedFromSearch,
+
+    /// <summary>Explicit negative feedback — the highest-value missing signal:
+    /// positives say what to show more of, negatives say what to stop showing.</summary>
+    NotInterested,
 }
 
 /// <summary>

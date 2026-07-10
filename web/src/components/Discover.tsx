@@ -36,6 +36,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
   const [notice, setNotice] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'match' | 'score'>('match')
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
 
   // The poll loop refreshes whatever plan is current when it finishes, even
   // if the user edited chips mid-analysis.
@@ -180,6 +181,9 @@ export function Discover({ llmSettings }: DiscoverProps) {
     // filter/sort — it's the position the ranker chose, which is what
     // interaction telemetry must record.
     let hits = result.hits.map((h, i) => ({ ...h, rank: i + 1 }))
+    if (hiddenIds.size > 0) {
+      hits = hits.filter((h) => !hiddenIds.has(h.paper.arxivId))
+    }
     if (analyzedOnly) {
       hits = hits.filter((h) => h.paper.analysis !== null)
     }
@@ -191,7 +195,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
       })
     }
     return hits
-  }, [result, sortBy, analyzedOnly])
+  }, [result, sortBy, analyzedOnly, hiddenIds])
 
   const analyzeCount = Math.min(ANALYZE_TOP_N, result?.hits.length ?? 0)
   const estimateText =
@@ -355,6 +359,9 @@ export function Discover({ llmSettings }: DiscoverProps) {
                 isWildcard={hit.isWildcard}
                 experienceProximity={hit.experienceProximity}
                 searchContext={{ searchEventId: result.searchEventId, rank: hit.rank }}
+                onNotInterested={() =>
+                  setHiddenIds((prev) => new Set(prev).add(hit.paper.arxivId))
+                }
               />
             ))}
           </div>

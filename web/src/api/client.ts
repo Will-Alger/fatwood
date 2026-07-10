@@ -122,6 +122,20 @@ export async function setBookmark(
   if (!response.ok) throw await parseError(response)
 }
 
+export async function markNotInterested(
+  arxivId: string,
+  context?: SearchContext,
+): Promise<void> {
+  const query = context
+    ? `?searchEventId=${context.searchEventId}&rank=${context.rank}`
+    : ''
+  const response = await fetch(
+    `/api/papers/${encodeURIComponent(arxivId)}/not-interested${query}`,
+    { method: 'POST' },
+  )
+  if (!response.ok) throw await parseError(response)
+}
+
 export function getCategories(signal?: AbortSignal): Promise<CategoryDto[]> {
   return getJson('/api/categories', signal)
 }

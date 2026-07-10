@@ -54,6 +54,7 @@ public class SearchTelemetryService(
                 Score = hit.MatchScore,
                 IsWildcard = hit.IsWildcard,
                 Proximity = hit.ExperienceProximity,
+                Variant = hit.Variant,
             });
         }
 

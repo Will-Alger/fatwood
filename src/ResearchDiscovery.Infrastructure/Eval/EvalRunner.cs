@@ -175,6 +175,59 @@ public class EvalRunner(
             Mean(scores.Select(s => s.ReciprocalRank)));
     }
 
+    public sealed record AuditQueryEstimate(
+        string QueryId,
+        int RandomJudged,
+        int RandomRelevant,
+        int CandidateCount,
+        int SurfacedRelevant,
+        double? EstimatedMissedGems);
+
+    /// <summary>
+    /// Missed-gem estimation from the judged RANDOM samples: if r of n
+    /// uniformly-sampled unreturned candidates are relevant, the filtered pool
+    /// hides ≈ (r/n) × (pool − returned) more gems the ranker never surfaced.
+    /// Small n means wide error bars — this is a trend indicator, not a count.
+    /// </summary>
+    public async Task<IReadOnlyList<AuditQueryEstimate>> AuditAsync(
+        string queriesPath, string judgmentsPath, CancellationToken ct)
+    {
+        var querySet = EvalFileStore.LoadQueries(queriesPath);
+        var judgmentSet = EvalFileStore.LoadJudgmentsOrEmpty(judgmentsPath, judge.RubricVersion);
+        var byQuery = judgmentSet.Judgments
+            .GroupBy(j => j.QueryId, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+        var estimates = new List<AuditQueryEstimate>();
+        foreach (var query in querySet.Queries)
+        {
+            if (query.Plan is null || !byQuery.TryGetValue(query.Id, out var judgments))
+            {
+                continue;
+            }
+
+            var random = judgments.Where(j => j.Source == "random").ToList();
+            var randomRelevant = random.Count(j => j.Grade >= RankingMetrics.RelevantThreshold);
+            var surfacedRelevant = judgments.Count(
+                j => j.Source == "pool" && j.Grade >= RankingMetrics.RelevantThreshold);
+
+            var candidateCount = await SearchService
+                .FilterCandidates(db.Papers.AsNoTracking(), query.Plan)
+                .CountAsync(ct);
+
+            double? estimate = random.Count > 0
+                ? (double)randomRelevant / random.Count * Math.Max(0, candidateCount - 50)
+                : null;
+
+            estimates.Add(new AuditQueryEstimate(
+                query.Id, random.Count, randomRelevant, candidateCount, surfacedRelevant, estimate));
+        }
+
+        return estimates;
+    }
+
     public sealed record TuneResult(
         RankingWeights Weights, double? MeanNdcg10, double? MeanRecall50, double? MeanMrr);
 
@@ -190,6 +243,7 @@ public class EvalRunner(
     {
         float[] recencyWeights = [0f, 0.05f, 0.1f, 0.2f];
         float[] codeBonuses = [0f, 0.02f, 0.05f];
+        float[] citationWeights = [0f, 0.05f, 0.1f];
         const int halfLifeDays = 90;
 
         var results = new List<TuneResult>();
@@ -197,13 +251,16 @@ public class EvalRunner(
         {
             foreach (var code in codeBonuses)
             {
-                var weights = new RankingWeights(1f, recency, halfLifeDays, code);
-                var report = await ScoreAsync(queriesPath, judgmentsPath, ct, weights);
-                results.Add(new TuneResult(
-                    weights, report.MeanNdcg10, report.MeanRecall50, report.MeanReciprocalRank));
-                logger.LogInformation(
-                    "Tune: recency={Recency} code={Code} → nDCG@10 {Ndcg:F3}",
-                    recency, code, report.MeanNdcg10 ?? 0);
+                foreach (var citation in citationWeights)
+                {
+                    var weights = new RankingWeights(1f, recency, halfLifeDays, code, citation);
+                    var report = await ScoreAsync(queriesPath, judgmentsPath, ct, weights);
+                    results.Add(new TuneResult(
+                        weights, report.MeanNdcg10, report.MeanRecall50, report.MeanReciprocalRank));
+                    logger.LogInformation(
+                        "Tune: recency={Recency} code={Code} citation={Citation} → nDCG@10 {Ndcg:F3}",
+                        recency, code, citation, report.MeanNdcg10 ?? 0);
+                }
             }
         }
 

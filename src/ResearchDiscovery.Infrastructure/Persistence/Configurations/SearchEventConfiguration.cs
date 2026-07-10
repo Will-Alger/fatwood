@@ -33,6 +33,8 @@ public class SearchEventResultConfiguration : IEntityTypeConfiguration<SearchEve
 
         builder.Property(r => r.Proximity).HasMaxLength(16);
 
+        builder.Property(r => r.Variant).HasMaxLength(1);
+
         builder.HasIndex(r => r.PaperId);
 
         builder.HasOne(r => r.Paper)

@@ -66,7 +66,7 @@ public class TelemetryAnalyzer(
 
         var allResults = await db.SearchEventResults
             .AsNoTracking()
-            .Select(r => new { r.SearchEventId, r.PaperId, r.IsWildcard })
+            .Select(r => new { r.SearchEventId, r.PaperId, r.IsWildcard, r.Variant })
             .ToListAsync(ct);
 
         var interactions = await db.InteractionEvents
@@ -202,6 +202,27 @@ public class TelemetryAnalyzer(
                 report.AppendLine("  ⚠ >90% of interactions land in the top 3 — labels mostly measure where you look, " +
                                   "not what is good. Discount position when using these as training labels.");
             }
+        }
+
+        // ---- Interleaving scoreboard (only when experiments ran) -------------
+        var variantByKey = allResults
+            .Where(r => r.Variant is not null)
+            .ToDictionary(r => (r.SearchEventId, r.PaperId), r => r.Variant!);
+        if (variantByKey.Count > 0)
+        {
+            var votesA = contextual.Count(i =>
+                i.SearchEventId is not null &&
+                variantByKey.GetValueOrDefault((i.SearchEventId.Value, i.PaperId)) == "A");
+            var votesB = contextual.Count(i =>
+                i.SearchEventId is not null &&
+                variantByKey.GetValueOrDefault((i.SearchEventId.Value, i.PaperId)) == "B");
+            var slotsA = allResults.Count(r => r.Variant == "A");
+            var slotsB = allResults.Count(r => r.Variant == "B");
+
+            report.AppendLine();
+            report.AppendLine($"Interleaving: control(A) {votesA} vote(s) over {slotsA} slots vs " +
+                              $"candidate(B) {votesB} vote(s) over {slotsB} slots. " +
+                              "Wait for a clear margin (and >20 votes) before promoting the candidate.");
         }
 
         report.AppendLine();

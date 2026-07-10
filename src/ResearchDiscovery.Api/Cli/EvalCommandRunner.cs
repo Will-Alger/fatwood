@@ -30,7 +30,8 @@ public static class EvalCommandRunner
                 "       eval search  [--queries <path>] [--judgments <path>]\n" +
                 "       eval bias\n" +
                 "       eval adopt   [--queries <path>]\n" +
-                "       eval tune    [--queries <path>] [--judgments <path>]");
+                "       eval tune    [--queries <path>] [--judgments <path>]\n" +
+                "       eval audit   [--queries <path>] [--judgments <path>]");
             return ExitUsage;
         }
 
@@ -88,6 +89,11 @@ public static class EvalCommandRunner
                     var tuned = await runner.TuneAsync(queriesPath, judgmentsPath, cts.Token);
                     PrintTuneResults(tuned);
                     return tuned.Count > 0 ? ExitOk : ExitRunFailed;
+
+                case "audit":
+                    var audit = await runner.AuditAsync(queriesPath, judgmentsPath, cts.Token);
+                    PrintAudit(audit);
+                    return audit.Count > 0 ? ExitOk : ExitRunFailed;
 
                 default:
                     return ExitUsage;
@@ -156,6 +162,24 @@ public static class EvalCommandRunner
               "if the delta is worth it; nothing is applied automatically.");
     }
 
+    private static void PrintAudit(IReadOnlyList<EvalRunner.AuditQueryEstimate> audit)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"{"query",-40} {"sampled",8} {"rel",4} {"candidates",11} {"est. missed gems",17}");
+        Console.WriteLine(new string('-', 86));
+        foreach (var a in audit)
+        {
+            var estimate = a.EstimatedMissedGems is { } e ? $"~{e:F0}" : "n/a";
+            Console.WriteLine(
+                $"{a.QueryId,-40} {a.RandomJudged,8} {a.RandomRelevant,4} " +
+                $"{a.CandidateCount,11:N0} {estimate,17}");
+        }
+
+        Console.WriteLine(new string('-', 86));
+        Console.WriteLine("Estimate = (relevant fraction of the random sample) × (candidates beyond the head).");
+        Console.WriteLine("Small samples → wide error bars: track the TREND across ranker versions, not the count.");
+    }
+
     private static string Fmt(double? value) => value?.ToString("0.000") ?? "n/a";
 
     private static bool TryParseArguments(
@@ -178,7 +202,7 @@ public static class EvalCommandRunner
         }
 
         verb = args[1].ToLowerInvariant();
-        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune"))
+        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit"))
         {
             return false;
         }

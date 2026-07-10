@@ -20,6 +20,20 @@ public interface IEmbeddingIndex
     Task<IReadOnlyList<ScoredPaper>> TopAsync(
         float[] query, int n, IReadOnlySet<long>? restrictTo, CancellationToken ct);
 
+    /// <summary>
+    /// Top-N papers scored as the average of (a) similarity to the primary
+    /// query vector — the whole intent — and (b) the BEST similarity among the
+    /// topic vectors. (a) alone averages away single-topic gems; (b) alone
+    /// rewards single-topic tunnel vision (measured: nDCG@10 0.38 vs 0.55);
+    /// the blend keeps both properties. With no topics this is plain cosine.
+    /// </summary>
+    Task<IReadOnlyList<ScoredPaper>> TopMultiAsync(
+        float[] primary,
+        IReadOnlyList<float[]> topics,
+        int n,
+        IReadOnlySet<long>? restrictTo,
+        CancellationToken ct);
+
     /// <summary>Cosine scores for a specific set of papers against a vector.</summary>
     Task<IReadOnlyDictionary<long, float>> ScoreAsync(
         IEnumerable<long> paperIds, float[] query, CancellationToken ct);

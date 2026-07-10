@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { setBookmark } from '../api/client'
+import { markNotInterested, setBookmark } from '../api/client'
 import type { PaperAnalysisDto, PaperDto, SearchContext } from '../api/types'
 
 const ABSTRACT_PREVIEW_LENGTH = 400
@@ -87,6 +87,8 @@ export interface PaperCardProps {
   experienceProximity?: 'close' | 'stretch' | null
   /** Present when this card came from a search — bookmarks then carry (search, rank) telemetry. */
   searchContext?: SearchContext
+  /** When set, shows a "not interested" control; the parent removes the card. */
+  onNotInterested?: () => void
 }
 
 export function PaperCard({
@@ -95,6 +97,7 @@ export function PaperCard({
   isWildcard,
   experienceProximity,
   searchContext,
+  onNotInterested,
 }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
@@ -146,6 +149,22 @@ export function PaperCard({
         >
           {bookmarked ? '★' : '☆'}
         </button>
+        {onNotInterested && (
+          <button
+            type="button"
+            className="bookmark-button"
+            onClick={() => {
+              onNotInterested()
+              void markNotInterested(paper.arxivId, searchContext).catch(() => {
+                /* telemetry write only — the card is already hidden */
+              })
+            }}
+            title="Not interested — hide and teach the ranker"
+            aria-label="Not interested"
+          >
+            ✕
+          </button>
+        )}
       </div>
       <div className="paper-meta">
         {isWildcard && (
