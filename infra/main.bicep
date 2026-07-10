@@ -397,9 +397,12 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
         parallelism: 1
         replicaCompletionCount: 1
       }
-      // A delta is minutes, but a self-healing catch-up after downtime can be
-      // long at arXiv's 1-req/3s etiquette.
-      replicaTimeout: 3600
+      // A delta is minutes, but two things can be long: a self-healing
+      // catch-up at arXiv's 1-req/3s etiquette, and a full corpus re-embed
+      // after an embedding-model change (~19k papers on 0.5 vCPU; batches
+      // persist, so a timeout only pauses progress — but 1h sliced the bge
+      // migration into week-long pieces).
+      replicaTimeout: 21600
       replicaRetryLimit: 1
       registries: registries
       secrets: kvSecrets
