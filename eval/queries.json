@@ -349,6 +349,23 @@
         "dateWindowDays": null,
         "requireNoCode": null
       }
+    },
+    {
+      "id": "adopted-agentic-llm-systems-for-automating-financial",
+      "persona": "Experience: 3 years fullstack development: C#/.NET backend, React frontends, SQL databases, REST APIs, clinical research data pipelines\nGoals: land a backend engineering role at a fintech company in New York City\nWeekly hours available: 10",
+      "query": "agentic LLM systems for automating financial document analysis, something I could demo to fintech employers",
+      "plan": {
+        "interpretation": "You\u0027re seeking papers on agentic LLM systems and autonomous AI agents applied to financial document processing and analysis-work you can build as a portfolio project to demonstrate backend and AI integration skills to fintech employers.",
+        "anchorText": "agentic systems, autonomous agents, large language models, financial document analysis, document processing, information extraction, natural language processing, multimodal document understanding, workflow automation, financial data extraction, retrieval-augmented generation, agent reasoning, tool use, document classification, named entity recognition, financial NLP",
+        "categories": [
+          "cs.AI",
+          "cs.CL",
+          "cs.LG",
+          "q-fin.CP"
+        ],
+        "dateWindowDays": 90,
+        "requireNoCode": null
+      }
     }
   ]
 }

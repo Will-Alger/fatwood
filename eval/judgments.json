@@ -6401,6 +6401,486 @@
       "rationale": "Directly relevant to reproducibility goals, but the paper appears to be primarily a specification/format design with LLM automation rather than a concrete implementable algorithm, making it less suitable as a standalone portfolio project compared to methodological papers.",
       "judgeModel": "claude-haiku-4-5",
       "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2606.00970",
+      "grade": 0,
+      "rationale": "Pure theoretical mathematics on MDPs and prospect theory with no implementation scope or backend/ML-adjacent application potential for a portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.05365",
+      "grade": 1,
+      "rationale": "While covering reasoning models and training, this is a technical report on a pre-built system requiring massive compute resources, not a buildable weekend project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.02701",
+      "grade": 1,
+      "rationale": "ML optimization paper on gradient clipping that shares optimization methods but lacks clear portfolio-project scope or backend relevance for someone with no ML experience.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.29151",
+      "grade": 0,
+      "rationale": "Pure algebraic geometry proof using AI assistance; unrelated to backend development, ML systems, or buildable engineering projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.18728",
+      "grade": 1,
+      "rationale": "Neural network verification is ML-adjacent but focuses on theoretical analysis rather than building a practical system; limited portfolio-project potential.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.15961",
+      "grade": 2,
+      "rationale": "Synthetic health data generation is directly relevant to clinical research, evaluates multiple models, and could be partially reproducible as a portfolio project comparing synthesizers on real datasets.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.09735",
+      "grade": 1,
+      "rationale": "LLM serving optimization requires specialized GPU infrastructure and deep systems knowledge; not realistically buildable for a clinical developer over weekends.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.03198",
+      "grade": 1,
+      "rationale": "Philosophical overview of world models and reduced-order systems lacks concrete implementation guidance or buildable scope for a weekend project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.16361",
+      "grade": 2,
+      "rationale": "Time series forecasting benchmark with heavy-tailed data is relevant, provides public dataset, and enables building a robust forecasting system as a portfolio project with ML-adjacent relevance.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.12119",
+      "grade": 1,
+      "rationale": "VLM evaluation study focuses on testing existing models rather than building new systems; minimal portfolio-project buildability for backend or ML-adjacent roles.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.27249",
+      "grade": 2,
+      "rationale": "Relevant to open science contribution with a novel controlled decoding algorithm, but the practical scope and data requirements for reproducing counterfactual generation are somewhat unclear from the abstract.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.22156",
+      "grade": 2,
+      "rationale": "Solid algorithmic contribution (OWPO) with clear method and reasonable scope for reimplementation, though it requires substantial LLM infrastructure and reward models that may limit accessibility.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2607.02082",
+      "grade": 3,
+      "rationale": "Excellent fit: combines evolutionary algorithms with Wave Function Collapse for procedural content generation with clear, reproducible methodology and well-defined benchmark domains (mazes, dungeons) amenable to solo implementation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.18802",
+      "grade": 2,
+      "rationale": "Solid methodological contribution addressing evaluation artifacts in wearable PPG analysis with explicit parameter optimization, though requires access to specialized medical datasets that may be restricted.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.23712",
+      "grade": 2,
+      "rationale": "Interesting operator learning approach with clear methodology and multiple benchmark datasets, but reproducing flow field reconstruction requires domain expertise and potentially significant computational resources.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.13673",
+      "grade": 3,
+      "rationale": "Excellent for portfolio: introduces novel GNN architecture for NP-hard combinatorial optimization with clear methodology, defined benchmarks, and reasonable scope for a solid reference implementation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.12620",
+      "grade": 1,
+      "rationale": "While addressing a meaningful problem, VeGAS requires integration with Habitat/ALFRED environments and LLM infrastructure that makes solo reproduction challenging and less suitable as a focused portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2606.06523",
+      "grade": 1,
+      "rationale": "Interesting formal verification framework but requires deep expertise in dependent-type languages (Lean4) and LLM agent systems, making it tangential to typical portfolio reproducibility goals.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.18632",
+      "grade": 1,
+      "rationale": "Position paper proposing a research direction rather than a reproducible method with specific algorithms or datasets, making it unsuitable as a portfolio implementation target.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2607.00523",
+      "grade": 0,
+      "rationale": "Philosophical position paper on human-AI teaming and trust with no technical methodology or experimental framework to reproduce.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.11238",
+      "grade": 3,
+      "rationale": "Directly on-target: describes a modular agentic LLM architecture (ShipFinance.ai) for automating financial document analysis and loan origination workflows, with clear buildable components and production deployment considerations highly relevant to fintech portfolio projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.25030",
+      "grade": 3,
+      "rationale": "Excellent match: presents MimirRAG, a production-grade multi-agent RAG system specifically designed for financial document analysis with clear technical architecture, ablation studies, and real-world validation by financial analysts\u2014ideal fintech portfolio demonstration.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.17159",
+      "grade": 2,
+      "rationale": "Relevant: describes MADP, a multi-agent document processing pipeline with production deployment on real invoices, but focused on general enterprise invoicing rather than financial services, making it slightly less aligned with fintech goals.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.03953",
+      "grade": 1,
+      "rationale": "Tangential: studies natural language tool calling in agentic systems, which is methodologically relevant but lacks domain specificity to financial document analysis or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.01152",
+      "grade": 0,
+      "rationale": "Irrelevant: curriculum design paper on agentic software engineering education; lacks concrete financial document analysis or buildable portfolio project scope.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.11304",
+      "grade": 2,
+      "rationale": "Relevant: BankerToolBench evaluates AI agents on investment banking workflows with financial modeling and document generation, directly applicable to fintech; however, it\u0027s primarily a benchmark paper rather than a buildable system architecture.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.03537",
+      "grade": 1,
+      "rationale": "Tangential: presents an agentic pipeline for library subject indexing using AI, demonstrating multi-agent architecture but in library/cataloging domain rather than financial services.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.05644",
+      "grade": 1,
+      "rationale": "Tangential: describes NLP methodology for clinical data extraction from medical records, shares domain expertise in document processing and information extraction but targets healthcare rather than finance.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.01647",
+      "grade": 1,
+      "rationale": "Tangential: AgenticDataBench includes fintech use cases and evaluates data agents, but focuses on general data science workflows rather than specifically financial document analysis for backend systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.21910",
+      "grade": 1,
+      "rationale": "Tangential: agentic architecture for scientific workflow automation with multi-layer design is methodologically relevant but lacks financial domain specificity or buildable fintech application scope.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.13110",
+      "grade": 3,
+      "rationale": "Directly targets agentic LLM systems for financial document analysis with a fully automated multi-agent framework for VC due diligence, including real-world data extraction and hallucination mitigation\u2014exactly what the searcher wants to demo to fintech employers.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.28787",
+      "grade": 2,
+      "rationale": "Relevant study on agentic data retrieval comparing semantic vs. unstructured approaches, useful for understanding agent design patterns but not specifically about financial document analysis or a complete buildable project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.03233",
+      "grade": 1,
+      "rationale": "Comprehensive survey on agentic AI for OSINT and cyber investigations; while it covers agentic architectures, it is orthogonal to financial document analysis and not geared toward fintech portfolio projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.05608",
+      "grade": 1,
+      "rationale": "Conceptual paper on agentic software paradigms and engineering practices rather than a concrete system for financial document analysis; too theoretical for immediate portfolio project development.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.00828",
+      "grade": 1,
+      "rationale": "Formative study on semantic gaps in agent-generated analytical workflows across finance, HR, and public safety; relevant to understanding agent limitations but not a buildable system or financial document-specific application.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.02592",
+      "grade": 1,
+      "rationale": "Systematic survey of foundation-model-based agents in industrial automation with focus on manufacturing and operations; lacks specific relevance to fintech or financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.06923",
+      "grade": 2,
+      "rationale": "Explores declarative vs. imperative orchestration for tool-using agents in customer-service workflows; relevant methodology for building agentic systems but not specifically targeted at financial documents or fintech.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.12729",
+      "grade": 0,
+      "rationale": "Focuses on LLM-based agents for network operations and IT operations (NetOps/AIOps); completely outside the domain of financial document analysis or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.30407",
+      "grade": 1,
+      "rationale": "Explores autonomous agentic data engineering for model specialization through iterative data curation; addresses agent autonomy but is focused on training data generation rather than financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.25256",
+      "grade": 0,
+      "rationale": "Benchmarks agentic AI on scientific literature discovery; while it demonstrates autonomous research capabilities, it is unrelated to financial documents or fintech domain applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.14527",
+      "grade": 0,
+      "rationale": "Focuses on materials science and ML interatomic potentials, which is unrelated to fintech or financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.00060",
+      "grade": 2,
+      "rationale": "Strong agentic LLM system with structured data integration and tool orchestration applicable to financial domains, though domain-specific to drilling operations rather than finance.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.20133",
+      "grade": 1,
+      "rationale": "Evolvable agent framework with skill learning is relevant to agentic systems but lacks financial or document analysis focus; more oriented to foreign trade workflows.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.10513",
+      "grade": 1,
+      "rationale": "Focuses on agent prompt optimization and semantic trajectory analysis; relevant to agentic systems but not specifically to financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.10480",
+      "grade": 0,
+      "rationale": "Addresses system identification and dynamical models, which is unrelated to fintech or financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.13318",
+      "grade": 1,
+      "rationale": "Web agent skill learning framework is relevant to agentic systems but targets browser automation rather than financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.03986",
+      "grade": 1,
+      "rationale": "Multi-agent system composition and orchestration is relevant to agentic workflows but lacks focus on financial documents or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.16911",
+      "grade": 1,
+      "rationale": "Agent skill package management is infrastructure-relevant to agentic systems but not specific to financial document analysis or fintech.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.26926",
+      "grade": 2,
+      "rationale": "Agentic RAG framework for document analysis with evidence grounding is directly applicable to financial document processing, though domain-specific to legal texts.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.06647",
+      "grade": 1,
+      "rationale": "Retrieval-augmented agent focuses on information retrieval optimization rather than financial document analysis or fintech automation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.07060",
+      "grade": 0,
+      "rationale": "Focus on interpretable ML for tabular data classification is unrelated to agentic LLM systems or financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.28024",
+      "grade": 0,
+      "rationale": "Federated multi-label learning in distributed settings has no connection to LLM agents or financial document processing.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.20924",
+      "grade": 1,
+      "rationale": "Addresses LLM instruction induction which touches on prompt engineering, but lacks the agentic automation and financial document focus the searcher needs.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.21061",
+      "grade": 0,
+      "rationale": "Covers vision-language models for autonomous driving trajectory prediction, unrelated to financial document analysis or agentic systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.12390",
+      "grade": 2,
+      "rationale": "Presents a structured reasoning framework (HCoT) for guiding LLM problem-solving with heuristics; relevant to agentic LLM systems but lacks financial document automation specificity.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.19436",
+      "grade": 1,
+      "rationale": "Addresses reasoning token credit assignment in RLVR for mathematical reasoning tasks; touches LLM reasoning but not document analysis or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.11710",
+      "grade": 0,
+      "rationale": "Focuses on compositional generalization in continual few-shot learning with vision transformers; unrelated to LLM agents or document processing.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.05387",
+      "grade": 0,
+      "rationale": "Addresses conditional sampling with diffusion models for inverse problems like inpainting; no relevance to LLM-based document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.20417",
+      "grade": 1,
+      "rationale": "Proposes a metric for vector search quality assessment; tangentially relevant to retrieval in document analysis systems but lacks LLM agency and fintech focus.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.25832",
+      "grade": 2,
+      "rationale": "Describes TrialCalibre, a multiagent system for automating clinical trial benchmarking; demonstrates agentic automation principles applicable to document workflows, but targets clinical rather than financial domain.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
     }
   ]
 }
