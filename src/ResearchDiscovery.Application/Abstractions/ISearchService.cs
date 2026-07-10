@@ -1,4 +1,5 @@
 using ResearchDiscovery.Application.Dtos;
+using ResearchDiscovery.Application.Options;
 
 namespace ResearchDiscovery.Application.Abstractions;
 
@@ -21,5 +22,8 @@ public sealed record SearchResult(
 /// </summary>
 public interface ISearchService
 {
-    Task<SearchResult> SearchAsync(SearchPlan plan, int limit, CancellationToken ct);
+    /// <param name="weights">Optional ranking-blend override, used only by the
+    /// offline tuner; null means the configured (default: pure similarity) blend.</param>
+    Task<SearchResult> SearchAsync(
+        SearchPlan plan, int limit, CancellationToken ct, RankingWeights? weights = null);
 }

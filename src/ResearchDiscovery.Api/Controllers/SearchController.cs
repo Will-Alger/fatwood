@@ -61,10 +61,16 @@ public class SearchController(
         }
     }
 
-    public sealed record SearchRequest(SearchPlan Plan, int? Limit);
+    /// <param name="QueryText">The original prose the plan was compiled from,
+    /// when known — captured into telemetry so `eval adopt` can turn real
+    /// searches into eval queries.</param>
+    public sealed record SearchRequest(SearchPlan Plan, int? Limit, string? QueryText);
 
     [HttpPost]
-    public async Task<IActionResult> Search([FromBody] SearchRequest request, CancellationToken ct)
+    public async Task<IActionResult> Search(
+        [FromBody] SearchRequest request,
+        [FromServices] ISearchTelemetry telemetry,
+        CancellationToken ct)
     {
         if (request.Plan is null || string.IsNullOrWhiteSpace(request.Plan.AnchorText))
         {
@@ -73,6 +79,19 @@ public class SearchController(
         }
 
         var result = await searchService.SearchAsync(request.Plan, request.Limit ?? 30, ct);
-        return Ok(result);
+
+        // Product searches are logged (the eval CLI calls ISearchService
+        // directly and never lands here). The event id goes back to the client
+        // so bookmark/analyze actions can carry their search context.
+        var searchEventId = await telemetry.LogSearchAsync(
+            request.QueryText, request.Plan, result, ct);
+
+        return Ok(new
+        {
+            searchEventId,
+            plan = result.Plan,
+            hits = result.Hits,
+            totalCandidates = result.TotalCandidates,
+        });
     }
 }

@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ResearchDiscovery.Application.Abstractions;
+using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Persistence;
 using ResearchDiscovery.Infrastructure.Profile;
 
@@ -25,6 +27,7 @@ public class SearchService(
     IEmbeddingIndex index,
     IPaperQueryService queryService,
     ProfileService profileService,
+    IOptions<RankingOptions> rankingOptions,
     ILogger<SearchService> logger) : ISearchService
 {
     private const int WildcardSlots = 2;
@@ -32,9 +35,11 @@ public class SearchService(
     private const float CloseToHomeThreshold = 0.45f;
     private const float StretchThreshold = 0.25f;
 
-    public async Task<SearchResult> SearchAsync(SearchPlan plan, int limit, CancellationToken ct)
+    public async Task<SearchResult> SearchAsync(
+        SearchPlan plan, int limit, CancellationToken ct, RankingWeights? weights = null)
     {
         limit = Math.Clamp(limit, 1, 200);
+        weights ??= rankingOptions.Value.ToWeights();
 
         // Stage 0: deterministic SQL filters.
         var candidates = FilterCandidates(db.Papers.AsNoTracking(), plan);
@@ -56,6 +61,15 @@ public class SearchService(
                 "Search matched {Candidates} papers but none have embeddings — run `embed` first",
                 candidateIds.Count);
             return new SearchResult(plan, [], candidateIds.Count);
+        }
+
+        // Optional signal blend: re-order the pool by weighted score before
+        // selection. The default weights are pure similarity, which skips this
+        // entirely — the original ranker, bit-for-bit. MatchScore stays the
+        // raw cosine either way; the blend changes order, not evidence.
+        if (!weights.IsPureSimilarity)
+        {
+            pool = await BlendAsync(pool, weights, ct);
         }
 
         // Experience annotation + wildcards need the profile's experience vector.
@@ -83,6 +97,43 @@ public class SearchService(
             .ToList();
 
         return new SearchResult(plan, hits, candidateIds.Count);
+    }
+
+    /// <summary>
+    /// Weighted re-order of the relevance pool: cosine similarity blended with
+    /// recency (exponential half-life decay from publication) and a flat
+    /// has-code bonus. Fetches only the pool's metadata (≤ limit×5 rows).
+    /// </summary>
+    private async Task<IReadOnlyList<ScoredPaper>> BlendAsync(
+        IReadOnlyList<ScoredPaper> pool, RankingWeights weights, CancellationToken ct)
+    {
+        var ids = pool.Select(p => p.PaperId).ToHashSet();
+        var meta = await db.Papers
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .Select(p => new { p.Id, p.PublishedUtc, HasCode = p.CodeUrl != null })
+            .ToDictionaryAsync(p => p.Id, ct);
+
+        var now = DateTimeOffset.UtcNow;
+        return pool
+            .Select(p =>
+            {
+                if (!meta.TryGetValue(p.PaperId, out var m))
+                {
+                    return (Paper: p, Blended: weights.SimilarityWeight * p.Score);
+                }
+
+                var ageDays = Math.Max(0, (now - m.PublishedUtc).TotalDays);
+                var recency = Math.Pow(2, -ageDays / weights.RecencyHalfLifeDays);
+                var blended = weights.SimilarityWeight * p.Score
+                    + weights.RecencyWeight * (float)recency
+                    + (m.HasCode ? weights.CodeBonus : 0f);
+                return (Paper: p, Blended: blended);
+            })
+            .OrderByDescending(x => x.Blended)
+            .ThenByDescending(x => x.Paper.Score)
+            .Select(x => x.Paper)
+            .ToList();
     }
 
     /// <summary>

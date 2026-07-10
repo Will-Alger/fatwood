@@ -72,7 +72,9 @@ public class AdminAnalysisController(
         });
     }
 
-    public sealed record SelectionRequest(IReadOnlyList<string> ArxivIds);
+    /// <param name="SearchEventId">The logged search the selection came from,
+    /// when triggered from search results — telemetry context only.</param>
+    public sealed record SelectionRequest(IReadOnlyList<string> ArxivIds, long? SearchEventId);
 
     /// <summary>
     /// Analyzes an explicit paper set — the "Analyze top N" action on search
@@ -80,7 +82,10 @@ public class AdminAnalysisController(
     /// enqueued set costs at most its stale members.
     /// </summary>
     [HttpPost("selection")]
-    public IActionResult TriggerSelection([FromBody] SelectionRequest request)
+    public async Task<IActionResult> TriggerSelection(
+        [FromBody] SelectionRequest request,
+        [FromServices] ISearchTelemetry telemetry,
+        CancellationToken ct)
     {
         if (request.ArxivIds is not { Count: > 0 })
         {
@@ -98,6 +103,19 @@ public class AdminAnalysisController(
         {
             return Problem(statusCode: StatusCodes.Status429TooManyRequests,
                 detail: "The analysis queue is full; try again once queued runs complete.");
+        }
+
+        // Spending analysis tokens on a paper is a strong interest signal;
+        // record it against the originating search when known (ranks resolve
+        // from the logged results).
+        if (request.SearchEventId is not null)
+        {
+            foreach (var arxivId in request.ArxivIds)
+            {
+                await telemetry.LogInteractionAsync(
+                    arxivId, Domain.Entities.InteractionType.AnalyzedFromSearch,
+                    request.SearchEventId, rank: null, ct);
+            }
         }
 
         return Accepted(value: new

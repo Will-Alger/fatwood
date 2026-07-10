@@ -15,6 +15,7 @@ using ResearchDiscovery.Infrastructure.Persistence;
 using ResearchDiscovery.Infrastructure.Profile;
 using ResearchDiscovery.Infrastructure.Queries;
 using ResearchDiscovery.Infrastructure.Search;
+using ResearchDiscovery.Infrastructure.Telemetry;
 
 namespace ResearchDiscovery.Infrastructure.DependencyInjection;
 
@@ -118,12 +119,22 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEmbeddingIndex, InMemoryEmbeddingIndex>();
         services.AddSingleton<IPaperEmbeddingService, PaperEmbeddingService>();
 
+        services.AddOptions<RankingOptions>()
+            .Bind(configuration.GetSection(RankingOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<ISearchPlanCompiler, AnthropicSearchPlanCompiler>();
+
+        // Product telemetry: searches + interactions, logged from the API
+        // surface only (the eval CLI must never write here).
+        services.AddScoped<ISearchTelemetry, SearchTelemetryService>();
 
         // Offline search-quality harness (CLI-only; never on a request path).
         services.AddScoped<IRelevanceJudge, AnthropicRelevanceJudge>();
         services.AddScoped<EvalRunner>();
+        services.AddScoped<TelemetryAnalyzer>();
 
         return services;
     }

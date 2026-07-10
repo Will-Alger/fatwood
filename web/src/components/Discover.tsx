@@ -45,6 +45,11 @@ export function Discover({ llmSettings }: DiscoverProps) {
     setPlanState(next)
   }
 
+  // The prose behind the current plan, read at execute time (a ref, not
+  // state, so long-lived poll loops don't capture a stale value). Sent with
+  // every search so telemetry can trace results back to the original intent.
+  const queryTextRef = useRef<string | null>(null)
+
   const hasAdminKey = getAdminKey() !== ''
 
   const analysisEstimate = useMemo(() => {
@@ -63,7 +68,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
     setBusy('search')
     setError(null)
     try {
-      const searchResult = await runSearch(nextPlan, RESULT_LIMIT)
+      const searchResult = await runSearch(nextPlan, RESULT_LIMIT, queryTextRef.current)
       setResult(searchResult)
       setPlan(searchResult.plan)
     } catch (err) {
@@ -90,6 +95,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
     try {
       const compiled = await compileSearch(trimmed)
       setLastCompiledQuery(trimmed)
+      queryTextRef.current = trimmed
       setPlan(compiled)
       await executePlan(compiled)
     } catch (err) {
@@ -111,7 +117,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
     setError(null)
     setNotice(null)
     try {
-      await analyzeSelection(ids)
+      await analyzeSelection(ids, result.searchEventId)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not queue analysis')
       return
@@ -170,7 +176,10 @@ export function Discover({ llmSettings }: DiscoverProps) {
 
   const displayedHits = useMemo(() => {
     if (!result) return []
-    let hits = result.hits
+    // Rank is assigned from the ORIGINAL result order before any client-side
+    // filter/sort — it's the position the ranker chose, which is what
+    // interaction telemetry must record.
+    let hits = result.hits.map((h, i) => ({ ...h, rank: i + 1 }))
     if (analyzedOnly) {
       hits = hits.filter((h) => h.paper.analysis !== null)
     }
@@ -345,6 +354,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
                 matchScore={hit.matchScore}
                 isWildcard={hit.isWildcard}
                 experienceProximity={hit.experienceProximity}
+                searchContext={{ searchEventId: result.searchEventId, rank: hit.rank }}
               />
             ))}
           </div>

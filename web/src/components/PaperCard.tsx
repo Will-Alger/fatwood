@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { setBookmark } from '../api/client'
-import type { PaperAnalysisDto, PaperDto } from '../api/types'
+import type { PaperAnalysisDto, PaperDto, SearchContext } from '../api/types'
 
 const ABSTRACT_PREVIEW_LENGTH = 400
 
@@ -85,9 +85,17 @@ export interface PaperCardProps {
   matchScore?: number
   isWildcard?: boolean
   experienceProximity?: 'close' | 'stretch' | null
+  /** Present when this card came from a search — bookmarks then carry (search, rank) telemetry. */
+  searchContext?: SearchContext
 }
 
-export function PaperCard({ paper, matchScore, isWildcard, experienceProximity }: PaperCardProps) {
+export function PaperCard({
+  paper,
+  matchScore,
+  isWildcard,
+  experienceProximity,
+  searchContext,
+}: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
   const [bookmarked, setBookmarked] = useState(paper.isBookmarked)
@@ -98,7 +106,7 @@ export function PaperCard({ paper, matchScore, isWildcard, experienceProximity }
     setBookmarked(next) // optimistic
     setBookmarkBusy(true)
     try {
-      await setBookmark(paper.arxivId, next)
+      await setBookmark(paper.arxivId, next, searchContext)
     } catch {
       setBookmarked(!next) // roll back on failure
     } finally {

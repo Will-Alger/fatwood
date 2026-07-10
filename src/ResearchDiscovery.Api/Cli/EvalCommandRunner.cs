@@ -27,7 +27,10 @@ public static class EvalCommandRunner
             Console.Error.WriteLine(
                 "Usage: eval compile [--queries <path>]\n" +
                 "       eval judge   [--queries <path>] [--judgments <path>] [--pool <N>] [--random <N>]\n" +
-                "       eval search  [--queries <path>] [--judgments <path>]");
+                "       eval search  [--queries <path>] [--judgments <path>]\n" +
+                "       eval bias\n" +
+                "       eval adopt   [--queries <path>]\n" +
+                "       eval tune    [--queries <path>] [--judgments <path>]");
             return ExitUsage;
         }
 
@@ -66,6 +69,25 @@ public static class EvalCommandRunner
                     var report = await runner.ScoreAsync(queriesPath, judgmentsPath, cts.Token);
                     PrintReport(report);
                     return report.Queries.Count > 0 ? ExitOk : ExitRunFailed;
+
+                case "bias":
+                    var analyzer = scope.ServiceProvider.GetRequiredService<TelemetryAnalyzer>();
+                    Console.WriteLine(await analyzer.BiasReportAsync(cts.Token));
+                    return ExitOk;
+
+                case "adopt":
+                    var adopter = scope.ServiceProvider.GetRequiredService<TelemetryAnalyzer>();
+                    var adopted = await adopter.AdoptAsync(queriesPath, cts.Token);
+                    Console.WriteLine(adopted > 0
+                        ? $"Adopted {adopted} real quer(ies) into {queriesPath}. " +
+                          "Run `eval judge` next to grade their pools."
+                        : "No new real queries to adopt (searches must carry prose query text).");
+                    return ExitOk;
+
+                case "tune":
+                    var tuned = await runner.TuneAsync(queriesPath, judgmentsPath, cts.Token);
+                    PrintTuneResults(tuned);
+                    return tuned.Count > 0 ? ExitOk : ExitRunFailed;
 
                 default:
                     return ExitUsage;
@@ -111,6 +133,29 @@ public static class EvalCommandRunner
         Console.WriteLine("re-run `eval judge` to grade the current ranker's head before trusting deltas.");
     }
 
+    private static void PrintTuneResults(IReadOnlyList<EvalRunner.TuneResult> results)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"{"recency",8} {"halfLife",9} {"codeBonus",10} {"nDCG@10",8} {"Recall@50",10} {"MRR",6}");
+        Console.WriteLine(new string('-', 58));
+        foreach (var r in results)
+        {
+            var marker = r.Weights.IsPureSimilarity ? "  <- current default" : string.Empty;
+            Console.WriteLine(
+                $"{r.Weights.RecencyWeight,8:0.00} {r.Weights.RecencyHalfLifeDays,8}d {r.Weights.CodeBonus,10:0.00} " +
+                $"{Fmt(r.MeanNdcg10),8} {Fmt(r.MeanRecall50),10} {Fmt(r.MeanMrr),6}{marker}");
+        }
+
+        Console.WriteLine(new string('-', 58));
+        var best = results[0];
+        Console.WriteLine(best.Weights.IsPureSimilarity
+            ? "Pure similarity is already the best measured blend — change nothing."
+            : $"Best blend: Ranking__RecencyWeight={best.Weights.RecencyWeight:0.00} " +
+              $"Ranking__RecencyHalfLifeDays={best.Weights.RecencyHalfLifeDays} " +
+              $"Ranking__CodeBonus={best.Weights.CodeBonus:0.00} — apply via configuration " +
+              "if the delta is worth it; nothing is applied automatically.");
+    }
+
     private static string Fmt(double? value) => value?.ToString("0.000") ?? "n/a";
 
     private static bool TryParseArguments(
@@ -133,7 +178,7 @@ public static class EvalCommandRunner
         }
 
         verb = args[1].ToLowerInvariant();
-        if (verb is not ("compile" or "judge" or "search"))
+        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune"))
         {
             return false;
         }

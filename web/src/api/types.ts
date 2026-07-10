@@ -77,9 +77,18 @@ export interface SearchHit {
 }
 
 export interface SearchResult {
+  /** Telemetry id for this executed search; bookmark/analyze actions carry it as context. */
+  searchEventId: number
   plan: SearchPlan
   hits: SearchHit[]
   totalCandidates: number
+}
+
+/** Ties an interaction (bookmark, analyze) back to the search that surfaced the paper. */
+export interface SearchContext {
+  searchEventId: number
+  /** 1-based rank the paper held in the original result order. */
+  rank: number
 }
 
 // --- Settings ---

@@ -4,6 +4,7 @@ import type {
   PagedResult,
   PaperDto,
   ProfileView,
+  SearchContext,
   SearchPlan,
   SearchResult,
   SortOrder,
@@ -106,10 +107,18 @@ export function getPapers(
   return getJson(`/api/papers?${query.toString()}`, signal)
 }
 
-export async function setBookmark(arxivId: string, bookmarked: boolean): Promise<void> {
-  const response = await fetch(`/api/papers/${encodeURIComponent(arxivId)}/bookmark`, {
-    method: bookmarked ? 'PUT' : 'DELETE',
-  })
+export async function setBookmark(
+  arxivId: string,
+  bookmarked: boolean,
+  context?: SearchContext,
+): Promise<void> {
+  const query = context
+    ? `?searchEventId=${context.searchEventId}&rank=${context.rank}`
+    : ''
+  const response = await fetch(
+    `/api/papers/${encodeURIComponent(arxivId)}/bookmark${query}`,
+    { method: bookmarked ? 'PUT' : 'DELETE' },
+  )
   if (!response.ok) throw await parseError(response)
 }
 
@@ -126,15 +135,24 @@ export function compileSearch(query: string, signal?: AbortSignal): Promise<Sear
 export function runSearch(
   plan: SearchPlan,
   limit: number,
+  queryText?: string | null,
   signal?: AbortSignal,
 ): Promise<SearchResult> {
-  return sendJson('POST', '/api/search', { plan, limit }, { signal })
+  return sendJson('POST', '/api/search', { plan, limit, queryText }, { signal })
 }
 
 // --- Analysis ---
 
-export function analyzeSelection(arxivIds: string[]): Promise<{ message: string }> {
-  return sendJson('POST', '/api/admin/analysis/selection', { arxivIds }, { admin: true })
+export function analyzeSelection(
+  arxivIds: string[],
+  searchEventId?: number,
+): Promise<{ message: string }> {
+  return sendJson(
+    'POST',
+    '/api/admin/analysis/selection',
+    { arxivIds, searchEventId },
+    { admin: true },
+  )
 }
 
 export interface AnalysisStatus {

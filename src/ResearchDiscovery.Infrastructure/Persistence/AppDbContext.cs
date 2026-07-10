@@ -28,6 +28,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<Bookmark> Bookmarks => Set<Bookmark>();
 
+    public DbSet<SearchEvent> SearchEvents => Set<SearchEvent>();
+
+    public DbSet<SearchEventResult> SearchEventResults => Set<SearchEventResult>();
+
+    public DbSet<InteractionEvent> InteractionEvents => Set<InteractionEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

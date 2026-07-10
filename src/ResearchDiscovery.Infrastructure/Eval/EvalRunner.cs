@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Eval;
+using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Persistence;
 using ResearchDiscovery.Infrastructure.Search;
 
@@ -125,7 +126,8 @@ public class EvalRunner(
         return totalNew;
     }
 
-    public async Task<EvalReport> ScoreAsync(string queriesPath, string judgmentsPath, CancellationToken ct)
+    public async Task<EvalReport> ScoreAsync(
+        string queriesPath, string judgmentsPath, CancellationToken ct, RankingWeights? weights = null)
     {
         var querySet = EvalFileStore.LoadQueries(queriesPath);
         var judgmentSet = EvalFileStore.LoadJudgmentsOrEmpty(judgmentsPath, judge.RubricVersion);
@@ -147,7 +149,7 @@ public class EvalRunner(
                 continue;
             }
 
-            var result = await search.SearchAsync(query.Plan, ScoreLimit, ct);
+            var result = await search.SearchAsync(query.Plan, ScoreLimit, ct, weights);
 
             // Wildcards are contractual serendipity, not ranking claims — the
             // metric measures the relevance ordering only.
@@ -171,6 +173,43 @@ public class EvalRunner(
             Mean(scores.Select(s => s.Ndcg10)),
             Mean(scores.Select(s => s.Recall50)),
             Mean(scores.Select(s => s.ReciprocalRank)));
+    }
+
+    public sealed record TuneResult(
+        RankingWeights Weights, double? MeanNdcg10, double? MeanRecall50, double? MeanMrr);
+
+    /// <summary>
+    /// Offline grid search over the ranking-blend weights, scoring each combo
+    /// against the judged ground truth. Returns results sorted best-first;
+    /// deliberately does NOT apply anything — a human reads the table, decides,
+    /// and sets the Ranking config. The (0, 0) combo is the current default
+    /// ranker, so the baseline is always in the table.
+    /// </summary>
+    public async Task<IReadOnlyList<TuneResult>> TuneAsync(
+        string queriesPath, string judgmentsPath, CancellationToken ct)
+    {
+        float[] recencyWeights = [0f, 0.05f, 0.1f, 0.2f];
+        float[] codeBonuses = [0f, 0.02f, 0.05f];
+        const int halfLifeDays = 90;
+
+        var results = new List<TuneResult>();
+        foreach (var recency in recencyWeights)
+        {
+            foreach (var code in codeBonuses)
+            {
+                var weights = new RankingWeights(1f, recency, halfLifeDays, code);
+                var report = await ScoreAsync(queriesPath, judgmentsPath, ct, weights);
+                results.Add(new TuneResult(
+                    weights, report.MeanNdcg10, report.MeanRecall50, report.MeanReciprocalRank));
+                logger.LogInformation(
+                    "Tune: recency={Recency} code={Code} → nDCG@10 {Ndcg:F3}",
+                    recency, code, report.MeanNdcg10 ?? 0);
+            }
+        }
+
+        return results
+            .OrderByDescending(r => r.MeanNdcg10 ?? 0)
+            .ToList();
     }
 
     /// <summary>

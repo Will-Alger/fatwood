@@ -68,29 +68,58 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Bookmarks a paper. Idempotent; user state, not corpus data.</summary>
+    /// <summary>
+    /// Bookmarks a paper. Idempotent; user state, not corpus data. Optional
+    /// searchEventId/rank tie the action to the search that surfaced the
+    /// paper — an implicit relevance label for the offline quality loop.
+    /// </summary>
     [HttpPut("{arxivId}/bookmark")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<IActionResult> AddBookmark(
-        string arxivId, [FromServices] IBookmarkService bookmarks, CancellationToken ct) =>
-        SetBookmarkAsync(arxivId, true, bookmarks, ct);
+        string arxivId,
+        [FromServices] IBookmarkService bookmarks,
+        [FromServices] ISearchTelemetry telemetry,
+        [FromQuery] long? searchEventId,
+        [FromQuery] int? rank,
+        CancellationToken ct) =>
+        SetBookmarkAsync(arxivId, true, bookmarks, telemetry, searchEventId, rank, ct);
 
     [HttpDelete("{arxivId}/bookmark")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<IActionResult> RemoveBookmark(
-        string arxivId, [FromServices] IBookmarkService bookmarks, CancellationToken ct) =>
-        SetBookmarkAsync(arxivId, false, bookmarks, ct);
+        string arxivId,
+        [FromServices] IBookmarkService bookmarks,
+        [FromServices] ISearchTelemetry telemetry,
+        [FromQuery] long? searchEventId,
+        [FromQuery] int? rank,
+        CancellationToken ct) =>
+        SetBookmarkAsync(arxivId, false, bookmarks, telemetry, searchEventId, rank, ct);
 
     private async Task<IActionResult> SetBookmarkAsync(
-        string arxivId, bool bookmarked, IBookmarkService bookmarks, CancellationToken ct)
+        string arxivId,
+        bool bookmarked,
+        IBookmarkService bookmarks,
+        ISearchTelemetry telemetry,
+        long? searchEventId,
+        int? rank,
+        CancellationToken ct)
     {
         var found = await bookmarks.SetAsync(arxivId, bookmarked, ct);
-        return found
-            ? NoContent()
-            : Problem(statusCode: StatusCodes.Status404NotFound,
+        if (!found)
+        {
+            return Problem(statusCode: StatusCodes.Status404NotFound,
                 detail: $"No paper with arXiv id '{arxivId}'.");
+        }
+
+        await telemetry.LogInteractionAsync(
+            arxivId,
+            bookmarked ? Domain.Entities.InteractionType.Bookmarked
+                       : Domain.Entities.InteractionType.Unbookmarked,
+            searchEventId, rank, ct);
+
+        return NoContent();
     }
 
     public sealed record AnalysisStatusRequest(IReadOnlyList<string> ArxivIds);

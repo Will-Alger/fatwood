@@ -70,9 +70,16 @@ flowchart TD
 
     results -->|"opt-in, top N only"| analysis["Personalized analysis — LLM call #35;2 per paper<br/>learnable ≠ blocker · learning bridge ·<br/>goal alignment · project score (cached per profile version)"]
 
+    results -->|"every product search"| telemetry[("Telemetry (append-only)<br/>SearchEvents: plan + ranked results<br/>InteractionEvents: bookmark/analyze<br/>joined to (search, rank)")]
+    analysis -.->|"analyze = strong signal"| telemetry
+
     subgraph eval["Offline quality loop (eval/, CLI-only)"]
-        queries["queries.json<br/>20 frozen personas + plans"] --> score["eval search — token-free<br/>nDCG@10 · Recall@50 · MRR"]
+        queries["queries.json<br/>frozen personas + plans"] --> score["eval search — token-free<br/>nDCG@10 · Recall@50 · MRR"]
         judgments["judgments.json<br/>LLM-judged ground truth (call #35;3)"] --> score
+        telemetry --> bias["eval bias — skew report:<br/>category/recency/length vs pool ·<br/>comfort-zone drift · wildcard yield ·<br/>position bias in attention"]
+        telemetry --> adopt["eval adopt — real logged<br/>queries join the eval set"]
+        adopt --> queries
+        score --> tune["eval tune — offline weight grid<br/>(recency · code bonus); prints best,<br/>a human applies via config"]
         score -->|"regression gate for every ranking change"| rank
     end
 ```
@@ -393,6 +400,40 @@ before trusting a delta; and pooled recall is relative to judged papers, not
 the true corpus — it gets more honest as successive rankers' heads accumulate
 into the artifact (standard TREC-style pooling). Scores also shift as the
 corpus grows, so compare rankers on the same DB snapshot.
+
+### Telemetry: learning from real usage
+
+Every product search is logged (`SearchEvents` + per-rank results), and
+bookmark/analyze actions are joined back to the (search, rank) that surfaced
+the paper (`InteractionEvents`, append-only — an unbookmark is a new row, not
+a deletion). The eval CLI never writes telemetry, so evaluation can't poison
+its own data. Three commands read it:
+
+```bash
+dotnet run --project src/ResearchDiscovery.Api -- eval bias    # skew report (token-free)
+dotnet run --project src/ResearchDiscovery.Api -- eval adopt \
+  --queries eval/queries.json                                  # real queries → eval set (token-free)
+dotnet run --project src/ResearchDiscovery.Api -- eval tune \
+  --queries eval/queries.json --judgments eval/judgments.json  # weight grid search (token-free)
+```
+
+- **`eval bias`** compares what the ranker *shows* (top-10) against the
+  filtered candidate pool: category share deltas, recency/abstract-length
+  leaning, comfort-zone mix over time (close% creeping up = exploration
+  eroding), wildcard engagement yield, and where your own attention lands by
+  rank (>90% in the top 3 means your labels measure where you look, not what
+  is good).
+- **`eval adopt`** promotes logged real queries (their prose + compiled plan)
+  into `eval/queries.json`, so the harness measures the query distribution
+  that actually happens. Run `eval judge` afterwards to grade their pools.
+- **`eval tune`** grid-searches the ranking blend (`Ranking` config:
+  similarity + recency half-life decay + has-code bonus; default is pure
+  similarity, bit-for-bit the original ranker) against the judged ground
+  truth and prints the table. **Detect automatically, tweak deliberately**:
+  nothing is ever applied by the tool — a human reads the table, weighs the
+  delta, and sets `Ranking__RecencyWeight` etc. in configuration. That
+  human-in-the-loop gate is what prevents the classic self-reinforcing
+  feedback loop (ranker learns from clicks on what it chose to show).
 
 ## Deployment (Azure Container Apps)
 
