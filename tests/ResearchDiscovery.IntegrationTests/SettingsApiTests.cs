@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using ResearchDiscovery.Application.Abstractions;
+using ResearchDiscovery.Application.Options;
 using Xunit;
 
 namespace ResearchDiscovery.IntegrationTests;
@@ -38,7 +39,9 @@ public class SettingsApiTests
         var settings = await client.GetFromJsonAsync<LlmSettingsView>("/api/admin/settings/llm");
         Assert.NotNull(settings);
         Assert.Contains(settings.Registry, m => m.Id == "claude-haiku-4-5" && m.InputPerMTok == 1.00m);
-        Assert.Equal(2, settings.Assignments.Count);
+        Assert.Equal(
+            LlmOptions.Steps.Order().ToList(),
+            settings.Assignments.Select(a => a.Step).Order().ToList());
         Assert.All(settings.Assignments, a => Assert.True(a.IsDefault));
 
         // Override the analysis step, verify it sticks and loses default status.

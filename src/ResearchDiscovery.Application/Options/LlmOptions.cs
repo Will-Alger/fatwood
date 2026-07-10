@@ -17,7 +17,11 @@ public class LlmOptions
     /// <summary>Step name for the per-paper personalized analysis.</summary>
     public const string StepPaperAnalysis = "PaperAnalysis";
 
-    public static readonly IReadOnlyList<string> Steps = [StepQueryCompiler, StepPaperAnalysis];
+    /// <summary>Step name for the offline eval relevance judge (never in the product path).</summary>
+    public const string StepRelevanceJudge = "RelevanceJudge";
+
+    public static readonly IReadOnlyList<string> Steps =
+        [StepQueryCompiler, StepPaperAnalysis, StepRelevanceJudge];
 
     [MinLength(1)]
     public IReadOnlyList<LlmModel> Models { get; set; } = [];

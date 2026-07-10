@@ -37,25 +37,7 @@ public class SearchService(
         limit = Math.Clamp(limit, 1, 200);
 
         // Stage 0: deterministic SQL filters.
-        IQueryable<Domain.Entities.Paper> candidates = db.Papers.AsNoTracking();
-
-        if (plan.Categories.Count > 0)
-        {
-            var codes = plan.Categories;
-            candidates = candidates.Where(
-                p => p.PaperCategories.Any(pc => codes.Contains(pc.Category.Code)));
-        }
-
-        if (plan.DateWindowDays is { } days and > 0)
-        {
-            var cutoff = DateTimeOffset.UtcNow.AddDays(-days);
-            candidates = candidates.Where(p => p.PublishedUtc >= cutoff);
-        }
-
-        if (plan.RequireNoCode == true)
-        {
-            candidates = candidates.Where(p => p.CodeUrl == null);
-        }
+        var candidates = FilterCandidates(db.Papers.AsNoTracking(), plan);
 
         var candidateIds = (await candidates.Select(p => p.Id).ToListAsync(ct)).ToHashSet();
         if (candidateIds.Count == 0)
@@ -101,6 +83,35 @@ public class SearchService(
             .ToList();
 
         return new SearchResult(plan, hits, candidateIds.Count);
+    }
+
+    /// <summary>
+    /// Stage-0 filters as a reusable query transform: the eval harness applies
+    /// the exact same candidate definition when sampling papers to judge, so
+    /// offline metrics measure the ranker, not a diverged filter.
+    /// </summary>
+    internal static IQueryable<Domain.Entities.Paper> FilterCandidates(
+        IQueryable<Domain.Entities.Paper> papers, SearchPlan plan)
+    {
+        if (plan.Categories.Count > 0)
+        {
+            var codes = plan.Categories;
+            papers = papers.Where(
+                p => p.PaperCategories.Any(pc => codes.Contains(pc.Category.Code)));
+        }
+
+        if (plan.DateWindowDays is { } days and > 0)
+        {
+            var cutoff = DateTimeOffset.UtcNow.AddDays(-days);
+            papers = papers.Where(p => p.PublishedUtc >= cutoff);
+        }
+
+        if (plan.RequireNoCode == true)
+        {
+            papers = papers.Where(p => p.CodeUrl == null);
+        }
+
+        return papers;
     }
 
     /// <summary>

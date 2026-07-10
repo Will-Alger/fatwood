@@ -1,0 +1,354 @@
+{
+  "version": 1,
+  "queries": [
+    {
+      "id": "fintech-nyc-fullstack",
+      "persona": "3 years fullstack development experience (C#/.NET, React). Currently in clinical research software. Goal: move to a fintech company in New York City.",
+      "query": "I\u0027m looking for projects to boost my chances at fintech companies when moving to new york city. I have 3 years fullstack development experience",
+      "plan": {
+        "interpretation": "You want to identify cutting-edge research projects in quantitative finance, algorithmic trading, risk modeling, and financial data analysis that you can implement as portfolio demonstrations to strengthen your candidacy at fintech firms.",
+        "anchorText": "algorithmic trading, portfolio optimization, market microstructure, high-frequency trading, option pricing, risk management, financial time series, machine learning trading, volatility forecasting, derivatives pricing, quantitative finance, backtesting, statistical arbitrage, market prediction, deep learning finance, reinforcement learning trading, anomaly detection markets, financial data analysis",
+        "categories": [
+          "q-fin.CP",
+          "q-fin.MF",
+          "q-fin.PM",
+          "q-fin.ST",
+          "q-fin.TR",
+          "cs.LG",
+          "cs.AI",
+          "stat.ML"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "fraud-detection",
+      "persona": "Backend engineer, 4 years, mostly payments infrastructure in Java. Wants to specialize in fraud and risk.",
+      "query": "recent machine learning approaches to payment fraud detection that I could implement as a demo system",
+      "plan": {
+        "interpretation": "You\u0027re looking for recent machine learning papers on payment fraud detection that are implementable as a demo project.",
+        "anchorText": "payment fraud detection, transaction fraud, machine learning, neural networks, anomaly detection, classification, real-time fraud detection, financial transaction analysis, imbalanced data, feature engineering, graph neural networks, deep learning, fraud risk scoring, behavioral modeling",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "stat.ML",
+          "q-fin.CP"
+        ],
+        "dateWindowDays": 365,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "rl-trading",
+      "persona": "Software engineer with solid Python, no finance background. Curious about algorithmic trading.",
+      "query": "reinforcement learning for trading strategies - something small enough to reproduce with free market data",
+      "plan": {
+        "interpretation": "You want to find papers on reinforcement learning applied to trading strategy development, focused on approaches reproducible with freely available market data and realistic for a solo implementation project.",
+        "anchorText": "reinforcement learning trading strategy, RL agent portfolio optimization, deep Q-learning market prediction, policy gradient trading algorithms, reward function asset trading, free market data backtesting, stock price prediction RL, transaction cost constraints trading, financial time series forecasting, DQN trader, actor-critic trading, state representation financial markets, exploratory trading agents",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "q-fin.CP",
+          "q-fin.PR"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "market-microstructure",
+      "persona": "Quant-curious developer, strong C\u002B\u002B, wants to understand how markets work at the order level.",
+      "query": "limit order book modeling and market microstructure research",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on limit order book dynamics, market microstructure theory, and order-level market mechanisms that could ground a quantitative trading or market simulation project.",
+        "anchorText": "limit order book, market microstructure, order flow, price formation, bid-ask spread, high-frequency trading, market impact, order dynamics, agent-based models, market simulation, order matching, liquidity provision, transaction costs, market efficiency, statistical arbitrage",
+        "categories": [
+          "q-fin.MF",
+          "q-fin.TR",
+          "physics.soc-ph",
+          "cs.MA"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "portfolio-optimization",
+      "persona": "Data analyst moving toward quant finance, comfortable with pandas and basic optimization.",
+      "query": "modern portfolio optimization methods beyond mean-variance, ideally with code or reproducible experiments",
+      "plan": {
+        "interpretation": "You want to discover modern portfolio optimization techniques that go beyond classical mean-variance models, with preference for papers that include reproducible code or experimental implementations.",
+        "anchorText": "portfolio optimization, mean-variance analysis, risk parity, convex optimization, multi-objective optimization, robust optimization, machine learning portfolio construction, deep reinforcement learning trading, factor models, covariance estimation, shrinkage estimators, constraint portfolios, backtesting, asset allocation, portfolio rebalancing, Markowitz, efficient frontier",
+        "categories": [
+          "q-fin.PM",
+          "q-fin.CP",
+          "stat.ML",
+          "cs.LG",
+          "math.OC"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "credit-risk-explainable",
+      "persona": "ML engineer at a bank, needs models that regulators can audit.",
+      "query": "interpretable and explainable machine learning for credit scoring and loan default prediction",
+      "plan": {
+        "interpretation": "You\u0027re looking for machine learning research on interpretable and explainable models applied to credit scoring and loan default prediction tasks.",
+        "anchorText": "interpretable machine learning, explainable AI, XAI, credit scoring, loan default prediction, feature importance, model transparency, regulatory compliance, financial risk assessment, SHAP values, decision trees, rule-based models, model auditing, fairness in lending, bias detection",
+        "categories": [
+          "cs.LG",
+          "cs.CY",
+          "stat.ML",
+          "econ.EM"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "timeseries-forecasting",
+      "persona": "Fullstack developer, 3 years, wants a substantial ML portfolio piece.",
+      "query": "state of the art time series forecasting for financial data, transformers vs classical methods",
+      "plan": {
+        "interpretation": "You want to build a portfolio project comparing transformer-based and classical machine learning approaches for financial time series forecasting, using recent state-of-the-art methods.",
+        "anchorText": "time series forecasting, transformer models, attention mechanisms, LSTM, autoregressive models, financial data, stock price prediction, volatility forecasting, sequence-to-sequence, deep learning benchmarks, classical statistical methods, ARIMA, neural network architectures, temporal dependencies, multivariate forecasting",
+        "categories": [
+          "cs.LG",
+          "q-fin.ST",
+          "stat.ML",
+          "econ.EM"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "crypto-defi",
+      "persona": "Web developer interested in blockchain engineering roles.",
+      "query": "analysis of decentralized finance protocols, DEX mechanics, or on-chain data",
+      "plan": {
+        "interpretation": "You\u0027re looking for research on decentralized finance (DeFi) protocol design, decentralized exchange mechanisms, and blockchain transaction analysis.",
+        "anchorText": "decentralized finance, DEX, automated market maker, liquidity pool, smart contract, on-chain analysis, blockchain transactions, protocol design, cryptocurrency, Ethereum, arbitrage, slippage, impermanent loss, price oracle, flash loan",
+        "categories": [
+          "cs.CR",
+          "cs.DC",
+          "econ.GN",
+          "q-fin.ST"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "quant-risk",
+      "persona": "Actuarial background, learning to code, targeting risk roles at trading firms.",
+      "query": "value at risk, tail risk estimation, and modern approaches to financial risk modeling",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on value at risk (VaR), tail risk estimation, and contemporary financial risk modeling techniques applicable to trading and risk management.",
+        "anchorText": "value at risk, VaR, tail risk, extreme value theory, expected shortfall, CVaR, conditional value at risk, risk estimation, financial risk modeling, portfolio risk, risk measurement, volatility forecasting, stress testing, market risk, quantile estimation, risk management, financial time series",
+        "categories": [
+          "q-fin.RM",
+          "q-fin.CP",
+          "q-fin.PR",
+          "stat.ML",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "llm-agents-swe",
+      "persona": "Senior fullstack engineer wanting to move into AI engineering.",
+      "query": "LLM agents for software engineering tasks like code review, bug fixing, or test generation",
+      "plan": {
+        "interpretation": "You want papers on LLM-based agents and systems designed to automate or assist with software engineering workflows including code review, bug fixing, and test generation.",
+        "anchorText": "LLM agents, software engineering automation, code review, bug fixing, test generation, automated program repair, code understanding, neural program synthesis, static analysis, code quality, software development, automated testing, machine learning for code, program transformation, source code analysis",
+        "categories": [
+          "cs.SE",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "rag-retrieval",
+      "persona": ".NET developer building internal search tools, wants to level up on retrieval.",
+      "query": "retrieval augmented generation and embedding-based search quality improvements",
+      "plan": {
+        "interpretation": "You want to build better retrieval and embedding systems for RAG and search, understanding how to improve ranking quality and relevance.",
+        "anchorText": "retrieval augmented generation, embedding similarity search, dense passage retrieval, vector search ranking, semantic relevance scoring, neural information retrieval, query embedding optimization, cross-encoder reranking, relevance metrics, retrieval quality evaluation, contrastive learning embeddings, BM25 hybrid search, embedding-based ranking, retrieval effectiveness",
+        "categories": [
+          "cs.IR",
+          "cs.CL",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "vuln-detection",
+      "persona": "Application security engineer, comfortable reading papers, wants a research-grade side project.",
+      "query": "machine learning for detecting vulnerabilities in source code",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on machine learning and deep learning techniques applied to automated vulnerability detection and security bug discovery in source code.",
+        "anchorText": "vulnerability detection, source code analysis, machine learning security, deep learning code, static analysis, program synthesis, adversarial examples, code representation learning, security defects, software vulnerabilities, neural networks code, ast parsing, bug detection, malware detection, code embeddings",
+        "categories": [
+          "cs.CR",
+          "cs.LG",
+          "cs.SE"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "adversarial-ml-security",
+      "persona": "Security analyst moving toward ML security.",
+      "query": "attacks on and defenses for machine learning models - adversarial examples, poisoning, model stealing",
+      "plan": {
+        "interpretation": "You\u0027re looking for research on adversarial attacks against ML models and corresponding defense mechanisms, including adversarial examples, data poisoning, model extraction, and robustness techniques.",
+        "anchorText": "adversarial examples, adversarial attacks, adversarial training, adversarial robustness, model robustness, poisoning attacks, data poisoning, model stealing, model extraction, backdoor attacks, adversarial perturbations, evasion attacks, defense mechanisms, robust neural networks, certified robustness, adversarial defense",
+        "categories": [
+          "cs.LG",
+          "cs.CR",
+          "stat.ML",
+          "cs.AI"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "privacy-preserving-ml",
+      "persona": "Engineer in healthcare software (HIPAA world), wants transferable privacy-tech skills.",
+      "query": "federated learning and differential privacy techniques practical enough to implement solo",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on federated learning and differential privacy with concrete, implementable methods suitable for solo projects in real-world applications.",
+        "anchorText": "federated learning, differential privacy, privacy-preserving machine learning, decentralized training, secure aggregation, local differential privacy, noise mechanisms, gradient perturbation, privacy budgets, federated optimization, distributed learning, client-side privacy, privacy attacks, membership inference, model inversion, practical implementations, benchmark datasets, communication efficiency, privacy-utility tradeoffs",
+        "categories": [
+          "cs.LG",
+          "cs.CR",
+          "stat.ML"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "anomaly-detection-ops",
+      "persona": "SRE/platform engineer, wants an ML-flavored project grounded in operations.",
+      "query": "anomaly detection for logs, metrics, or system telemetry",
+      "plan": {
+        "interpretation": "You are looking for papers on machine learning approaches to detect anomalies in operational telemetry\u2014logs, metrics, and system monitoring data\u2014suitable for building SRE/platform engineering projects.",
+        "anchorText": "anomaly detection, time series anomaly detection, log analysis, system telemetry, metrics monitoring, outlier detection, unsupervised learning, autoencoders, isolation forests, LSTM anomaly detection, distributional shift detection, statistical anomaly detection, operational monitoring, system health monitoring, fault detection",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.DS",
+          "stat.ML",
+          "eess.SY"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "testing-research",
+      "persona": "QA automation engineer who wants to stand out with research-informed tooling.",
+      "query": "recent research on automated software testing, fuzzing, or flaky test detection",
+      "plan": {
+        "interpretation": "Find recent papers on automated testing, fuzzing, and flaky test detection that could inform novel tooling for QA automation.",
+        "anchorText": "automated software testing, fuzzing, test case generation, flaky tests, test flakiness, test reliability, fuzz testing, property-based testing, test automation, continuous testing, regression testing, test oracle, test generation, software quality assurance",
+        "categories": [
+          "cs.SE"
+        ],
+        "dateWindowDays": 90,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "recommender-systems",
+      "persona": "Fullstack developer at an e-commerce startup.",
+      "query": "recommender system techniques that would work at small scale, cold start and ranking",
+      "plan": {
+        "interpretation": "You\u0027re looking for recommender system methods that handle cold-start problems and ranking at small scale without requiring massive infrastructure.",
+        "anchorText": "cold start problem, collaborative filtering, content-based recommendation, ranking algorithms, matrix factorization, similarity metrics, item recommendation, user-item interactions, implicit feedback, exploration-exploitation, small-scale systems, personalization, information retrieval ranking, embedding methods, nearest neighbor search",
+        "categories": [
+          "cs.IR",
+          "cs.LG",
+          "cs.AI",
+          "cs.CE"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "vague-career-pivot",
+      "persona": "Clinical research software developer, 3 years .NET, no ML experience, wants to become more marketable in the next year.",
+      "query": "something impressive I could build in a few weekends that would make my resume stand out for backend or ML-adjacent roles",
+      "plan": {
+        "interpretation": "You\u0027re looking for concrete, implementable research problems in machine learning and backend systems that can be tackled in a short timeframe to strengthen your portfolio and attract attention from backend or ML-adjacent employers.",
+        "anchorText": "neural network inference optimization, transformer model compression, efficient deep learning, model quantization, low-latency prediction serving, recommendation systems, time series forecasting, anomaly detection algorithms, distributed training frameworks, gradient boosting, feature engineering pipelines, embeddings and similarity search, batch processing systems, real-time inference engines, model serving infrastructure",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.DC",
+          "cs.DB",
+          "stat.ML",
+          "stat.CO"
+        ],
+        "dateWindowDays": 90,
+        "requireNoCode": true
+      }
+    },
+    {
+      "id": "reproduction-gap",
+      "persona": "Engineer who wants to contribute to open science by reproducing results.",
+      "query": "interesting recent papers that don\u0027t have public code yet, where a solid reference implementation would be a real contribution",
+      "plan": {
+        "interpretation": "You want to find recent papers with promising results that lack public implementations, where building a reference codebase would meaningfully advance reproducibility.",
+        "anchorText": "reproduction, reproducibility, reference implementation, baseline model, benchmarking, empirical evaluation, experimental results, code availability, open science, research contribution, algorithmic method, computational validation, comparative analysis, performance metrics",
+        "categories": [
+          "cs.AI",
+          "cs.LG",
+          "cs.CV",
+          "cs.CL",
+          "cs.DS",
+          "stat.ML",
+          "math.NA",
+          "physics.comp-ph",
+          "q-bio.QM",
+          "cond-mat.stat-mech"
+        ],
+        "dateWindowDays": 60,
+        "requireNoCode": true
+      }
+    },
+    {
+      "id": "hft-execution",
+      "persona": "Backend engineer with low-latency systems interest, targeting trading infrastructure roles.",
+      "query": "optimal trade execution, market making strategies, and transaction cost analysis",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on optimal execution algorithms, market microstructure, and quantitative strategies for minimizing trading costs and optimizing order flow.",
+        "anchorText": "optimal execution, market making, transaction costs, order placement, price impact, liquidity, high-frequency trading, market microstructure, execution algorithms, venue selection, latency arbitrage, statistical arbitrage, market impact models, bid-ask spread",
+        "categories": [
+          "q-fin.TR",
+          "q-fin.CP",
+          "q-fin.MF",
+          "cs.LG",
+          "stat.ML"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    }
+  ]
+}

@@ -8,6 +8,7 @@ using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Analysis;
 using ResearchDiscovery.Infrastructure.Arxiv;
 using ResearchDiscovery.Infrastructure.Embeddings;
+using ResearchDiscovery.Infrastructure.Eval;
 using ResearchDiscovery.Infrastructure.Ingestion;
 using ResearchDiscovery.Infrastructure.Llm;
 using ResearchDiscovery.Infrastructure.Persistence;
@@ -119,6 +120,10 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<ISearchPlanCompiler, AnthropicSearchPlanCompiler>();
+
+        // Offline search-quality harness (CLI-only; never on a request path).
+        services.AddScoped<IRelevanceJudge, AnthropicRelevanceJudge>();
+        services.AddScoped<EvalRunner>();
 
         return services;
     }

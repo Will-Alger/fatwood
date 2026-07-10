@@ -42,6 +42,41 @@ web/                                 React + TypeScript (Vite) browse UI
   Runs are bounded by construction (one category, capped paper count) and
   idempotent: already-analyzed papers are never re-sent to the model.
 
+### How a query becomes results
+
+The end-to-end path from natural-language intent to ranked, personalized
+results — and the offline loop that keeps the ranking honest. LLM calls are
+marked; everything else is deterministic and token-free.
+
+```mermaid
+flowchart TD
+    subgraph corpus["Corpus (built ahead of time, ops-only)"]
+        arxiv["arXiv Atom API"] -->|"1 req/3s, retries,<br/>per-category high-water mark"| upsert["Idempotent upsert"]
+        upsert --> pg[("PostgreSQL<br/>~21k real papers")]
+        pg --> embedder["Local ONNX embedder<br/>all-MiniLM-L6-v2, 384d<br/>(title + abstract)"]
+        embedder --> vecs[("Paper vectors<br/>float32, provider-portable")]
+    end
+
+    subgraph search["Search (per query)"]
+        user(["Natural-language intent<br/>+ saved profile"]) --> compiler["Query compiler — LLM call #35;1<br/>intent → concrete research topics"]
+        compiler --> plan["SearchPlan (editable chips)<br/>anchor topics · categories ·<br/>date window · code filter"]
+        plan -->|"edits re-run token-free"| filters
+        filters["Stage 0 — SQL filters<br/>categories · date · has-code"] --> rank
+        pg --> filters
+        vecs -.->|"in-memory cosine index"| rank["Stage 1 — relevance rank<br/>anchor vector × paper vectors"]
+        rank --> wildcards["Wildcard slots — 2 high-relevance papers<br/>from OUTSIDE the experience cluster<br/>(exploration guardrail: experience<br/>similarity never ranks or gates)"]
+        wildcards --> results(["Ranked results<br/>match% · close-to-home/stretch badges"])
+    end
+
+    results -->|"opt-in, top N only"| analysis["Personalized analysis — LLM call #35;2 per paper<br/>learnable ≠ blocker · learning bridge ·<br/>goal alignment · project score (cached per profile version)"]
+
+    subgraph eval["Offline quality loop (eval/, CLI-only)"]
+        queries["queries.json<br/>20 frozen personas + plans"] --> score["eval search — token-free<br/>nDCG@10 · Recall@50 · MRR"]
+        judgments["judgments.json<br/>LLM-judged ground truth (call #35;3)"] --> score
+        score -->|"regression gate for every ranking change"| rank
+    end
+```
+
 ## Prerequisites
 
 - .NET 10 SDK
@@ -320,6 +355,44 @@ dotnet test
   decline handling, score sorting, analyzed-only filtering). The arXiv client
   and the LLM (`IPaperAnalyzer`) are stubbed in tests so they never leave the
   process.
+
+## Search quality: the eval harness
+
+Ranking changes are guesses until they're measured. The harness makes search
+quality a number, computed offline against two versioned artifacts in `eval/`:
+
+- **`eval/queries.json`** — 20 frozen queries (persona + prose + compiled
+  plan) spanning specific technical intents and vague career goals. Plans are
+  frozen into the file so scoring is deterministic and token-free.
+- **`eval/judgments.json`** — graded relevance ground truth (0=irrelevant …
+  3=excellent project candidate), produced by an LLM judge whose rubric
+  mirrors the product's exploration principle: unfamiliar tools never lower a
+  grade. Judgments are append-only; each records whether the paper entered
+  via the ranker's head (`pool`) or a seeded random sample (`random` — what
+  makes missed-gem estimation possible).
+
+```bash
+# Score the current ranker against the ground truth (zero tokens — run this
+# on EVERY ranking change; the number must not go down):
+dotnet run --project src/ResearchDiscovery.Api -- eval search \
+  --queries eval/queries.json --judgments eval/judgments.json
+
+# One-time / occasional, spends LLM tokens:
+dotnet run --project src/ResearchDiscovery.Api -- eval compile ...  # fill missing plans
+dotnet run --project src/ResearchDiscovery.Api -- eval judge ...    # grade unjudged pool papers
+```
+
+Metrics per query and averaged: **nDCG@10** (are the best papers at the
+top?), **Recall@50** (of everything judged relevant, how much surfaced?),
+**MRR** (how high is the first good result?). Wildcards are excluded from
+scoring — they're contractual serendipity, not ranking claims.
+
+Two honest caveats baked into the report: `judged@10 < 10` means unjudged
+papers reached the head (they score as grade 0), so re-run `eval judge`
+before trusting a delta; and pooled recall is relative to judged papers, not
+the true corpus — it gets more honest as successive rankers' heads accumulate
+into the artifact (standard TREC-style pooling). Scores also shift as the
+corpus grows, so compare rankers on the same DB snapshot.
 
 ## Deployment (Azure Container Apps)
 
