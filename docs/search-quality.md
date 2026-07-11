@@ -22,6 +22,16 @@ config flag):
 **Score**: nDCG@10 ≈ 0.62 on the frozen eval set (was 0.523 for the original
 single-anchor cosine ranker on the same ground truth). MRR ≈ 0.94–1.0.
 
+The 2026-07 selection campaign, all configs scored on identical ground truth:
+
+| config | nDCG@10 | Recall@50 | MRR |
+|---|---|---|---|
+| single-anchor cosine (original) | 0.523 | 0.530 | 0.897 |
+| multi-anchor only | 0.520 | 0.564 | 0.790 |
+| hybrid BM25 only | 0.594 | 0.590 | 1.000 |
+| **multi-anchor + hybrid (shipped)** | **0.614** | **0.606** | **1.000** |
+| + cross-encoder rerank | 0.612 | 0.599 | 0.929 |
+
 **Ground truth**: `eval/queries.json` (21 queries: 20 authored + 1 adopted
 real query) and `eval/judgments.json` (~3,300 LLM-judged (query, paper)
 grades 0–3, append-only, rubric v1). Both are versioned repo artifacts —
