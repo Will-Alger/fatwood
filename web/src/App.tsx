@@ -3,6 +3,7 @@ import { getAdminKey, getLlmSettings } from './api/client'
 import type { LlmSettingsView, SortOrder } from './api/types'
 import { CategoryFilter } from './components/CategoryFilter'
 import { Discover } from './components/Discover'
+import { Logo } from './components/Logo'
 import { Pagination } from './components/Pagination'
 import { PaperList } from './components/PaperList'
 import { SettingsPanel } from './components/SettingsPanel'
@@ -13,11 +14,17 @@ import './App.css'
 const PAGE_SIZE = 25
 
 type Tab = 'discover' | 'browse'
+type Theme = 'dark' | 'light'
+
+function currentTheme(): Theme {
+  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('discover')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [llmSettings, setLlmSettings] = useState<LlmSettingsView | null>(null)
+  const [theme, setTheme] = useState<Theme>(currentTheme)
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [page, setPage] = useState(1)
@@ -43,6 +50,13 @@ export default function App() {
     }
   }, [])
 
+  function toggleTheme() {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next
+    localStorage.setItem('fatwood.theme', next)
+    setTheme(next)
+  }
+
   function handleCategoriesChange(next: string[]) {
     setSelectedCategories(next)
     setPage(1)
@@ -62,17 +76,33 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="app-header-top">
-          <div>
-            <h1>Research Discovery</h1>
-            <p>Find research you can actually build on.</p>
+          <div className="app-brand">
+            <Logo size={36} />
+            <div>
+              <h1>Fatwood</h1>
+              <p>Kindling for your next build.</p>
+            </div>
           </div>
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => setSettingsOpen(true)}
-          >
-            ⚙ Settings
-          </button>
+          <div className="app-header-actions">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => setSettingsOpen(true)}
+              title="Settings"
+              aria-label="Settings"
+            >
+              ⚙
+            </button>
+          </div>
         </div>
         <nav className="app-tabs">
           <button
@@ -98,62 +128,56 @@ export default function App() {
         <Discover llmSettings={llmSettings} />
       </div>
       <div className="app-body" style={{ display: tab === 'browse' ? undefined : 'none' }}>
-          <CategoryFilter
-            categories={categories}
-            selected={selectedCategories}
-            onChange={handleCategoriesChange}
+        <CategoryFilter
+          categories={categories}
+          selected={selectedCategories}
+          onChange={handleCategoriesChange}
+        />
+        <main className="app-main">
+          <div className="toolbar">
+            <label>
+              Sort by{' '}
+              <select value={sort} onChange={(e) => handleSortChange(e.target.value as SortOrder)}>
+                <option value="published_desc">Newest first</option>
+                <option value="published_asc">Oldest first</option>
+                <option value="score_desc">Best project score</option>
+              </select>
+            </label>
+            <label className="toolbar-toggle">
+              <input
+                type="checkbox"
+                checked={analyzedOnly}
+                onChange={(e) => handleAnalyzedOnlyChange(e.target.checked)}
+              />{' '}
+              Analyzed only
+            </label>
+            <label className="toolbar-toggle">
+              <input
+                type="checkbox"
+                checked={bookmarkedOnly}
+                onChange={(e) => {
+                  setBookmarkedOnly(e.target.checked)
+                  setPage(1)
+                }}
+              />{' '}
+              ★ Bookmarked
+            </label>
+          </div>
+          {categoriesError && (
+            <p className="status status-error">Could not load categories: {categoriesError}</p>
+          )}
+          <PaperList data={data} loading={loading} error={error} />
+          <Pagination
+            page={page}
+            totalPages={data?.totalPages ?? 0}
+            totalItems={data?.totalItems ?? 0}
+            onPageChange={setPage}
           />
-          <main className="app-main">
-            <div className="toolbar">
-              <label>
-                Sort by{' '}
-                <select
-                  value={sort}
-                  onChange={(e) => handleSortChange(e.target.value as SortOrder)}
-                >
-                  <option value="published_desc">Newest first</option>
-                  <option value="published_asc">Oldest first</option>
-                  <option value="score_desc">Best project score</option>
-                </select>
-              </label>
-              <label className="toolbar-toggle">
-                <input
-                  type="checkbox"
-                  checked={analyzedOnly}
-                  onChange={(e) => handleAnalyzedOnlyChange(e.target.checked)}
-                />{' '}
-                Analyzed only
-              </label>
-              <label className="toolbar-toggle">
-                <input
-                  type="checkbox"
-                  checked={bookmarkedOnly}
-                  onChange={(e) => {
-                    setBookmarkedOnly(e.target.checked)
-                    setPage(1)
-                  }}
-                />{' '}
-                ★ Bookmarked
-              </label>
-            </div>
-            {categoriesError && (
-              <p className="status status-error">Could not load categories: {categoriesError}</p>
-            )}
-            <PaperList data={data} loading={loading} error={error} />
-            <Pagination
-              page={page}
-              totalPages={data?.totalPages ?? 0}
-              totalItems={data?.totalItems ?? 0}
-              onPageChange={setPage}
-            />
-          </main>
+        </main>
       </div>
 
       {settingsOpen && (
-        <SettingsPanel
-          onClose={() => setSettingsOpen(false)}
-          onSettingsChanged={setLlmSettings}
-        />
+        <SettingsPanel onClose={() => setSettingsOpen(false)} onSettingsChanged={setLlmSettings} />
       )}
     </div>
   )

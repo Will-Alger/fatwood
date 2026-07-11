@@ -1,6 +1,10 @@
-# Research Discovery
+# Fatwood
 
-**Turn the research firehose into your next project.**
+**Kindling for your next build** · [fatwood.io](https://fatwood.io)
+
+Fatwood is the resin-saturated heart of a pine — the wood that catches fire
+from a single spark. This app is that, for engineers: it finds the research
+papers that will actually ignite your next project.
 
 arXiv publishes ~300 papers a day in machine learning, security, software
 engineering, and quantitative finance alone. Somewhere in this week's batch
@@ -10,7 +14,7 @@ build, maybe a result nobody has reproduced in public yet. The problem is
 finding it: keyword search doesn't know you, category feeds are a firehose,
 and reading 300 abstracts a day is a job.
 
-Research Discovery closes that gap. Describe what you're after in plain
+Fatwood closes that gap. Describe what you're after in plain
 language — career goals included:
 
 > *"I want to move from backend work into applied machine learning — looking

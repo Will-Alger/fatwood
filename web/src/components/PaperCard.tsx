@@ -83,6 +83,8 @@ function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
 export interface PaperCardProps {
   paper: PaperDto
   matchScore?: number
+  /** Best match score in the current result set — match strength is relative to it. */
+  topMatchScore?: number
   isWildcard?: boolean
   experienceProximity?: 'close' | 'stretch' | null
   /** Present when this card came from a search — bookmarks then carry (search, rank) telemetry. */
@@ -91,9 +93,21 @@ export interface PaperCardProps {
   onNotInterested?: () => void
 }
 
+/**
+ * Match strength shown relative to the best hit in this result set (raw
+ * cosine values cluster in a narrow band, so absolute percentages mislead).
+ */
+function matchTier(score: number, top: number): { label: string; level: 1 | 2 | 3 } {
+  const ratio = top > 0 ? score / top : 0
+  if (ratio >= 0.92) return { label: 'strong match', level: 3 }
+  if (ratio >= 0.78) return { label: 'good match', level: 2 }
+  return { label: 'fair match', level: 1 }
+}
+
 export function PaperCard({
   paper,
   matchScore,
+  topMatchScore,
   isWildcard,
   experienceProximity,
   searchContext,
@@ -183,9 +197,17 @@ export function PaperCard({
             ★ {Math.round(score)}
           </span>
         )}
-        {matchScore !== undefined && (
-          <span className="badge badge-match" title="Relevance to this search">
-            {Math.round(matchScore * 100)}% match
+        {matchScore !== undefined && topMatchScore !== undefined && (
+          <span
+            className={`match-meter match-level-${matchTier(matchScore, topMatchScore).level}`}
+            title={`Relevance to this search (raw similarity ${Math.round(matchScore * 100)}%)`}
+          >
+            <span className="match-segments" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            {matchTier(matchScore, topMatchScore).label}
           </span>
         )}
         {experienceProximity === 'close' && (

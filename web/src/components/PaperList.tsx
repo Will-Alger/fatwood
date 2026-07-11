@@ -1,5 +1,6 @@
 import type { PagedResult, PaperDto } from '../api/types'
 import { PaperCard } from './PaperCard'
+import { PaperSkeletons } from './Skeletons'
 
 interface PaperListProps {
   data: PagedResult<PaperDto> | null
@@ -13,7 +14,7 @@ export function PaperList({ data, loading, error }: PaperListProps) {
   }
 
   if (loading && !data) {
-    return <p className="status">Loading papers…</p>
+    return <PaperSkeletons count={5} />
   }
 
   if (!data || data.items.length === 0) {
