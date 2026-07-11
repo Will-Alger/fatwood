@@ -1,17 +1,100 @@
 # Research Discovery
 
-A research-to-project discovery tool: browse recent arXiv papers by category to
-find portfolio-project candidates. Phase 1 ingests real paper metadata from the
-official [arXiv API](https://info.arxiv.org/help/api/index.html) into
-PostgreSQL and serves a fast, filterable browse UI. Phase 2 runs an
-inexpensive LLM (Anthropic `claude-haiku-4-5` by default) over bounded,
-admin-selected subsets of papers to score their suitability as solo portfolio
-projects, and surfaces the stored analysis in the browse UI (score sort,
-analyzed-only filter, per-paper detail).
+**Turn the research firehose into your next project.**
 
-**No mock data anywhere in the product path** — every paper row comes from the
-live arXiv API. Tests use saved real responses as fixtures; the running app
-always hits arXiv.
+Have you ever wanted to build something that actually matters — a portfolio
+project that isn't another todo app, but something drawn from what's
+happening at the edge of your field *right now*? The raw material exists:
+arXiv publishes about **300 new papers a day** in machine learning, security,
+software engineering, and quantitative finance alone. Somewhere in this
+week's batch there's a paper that would make a fantastic project for
+*you specifically* — the right topic for where you want your career to go,
+the right scope for a solo build, maybe even a result nobody has reproduced
+in public yet.
+
+The problem is finding it. Keyword search doesn't know you. Category feeds
+are a firehose. And reading 300 abstracts a day is a job, not a hobby.
+
+Research Discovery closes that gap. You describe what you're after in plain
+language — career goals included:
+
+> *"I'm looking for projects to boost my chances at fintech companies when
+> moving to New York City. I have 3 years fullstack development experience."*
+
+— and it answers with a ranked shortlist of real, current papers, each one
+scored for how buildable it is **by you**: what you'd learn, how long it
+would take, what would go on your resume, and an extension idea that plays
+to your strengths. It even deliberately includes a couple of *wildcards* —
+highly relevant papers from outside your comfort zone — because the goal is
+to expand what you can build, not echo what you already know.
+
+**No mock data anywhere in the product path** — every paper comes from the
+live arXiv API, every citation count from Semantic Scholar, every ranking
+from real measurements. (Tests use saved real responses as fixtures; the
+running app always hits the real world.)
+
+## From a sentence to insights
+
+Here's the journey your question takes — worth reading once, because almost
+every design decision in the codebase exists to serve some step of it.
+
+**1. Your sentence becomes a plan (the only LLM call per search).** An LLM
+reads your prose once and *compiles* it into a transparent, editable search
+plan: the concrete research topics your goal implies ("fintech in NYC" →
+order execution, fraud detection, portfolio optimization…), category
+filters, a date window. The plan renders as chips in the UI — you can see
+exactly how you were understood, and editing a chip re-runs the search
+instantly and for free, because from here on, **nothing costs tokens**.
+
+**2. Filters narrow the field.** Plain SQL cuts ~28k papers down to the
+candidates matching your categories and date window. Deterministic,
+milliseconds.
+
+**3. Meaning, not keywords, does the ranking.** Every paper's title and
+abstract has been converted — by a small neural network running locally —
+into a point in a 384-dimensional space where *texts that mean similar
+things sit close together*. Your plan's topics become points in the same
+space, and relevance is literally geometric distance (that's the "match%"
+badge). Each paper scores as a blend of "close to your overall intent" and
+"nails at least one of your topics", so multi-topic queries don't average
+away their best matches.
+
+**4. Exact words get a vote too.** Embeddings blur precise terminology — a
+literal "limit order book" match is a stronger signal than geometry can
+express. A classic BM25 text index runs in parallel and the two rankings are
+fused. (This hybrid alone was measured at **+17% ranking quality** over
+embeddings alone.)
+
+**5. Wildcards protect exploration.** Before results render, two slots are
+reserved for high-relevance papers *least similar to your experience*. Your
+comfort zone never silently narrows what you see — this is a contractual
+guarantee in the code, not a preference.
+
+**6. Analysis turns papers into decisions (opt-in, per paper, cached).**
+For the results you choose, a second LLM pass reads each paper *against your
+profile*: feasibility where unfamiliar tools count as learnable rather than
+blockers, a learning bridge ("what you'd need to pick up, and how long"),
+goal alignment, resume value, an extension idea. This is where tokens are
+spent — deliberately, visibly (the button shows a live dollar estimate), and
+never twice for the same paper and profile.
+
+**7. Every search makes the next one better.** Searches and your reactions
+to them (bookmarks, analyses, "not interested") are logged with full
+context. An offline evaluation harness — frozen queries, ~3,300 graded
+relevance judgments, standard IR metrics — turns "is search getting better?"
+into a number, and **no ranking change ships unless that number goes up**.
+The current pipeline exists because measurements picked it: every stage
+beat a baseline or it stayed off.
+
+![Architecture: query → staged retrieval → results, with telemetry feeding the offline quality loop](docs/architecture.svg)
+
+*(Diagram source: [`docs/architecture.mmd`](docs/architecture.mmd); re-render
+with `npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.svg -b transparent`.)*
+
+---
+
+Everything below is the technical tour: how it's built, how to run it, and
+the measurement culture that keeps it honest.
 
 ## Architecture
 
@@ -41,21 +124,6 @@ web/                                 React + TypeScript (Vite) browse UI
   admin endpoint. Regular users have no route that can trigger an LLM call.
   Runs are bounded by construction (one category, capped paper count) and
   idempotent: already-analyzed papers are never re-sent to the model.
-
-### How a query becomes results
-
-The end-to-end path from natural-language intent to ranked, personalized
-results — and the offline loop that keeps the ranking honest. LLM calls are
-marked; everything else is deterministic and token-free.
-
-![Architecture: query → staged retrieval → results, with telemetry feeding the offline quality loop](docs/architecture.svg)
-
-The diagram source lives in [`docs/architecture.mmd`](docs/architecture.mmd);
-re-render after editing with:
-
-```bash
-npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.svg -b transparent
-```
 
 ## Prerequisites
 
