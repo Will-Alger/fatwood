@@ -215,7 +215,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
               void handleSearch()
             }
           }}
-          placeholder='Describe what you&apos;re after — e.g. "projects to boost my chances at fintech companies when moving to NYC; I have 3 years fullstack experience"'
+          placeholder='Describe what you&apos;re after — e.g. "a weekend-scale ML project on anomaly detection; I have 4 years of backend experience"'
           rows={2}
         />
         <button

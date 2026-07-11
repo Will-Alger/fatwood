@@ -129,12 +129,12 @@ public class SearchApiTests
         client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
 
         var response = await client.PostAsJsonAsync(
-            "/api/search/compile", new { query = "fintech projects" });
+            "/api/search/compile", new { query = "anomaly detection projects" });
         response.EnsureSuccessStatusCode();
 
         var plan = await response.Content.ReadFromJsonAsync<SearchPlan>();
         Assert.NotNull(plan);
-        Assert.Contains("fintech projects", plan.Interpretation);
+        Assert.Contains("anomaly detection projects", plan.Interpretation);
     }
 
     private sealed record SearchHitView(

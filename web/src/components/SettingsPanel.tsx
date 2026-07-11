@@ -139,7 +139,7 @@ export function SettingsPanel({ onClose, onSettingsChanged }: SettingsPanelProps
                 rows={3}
                 value={profile.goals}
                 onChange={(e) => setProfile({ ...profile, goals: e.target.value })}
-                placeholder="e.g. backend/quant-adjacent engineering role at a NYC fintech within a year"
+                placeholder="e.g. move into a machine learning engineering role within a year"
               />
             </label>
             <label>

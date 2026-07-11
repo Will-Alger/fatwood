@@ -17,8 +17,8 @@ finance), browses recent papers in that domain, and — eventually — sees
 pre-computed "how good is this as a solo project" analysis so they can find one
 that clicks and go extend it.
 
-I want to break into fintech / NYC roles, so the stack and code quality should
-read as production-grade, not a tutorial.
+The stack and code quality should read as production-grade, not a tutorial —
+this project is itself meant to hold up under review by senior engineers.
 
 ---
 
@@ -104,8 +104,8 @@ When I later ask for it, the analysis layer will:
 - Produce **structured JSON** per paper and persist it, with fields such as:
   solo-dev implementation feasibility, estimated effort, reproduce-vs-extend
   guidance, likelihood that reference code already exists, resume/domain signal
-  (e.g. fintech relevance), one concrete extension idea, required-skills/stack
-  fit, and a composite score.
+  (relevance to the user's stated goals), one concrete extension idea,
+  required-skills/stack fit, and a composite score.
 - Expose that stored analysis so the browse UI can sort and filter by score.
 
 For Phase 1: leave a clean seam for this (e.g. an `AnalysisResult` table with a

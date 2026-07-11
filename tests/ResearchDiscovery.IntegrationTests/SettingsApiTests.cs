@@ -89,7 +89,7 @@ public class SettingsApiTests
 
         // Saving the profile bumps the version...
         var saved = await client.PutAsJsonAsync("/api/admin/settings/profile",
-            new { experienceSummary = "3 years fullstack", goals = "fintech NYC", weeklyHours = 8 });
+            new { experienceSummary = "4 years backend", goals = "applied ML engineering", weeklyHours = 8 });
         saved.EnsureSuccessStatusCode();
         var profile = await saved.Content.ReadFromJsonAsync<ProfileView>();
         Assert.Equal(1, profile!.Version);

@@ -18,8 +18,9 @@ are a firehose. And reading 300 abstracts a day is a job, not a hobby.
 Research Discovery closes that gap. You describe what you're after in plain
 language — career goals included:
 
-> *"I'm looking for projects to boost my chances at fintech companies when
-> moving to New York City. I have 3 years fullstack development experience."*
+> *"I want to move from backend work into applied machine learning — looking
+> for a weekend-scale project on anomaly detection. I have four years of
+> Java experience."*
 
 — and it answers with a ranked shortlist of real, current papers, each one
 scored for how buildable it is **by you**: what you'd learn, how long it
@@ -28,23 +29,53 @@ to your strengths. It even deliberately includes a couple of *wildcards* —
 highly relevant papers from outside your comfort zone — because the goal is
 to expand what you can build, not echo what you already know.
 
-**No mock data anywhere in the product path** — every paper comes from the
-live arXiv API, every citation count from Semantic Scholar, every ranking
-from real measurements. (Tests use saved real responses as fixtures; the
-running app always hits the real world.)
+## Project goals
+
+These principles were set at the start and shaped every design decision;
+each one is enforced somewhere concrete in the codebase.
+
+- **Search quality must be measurable — or none of this means anything.**
+  The most valuable feature isn't a feature: it's the evaluation harness
+  that turns "are the results good?" into a number (nDCG over ~3,300 graded
+  relevance judgments). No ranking change ships unless the number goes up;
+  several "obviously good" ideas died in measurement, and that's the system
+  working.
+- **Exploration is protected, structurally.** A great project must never be
+  missed over a programming-language difference or a skill you could pick up
+  in a weekend. Experience similarity annotates results but never ranks or
+  gates them; two wildcard slots are a contractual guarantee; analysis
+  treats unfamiliar tools as learnable, never as blockers.
+- **Tokens are spent deliberately and visibly.** The LLM never filters the
+  corpus. It compiles your intent (once per search) and analyzes papers you
+  explicitly choose — both on the cheapest capable model, both with live
+  dollar estimates in the UI. Browsing and searching cost zero tokens,
+  always.
+- **Real data only.** Every paper is live from arXiv, every citation from
+  Semantic Scholar, every quality number from actual measurement. Mock data
+  is banned from the product path (test fixtures are saved *real*
+  responses).
+- **Improve from real usage — with a human in the loop.** Every search and
+  reaction is logged; reports surface biases and candidate improvements; but
+  nothing retunes itself automatically. Detect automatically, tweak
+  deliberately — the guard against self-reinforcing feedback loops.
+- **Production-grade, portable engineering.** Provider-swappable database,
+  81 tests, infrastructure as code, CI/CD — built to hold up under review,
+  not to demo.
 
 ## From a sentence to insights
 
 Here's the journey your question takes — worth reading once, because almost
 every design decision in the codebase exists to serve some step of it.
 
-**1. Your sentence becomes a plan (the only LLM call per search).** An LLM
-reads your prose once and *compiles* it into a transparent, editable search
-plan: the concrete research topics your goal implies ("fintech in NYC" →
-order execution, fraud detection, portfolio optimization…), category
-filters, a date window. The plan renders as chips in the UI — you can see
-exactly how you were understood, and editing a chip re-runs the search
-instantly and for free, because from here on, **nothing costs tokens**.
+**1. Your sentence becomes a plan (one LLM call).** An LLM reads your prose
+once and *compiles* it into a transparent, editable search plan: the
+concrete research topics your goal implies ("backend dev moving into applied
+ML" → anomaly detection, time-series forecasting, model monitoring…),
+category filters, a date window. The plan renders as chips in the UI — you
+can see exactly how you were understood, and editing a chip re-runs the
+search instantly and for free: **searching and refining never cost tokens**.
+The only other place tokens are ever spent is the per-paper analysis you
+explicitly opt into at step 6.
 
 **2. Filters narrow the field.** Plain SQL cuts ~28k papers down to the
 candidates matching your categories and date window. Deterministic,

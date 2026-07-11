@@ -47,7 +47,7 @@ public class AnalysisContractTests
     public void UserPrompt_ContainsAllPaperFieldsAndProfile()
     {
         var prompt = AnalysisContract.BuildUserPrompt(
-            "Experience: 3 years fullstack.\nGoals: fintech in NYC.",
+            "Experience: 4 years backend.\nGoals: applied ML engineering.",
             "2501.12345",
             "A Great Paper",
             "Ada Lovelace; Alan Turing",
@@ -63,7 +63,7 @@ public class AnalysisContractTests
         Assert.Contains("cs.LG, q-fin.TR", prompt);
         Assert.Contains("2026-06-01", prompt);
         Assert.Contains("We prove things.", prompt);
-        Assert.Contains("3 years fullstack", prompt);
+        Assert.Contains("4 years backend", prompt);
         Assert.Contains("https://github.com/example/repo", prompt);
     }
 

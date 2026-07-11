@@ -11,8 +11,8 @@ namespace ResearchDiscovery.Infrastructure.Search;
 /// LLM call site #1: one cheap structured-output call per search that turns
 /// natural-language intent into a deterministic SearchPlan. This is the ONLY
 /// place a model sees the query; it never sees the corpus. The critical
-/// expansion job: career intent ("break into fintech in NYC") → research
-/// topics an embedding model can match against abstracts.
+/// expansion job: career intent ("move into applied ML") → research topics
+/// an embedding model can match against abstracts.
 /// </summary>
 public class AnthropicSearchPlanCompiler(
     AnthropicClient client,

@@ -15,7 +15,7 @@ public sealed record SearchPlan(
 
 /// <summary>
 /// LLM call site #1: natural-language intent → SearchPlan. The key job is
-/// expansion — "fintech NYC roles" becomes concrete research topics an
+/// expansion — "moving into applied ML" becomes concrete research topics an
 /// embedding model can actually match against abstracts.
 /// </summary>
 public interface ISearchPlanCompiler

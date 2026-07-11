@@ -35,8 +35,8 @@ profile fills gaps.
 One cheap call per search. Natural language → structured SearchPlan:
 `{ interpretation, anchorText, categories[], dateWindow, effortCeiling,
 codeExists?, experienceContext }`. Key job is career intent → research topic
-expansion ("fintech NYC" → market microstructure, fraud detection, payments
-infra, risk modeling...). The plan renders as **editable chips** above
+expansion ("applied ML" → anomaly detection, time-series forecasting, model
+monitoring, evaluation...). The plan renders as **editable chips** above
 results — correct the compiler by clicking, not re-prompting. The
 interpretation line is always shown (trust/transparency).
 
