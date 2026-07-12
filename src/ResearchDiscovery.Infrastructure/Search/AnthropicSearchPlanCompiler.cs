@@ -25,7 +25,7 @@ public class AnthropicSearchPlanCompiler(
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["interpretation", "anchor_text", "categories", "date_window_days", "require_no_code", "hypothetical_abstract"],
+      "required": ["interpretation", "anchor_text", "categories", "date_window_days", "require_no_code", "hypothetical_abstract", "query_style"],
       "properties": {
         "interpretation": {
           "type": "string",
@@ -51,6 +51,11 @@ public class AnthropicSearchPlanCompiler(
         "hypothetical_abstract": {
           "type": "string",
           "description": "The abstract of the hypothetical IDEAL paper for this search, 4-6 sentences, written exactly like a real arXiv abstract: the problem, the proposed method, key results. Dense and technical, no meta-commentary, no mention of the user. This is embedded and matched against real abstracts (abstracts match abstracts far better than topic lists do)."
+        },
+        "query_style": {
+          "type": "string",
+          "enum": ["precise", "exploratory", "mixed"],
+          "description": "How the query is phrased. 'precise': it names specific methods, systems, model families, or acronyms - the user's exact words are the best possible search terms (e.g. 'speculative decoding', 'DPO vs RLHF'). 'exploratory': goal- or career-phrased, or plain-language descriptions where the user's vocabulary likely differs from paper vocabulary (e.g. 'something impressive to build', 'chatbots making things up'). 'mixed': both, or unclear."
         }
       }
     }
@@ -150,6 +155,15 @@ public class AnthropicSearchPlanCompiler(
                 ? hydeProp.GetString()
                 : null;
 
+        var intent = root.TryGetProperty("query_style", out var intentProp)
+            && intentProp.ValueKind == JsonValueKind.String
+                ? intentProp.GetString()?.Trim().ToLowerInvariant()
+                : null;
+        if (intent is not ("precise" or "exploratory" or "mixed"))
+        {
+            intent = null; // unknown values degrade to "no signal", never throw
+        }
+
         return new SearchPlan(
             root.GetProperty("interpretation").GetString() ?? string.Empty,
             anchor,
@@ -160,6 +174,7 @@ public class AnthropicSearchPlanCompiler(
             root.GetProperty("require_no_code").ValueKind == JsonValueKind.True
                 ? true
                 : null,
-            string.IsNullOrWhiteSpace(hyde) ? null : hyde);
+            string.IsNullOrWhiteSpace(hyde) ? null : hyde,
+            intent);
     }
 }

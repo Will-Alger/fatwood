@@ -162,8 +162,12 @@ public class SearchService(
 
         // HyDE: the hypothetical ideal-paper abstract joins the anchor set.
         // Embedded WITHOUT the query prefix — it's document-shaped text, and
-        // the point is matching it against document-side embeddings.
-        if (profile.UseHyde && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract))
+        // the point is matching it against document-side embeddings. Precise
+        // queries skip it under intent profiles: their exact words are already
+        // the best anchors, and the abstract can only dilute them.
+        var hydeGatedOff = profile.UseIntentProfiles
+            && string.Equals(plan.Intent, "precise", StringComparison.OrdinalIgnoreCase);
+        if (profile.UseHyde && !hydeGatedOff && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract))
         {
             topicVectors.Add(await embedder.EmbedAsync(plan.HypotheticalAbstract, ct));
         }

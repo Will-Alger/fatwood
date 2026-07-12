@@ -20,7 +20,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a scalable end-to-end system for real-time financial data ingestion, processing, and algorithmic decision-making. Our architecture combines distributed computing with machine learning pipelines to predict short-term price movements and optimize portfolio rebalancing decisions. We validate the framework on historical market data across multiple asset classes, demonstrating 15-30% improvement in risk-adjusted returns compared to baseline strategies. The system achieves sub-millisecond latency for order execution and handles datasets at petabyte scale. Code and benchmarks are available for reproducibility."
+        "hypotheticalAbstract": "We present a scalable end-to-end system for real-time financial data ingestion, processing, and algorithmic decision-making. Our architecture combines distributed computing with machine learning pipelines to predict short-term price movements and optimize portfolio rebalancing decisions. We validate the framework on historical market data across multiple asset classes, demonstrating 15-30% improvement in risk-adjusted returns compared to baseline strategies. The system achieves sub-millisecond latency for order execution and handles datasets at petabyte scale. Code and benchmarks are available for reproducibility.",
+        "intent": "mixed"
       }
     },
     {
@@ -38,7 +39,8 @@
         ],
         "dateWindowDays": 365,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We propose a machine learning approach for detecting fraudulent payment transactions in real-time financial systems. Our method combines supervised classification with anomaly detection to identify fraudulent activity while minimizing false positives on legitimate transactions. We evaluate our approach on a large-scale payment dataset, achieving 0.94 AUC-ROC on held-out test transactions. We demonstrate implementation considerations including handling severe class imbalance, latency constraints, and feature engineering from transaction metadata. Our results show significant improvements over baseline fraud detection systems and provide practical guidance for production deployment."
+        "hypotheticalAbstract": "We propose a machine learning approach for detecting fraudulent payment transactions in real-time financial systems. Our method combines supervised classification with anomaly detection to identify fraudulent activity while minimizing false positives on legitimate transactions. We evaluate our approach on a large-scale payment dataset, achieving 0.94 AUC-ROC on held-out test transactions. We demonstrate implementation considerations including handling severe class imbalance, latency constraints, and feature engineering from transaction metadata. Our results show significant improvements over baseline fraud detection systems and provide practical guidance for production deployment.",
+        "intent": "mixed"
       }
     },
     {
@@ -56,7 +58,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a reinforcement learning framework for automated intraday trading strategy development. The approach employs a deep Q-network agent trained on open-source market data to learn optimal buy-sell decisions from raw OHLCV candlestick sequences. The agent is trained using experience replay and target networks on publicly available historical price feeds without requiring proprietary data. Backtesting on held-out periods demonstrates consistent Sharpe ratio improvements over baseline strategies with modest computational requirements suitable for commodity hardware. We provide open-source code and detailed reproduction instructions using standard Python libraries."
+        "hypotheticalAbstract": "We present a reinforcement learning framework for automated intraday trading strategy development. The approach employs a deep Q-network agent trained on open-source market data to learn optimal buy-sell decisions from raw OHLCV candlestick sequences. The agent is trained using experience replay and target networks on publicly available historical price feeds without requiring proprietary data. Backtesting on held-out periods demonstrates consistent Sharpe ratio improvements over baseline strategies with modest computational requirements suitable for commodity hardware. We provide open-source code and detailed reproduction instructions using standard Python libraries.",
+        "intent": "mixed"
       }
     },
     {
@@ -74,7 +77,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a stochastic model of limit order book dynamics incorporating realistic order arrival and cancellation patterns. The model captures the joint evolution of bid-ask spreads, order queue positions, and price impact through coupled differential equations with empirical parameters extracted from high-frequency market data. We demonstrate that the model accurately reproduces stylized facts of financial microstructure including mean-reverting spreads, non-linear price impact, and the heavy-tailed distribution of order lifetimes. Simulation experiments validate the framework for studying execution algorithms and measuring market resilience under various order flow regimes. The approach enables efficient pricing of latency-sensitive strategies and prediction of short-term price movements from order flow imbalance."
+        "hypotheticalAbstract": "We present a stochastic model of limit order book dynamics incorporating realistic order arrival and cancellation patterns. The model captures the joint evolution of bid-ask spreads, order queue positions, and price impact through coupled differential equations with empirical parameters extracted from high-frequency market data. We demonstrate that the model accurately reproduces stylized facts of financial microstructure including mean-reverting spreads, non-linear price impact, and the heavy-tailed distribution of order lifetimes. Simulation experiments validate the framework for studying execution algorithms and measuring market resilience under various order flow regimes. The approach enables efficient pricing of latency-sensitive strategies and prediction of short-term price movements from order flow imbalance.",
+        "intent": "precise"
       }
     },
     {
@@ -93,7 +97,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We propose a robust portfolio optimization framework that extends classical mean-variance analysis by incorporating higher-order moments and tail risk constraints through a multi-objective optimization formulation. Using convex optimization techniques, we simultaneously optimize Sharpe ratio and maximum drawdown across a universe of liquid assets while enforcing diversification constraints. We provide a fully reproducible implementation in Python with backtesting on fifteen years of historical market data, demonstrating significant out-of-sample performance improvements and reduced drawdowns compared to equal-weight and traditional mean-variance benchmarks across multiple market regimes."
+        "hypotheticalAbstract": "We propose a robust portfolio optimization framework that extends classical mean-variance analysis by incorporating higher-order moments and tail risk constraints through a multi-objective optimization formulation. Using convex optimization techniques, we simultaneously optimize Sharpe ratio and maximum drawdown across a universe of liquid assets while enforcing diversification constraints. We provide a fully reproducible implementation in Python with backtesting on fifteen years of historical market data, demonstrating significant out-of-sample performance improvements and reduced drawdowns compared to equal-weight and traditional mean-variance benchmarks across multiple market regimes.",
+        "intent": "mixed"
       }
     },
     {
@@ -111,7 +116,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Credit risk assessment and loan default prediction require models that satisfy regulatory scrutiny while maintaining predictive accuracy. We propose a framework combining gradient boosting with inherently interpretable feature engineering and SHAP-based local explanations to quantify individual feature contributions to default predictions. Our approach is validated on large-scale credit datasets, demonstrating comparable performance to black-box alternatives while providing audit trails suitable for regulatory examination. We show that interpretability constraints need not substantially compromise predictive power in loan default classification, and we provide post-hoc explanation methods for existing production models that enable compliance auditing."
+        "hypotheticalAbstract": "Credit risk assessment and loan default prediction require models that satisfy regulatory scrutiny while maintaining predictive accuracy. We propose a framework combining gradient boosting with inherently interpretable feature engineering and SHAP-based local explanations to quantify individual feature contributions to default predictions. Our approach is validated on large-scale credit datasets, demonstrating comparable performance to black-box alternatives while providing audit trails suitable for regulatory examination. We show that interpretability constraints need not substantially compromise predictive power in loan default classification, and we provide post-hoc explanation methods for existing production models that enable compliance auditing.",
+        "intent": "precise"
       }
     },
     {
@@ -129,7 +135,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "This paper presents a comprehensive empirical study comparing transformer-based architectures with classical time series forecasting methods on financial datasets. We evaluate self-attention mechanisms, multi-head attention, and positional encodings against ARIMA, exponential smoothing, and LSTM baselines across multiple financial instruments including stock indices and exchange rates. Our transformer model incorporates temporal feature embeddings and achieves state-of-the-art performance on standard benchmarks, with detailed ablation studies isolating the contribution of attention components. We provide extensive comparisons on metric dimensions including directional accuracy, mean absolute percentage error, and Sharpe ratio for trading signals, offering practitioners guidance on method selection and computational trade-offs."
+        "hypotheticalAbstract": "This paper presents a comprehensive empirical study comparing transformer-based architectures with classical time series forecasting methods on financial datasets. We evaluate self-attention mechanisms, multi-head attention, and positional encodings against ARIMA, exponential smoothing, and LSTM baselines across multiple financial instruments including stock indices and exchange rates. Our transformer model incorporates temporal feature embeddings and achieves state-of-the-art performance on standard benchmarks, with detailed ablation studies isolating the contribution of attention components. We provide extensive comparisons on metric dimensions including directional accuracy, mean absolute percentage error, and Sharpe ratio for trading signals, offering practitioners guidance on method selection and computational trade-offs.",
+        "intent": "mixed"
       }
     },
     {
@@ -147,7 +154,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a comprehensive analysis of decentralized exchange (DEX) mechanics on Ethereum, examining how automated market maker (AMM) designs affect price discovery, slippage, and user outcomes. Using on-chain transaction data spanning six months, we characterize liquidity provision patterns, measure maximal extractable value (MEV) across protocol variants, and evaluate incentive structures that drive capital formation. Our findings reveal substantial inefficiencies in current pool designs and propose modifications to smart contract mechanics that improve execution quality for traders while maintaining incentive compatibility for liquidity providers. Code and datasets are released for reproducibility."
+        "hypotheticalAbstract": "We present a comprehensive analysis of decentralized exchange (DEX) mechanics on Ethereum, examining how automated market maker (AMM) designs affect price discovery, slippage, and user outcomes. Using on-chain transaction data spanning six months, we characterize liquidity provision patterns, measure maximal extractable value (MEV) across protocol variants, and evaluate incentive structures that drive capital formation. Our findings reveal substantial inefficiencies in current pool designs and propose modifications to smart contract mechanics that improve execution quality for traders while maintaining incentive compatibility for liquidity providers. Code and datasets are released for reproducibility.",
+        "intent": "precise"
       }
     },
     {
@@ -166,7 +174,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We propose a novel machine learning approach to value-at-risk estimation that combines extreme value theory with deep neural networks to better capture tail behavior in high-dimensional financial portfolios. Our method addresses limitations of traditional parametric and historical simulation approaches by adaptively learning nonlinear relationships between risk factors and extreme losses. We demonstrate superior out-of-sample performance on equity and fixed-income portfolios across multiple market regimes, with particular improvements in tail quantile forecasting during crisis periods. Backtesting results show our approach reduces both Type I and Type II errors compared to standard unconditional and conditional VaR models."
+        "hypotheticalAbstract": "We propose a novel machine learning approach to value-at-risk estimation that combines extreme value theory with deep neural networks to better capture tail behavior in high-dimensional financial portfolios. Our method addresses limitations of traditional parametric and historical simulation approaches by adaptively learning nonlinear relationships between risk factors and extreme losses. We demonstrate superior out-of-sample performance on equity and fixed-income portfolios across multiple market regimes, with particular improvements in tail quantile forecasting during crisis periods. Backtesting results show our approach reduces both Type I and Type II errors compared to standard unconditional and conditional VaR models.",
+        "intent": "precise"
       }
     },
     {
@@ -183,7 +192,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We propose an end-to-end framework leveraging large language models to automate software engineering tasks including code review, bug detection, and test generation. Our approach fine-tunes transformer-based models on domain-specific software repositories and employs few-shot prompting strategies to generate contextually appropriate code reviews, identify potential defects, and synthesize unit tests. Experimental evaluation on open-source projects demonstrates that our LLM agent achieves 78% precision in bug detection and generates functionally correct test cases for 65% of target functions, significantly outperforming rule-based baselines while reducing manual effort in the software development lifecycle."
+        "hypotheticalAbstract": "We propose an end-to-end framework leveraging large language models to automate software engineering tasks including code review, bug detection, and test generation. Our approach fine-tunes transformer-based models on domain-specific software repositories and employs few-shot prompting strategies to generate contextually appropriate code reviews, identify potential defects, and synthesize unit tests. Experimental evaluation on open-source projects demonstrates that our LLM agent achieves 78% precision in bug detection and generates functionally correct test cases for 65% of target functions, significantly outperforming rule-based baselines while reducing manual effort in the software development lifecycle.",
+        "intent": "precise"
       }
     },
     {
@@ -200,7 +210,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Retrieval-augmented generation systems rely critically on the quality of retrieved documents to ground language model outputs. We propose a framework for improving embedding-based retrieval by optimizing the alignment between query and document representations through contrastive learning objectives. We introduce novel evaluation metrics tailored to RAG performance and demonstrate that explicit relevance ranking supervision significantly improves downstream generation quality. Experiments on multiple retrieval benchmarks show our approach achieves state-of-the-art performance while maintaining computational efficiency for production deployment."
+        "hypotheticalAbstract": "Retrieval-augmented generation systems rely critically on the quality of retrieved documents to ground language model outputs. We propose a framework for improving embedding-based retrieval by optimizing the alignment between query and document representations through contrastive learning objectives. We introduce novel evaluation metrics tailored to RAG performance and demonstrate that explicit relevance ranking supervision significantly improves downstream generation quality. Experiments on multiple retrieval benchmarks show our approach achieves state-of-the-art performance while maintaining computational efficiency for production deployment.",
+        "intent": "precise"
       }
     },
     {
@@ -217,7 +228,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a deep learning framework for detecting security vulnerabilities in source code by learning rich semantic representations of program structure. Our approach combines graph neural networks over abstract syntax trees and data dependency graphs with transformer-based encoders to capture both local code patterns and long-range semantic dependencies indicative of common vulnerability classes. We evaluate on large-scale datasets including CWE-annotated real-world code and synthetic vulnerability benchmarks, achieving state-of-the-art precision and recall on buffer overflows, SQL injection, use-after-free, and path traversal vulnerabilities. Our method generalizes across programming languages and outperforms traditional static analysis tools on novel vulnerability variants not seen during training."
+        "hypotheticalAbstract": "We present a deep learning framework for detecting security vulnerabilities in source code by learning rich semantic representations of program structure. Our approach combines graph neural networks over abstract syntax trees and data dependency graphs with transformer-based encoders to capture both local code patterns and long-range semantic dependencies indicative of common vulnerability classes. We evaluate on large-scale datasets including CWE-annotated real-world code and synthetic vulnerability benchmarks, achieving state-of-the-art precision and recall on buffer overflows, SQL injection, use-after-free, and path traversal vulnerabilities. Our method generalizes across programming languages and outperforms traditional static analysis tools on novel vulnerability variants not seen during training.",
+        "intent": "precise"
       }
     },
     {
@@ -235,7 +247,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We study the vulnerability of deep neural networks to adversarial perturbations, where small imperceptible changes to inputs can cause misclassification. We propose a defense mechanism based on adversarial training that robustly increases model resilience against both white-box and black-box attacks. Additionally, we investigate data poisoning attacks where an adversary injects malicious samples during training, and model extraction attacks where attackers query the model to reverse-engineer its weights. We evaluate our approach against multiple attack vectors on image classification benchmarks and provide empirical evidence of improved robustness without significant accuracy loss."
+        "hypotheticalAbstract": "We study the vulnerability of deep neural networks to adversarial perturbations, where small imperceptible changes to inputs can cause misclassification. We propose a defense mechanism based on adversarial training that robustly increases model resilience against both white-box and black-box attacks. Additionally, we investigate data poisoning attacks where an adversary injects malicious samples during training, and model extraction attacks where attackers query the model to reverse-engineer its weights. We evaluate our approach against multiple attack vectors on image classification benchmarks and provide empirical evidence of improved robustness without significant accuracy loss.",
+        "intent": "precise"
       }
     },
     {
@@ -252,7 +265,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Federated learning enables distributed training without centralizing sensitive data, but privacy remains a critical concern. We present a practical framework combining federated averaging with per-sample differential privacy noise injection, providing formal privacy guarantees while maintaining model utility. Our approach employs privacy budget allocation strategies and adaptive noise scheduling to balance convergence speed and privacy loss. We demonstrate the method on healthcare datasets with implementation details and code, showing that modest privacy budgets achieve competitive accuracy on realistic tasks. We provide empirical analysis of privacy-utility tradeoffs and discuss deployment considerations for resource-constrained devices."
+        "hypotheticalAbstract": "Federated learning enables distributed training without centralizing sensitive data, but privacy remains a critical concern. We present a practical framework combining federated averaging with per-sample differential privacy noise injection, providing formal privacy guarantees while maintaining model utility. Our approach employs privacy budget allocation strategies and adaptive noise scheduling to balance convergence speed and privacy loss. We demonstrate the method on healthcare datasets with implementation details and code, showing that modest privacy budgets achieve competitive accuracy on realistic tasks. We provide empirical analysis of privacy-utility tradeoffs and discuss deployment considerations for resource-constrained devices.",
+        "intent": "precise"
       }
     },
     {
@@ -271,7 +285,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a practical anomaly detection framework for high-dimensional system telemetry combining unsupervised learning with statistical baselines. Our approach integrates time-series preprocessing, feature extraction from logs and metrics, and ensemble anomaly scoring to identify both point and collective anomalies in operational data. We evaluate on real production datasets spanning application metrics, system logs, and infrastructure telemetry, demonstrating detection rates above 85% with minimal false positives. The system handles concept drift and seasonal patterns common in operational environments, with latency suitable for real-time monitoring pipelines."
+        "hypotheticalAbstract": "We present a practical anomaly detection framework for high-dimensional system telemetry combining unsupervised learning with statistical baselines. Our approach integrates time-series preprocessing, feature extraction from logs and metrics, and ensemble anomaly scoring to identify both point and collective anomalies in operational data. We evaluate on real production datasets spanning application metrics, system logs, and infrastructure telemetry, demonstrating detection rates above 85% with minimal false positives. The system handles concept drift and seasonal patterns common in operational environments, with latency suitable for real-time monitoring pipelines.",
+        "intent": "precise"
       }
     },
     {
@@ -286,7 +301,8 @@
         ],
         "dateWindowDays": 90,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Automated software testing remains a challenge in continuous integration pipelines, particularly in detecting and resolving flaky tests that fail intermittently regardless of code changes. We propose a novel approach combining fuzzing-guided test generation with machine learning-based flakiness prediction to identify tests prone to non-deterministic failures. Our method analyzes execution traces, timing characteristics, and environmental dependencies across multiple test runs, achieving 87% precision in flaky test detection on real-world projects. We demonstrate the approach on three large open-source repositories, showing that our tooling reduces false failures by 73% and accelerates CI/CD cycles by 41%."
+        "hypotheticalAbstract": "Automated software testing remains a challenge in continuous integration pipelines, particularly in detecting and resolving flaky tests that fail intermittently regardless of code changes. We propose a novel approach combining fuzzing-guided test generation with machine learning-based flakiness prediction to identify tests prone to non-deterministic failures. Our method analyzes execution traces, timing characteristics, and environmental dependencies across multiple test runs, achieving 87% precision in flaky test detection on real-world projects. We demonstrate the approach on three large open-source repositories, showing that our tooling reduces false failures by 73% and accelerates CI/CD cycles by 41%.",
+        "intent": "precise"
       }
     },
     {
@@ -304,7 +320,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a lightweight recommender system designed for e-commerce platforms with limited user-item interaction data and sparse user histories. Our approach combines content-based item similarity with adaptive exploration strategies to address the cold-start problem for new users and items. We propose a scalable ranking mechanism that leverages item embeddings and lightweight collaborative signals to balance personalization with coverage. Experiments on small-scale datasets demonstrate competitive performance against heavier baselines while maintaining low computational overhead suitable for resource-constrained deployments. Our method achieves improved ranking quality and cold-start performance with minimal training data."
+        "hypotheticalAbstract": "We present a lightweight recommender system designed for e-commerce platforms with limited user-item interaction data and sparse user histories. Our approach combines content-based item similarity with adaptive exploration strategies to address the cold-start problem for new users and items. We propose a scalable ranking mechanism that leverages item embeddings and lightweight collaborative signals to balance personalization with coverage. Experiments on small-scale datasets demonstrate competitive performance against heavier baselines while maintaining low computational overhead suitable for resource-constrained deployments. Our method achieves improved ranking quality and cold-start performance with minimal training data.",
+        "intent": "mixed"
       }
     },
     {
@@ -324,7 +341,8 @@
         ],
         "dateWindowDays": 90,
         "requireNoCode": true,
-        "hypotheticalAbstract": "We present a lightweight, production-ready inference system for deploying pre-trained neural networks at scale with minimal latency overhead. The system combines efficient model serving, adaptive batching, and intelligent caching to enable real-time predictions across distributed backend services. We evaluate on standard benchmarks, demonstrating sub-100ms latency inference with \u003C5% throughput overhead compared to naive approaches. Our implementation provides clear APIs for feature engineering and model management, making it practical for developers to integrate state-of-the-art models into existing backend systems without deep ML expertise. Code and documentation are publicly available."
+        "hypotheticalAbstract": "We present a lightweight, production-ready inference system for deploying pre-trained neural networks at scale with minimal latency overhead. The system combines efficient model serving, adaptive batching, and intelligent caching to enable real-time predictions across distributed backend services. We evaluate on standard benchmarks, demonstrating sub-100ms latency inference with \u003C5% throughput overhead compared to naive approaches. Our implementation provides clear APIs for feature engineering and model management, making it practical for developers to integrate state-of-the-art models into existing backend systems without deep ML expertise. Code and documentation are publicly available.",
+        "intent": "exploratory"
       }
     },
     {
@@ -348,7 +366,8 @@
         ],
         "dateWindowDays": 60,
         "requireNoCode": true,
-        "hypotheticalAbstract": "We present a novel approach to [problem domain] that achieves state-of-the-art results through [methodological contribution]. Our method combines [technical components] to address [specific challenges], demonstrating improvements on [benchmark datasets/tasks]. While prior work has explored [related approaches], our framework uniquely [key differentiator], enabling [practical benefit]. Experimental validation on [evaluation setting] shows [quantitative results] compared to baselines. Code and datasets are made available to support reproducibility."
+        "hypotheticalAbstract": "We present a novel approach to [problem domain] that achieves state-of-the-art results through [methodological contribution]. Our method combines [technical components] to address [specific challenges], demonstrating improvements on [benchmark datasets/tasks]. While prior work has explored [related approaches], our framework uniquely [key differentiator], enabling [practical benefit]. Experimental validation on [evaluation setting] shows [quantitative results] compared to baselines. Code and datasets are made available to support reproducibility.",
+        "intent": "exploratory"
       }
     },
     {
@@ -367,7 +386,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We propose a deep reinforcement learning framework for optimal trade execution that minimizes expected transaction costs while accounting for market impact and adverse selection. Our approach models the limit order book dynamics and uses a recurrent neural network to predict short-term price movements and liquidity conditions. We evaluate the algorithm on intraday equity data, demonstrating 15-20% reduction in implementation shortfall compared to classical VWAP and TWAP benchmarks. We further extend the framework to multi-asset execution with portfolio-level constraints and show that accounting for cross-asset correlations yields significant additional cost savings."
+        "hypotheticalAbstract": "We propose a deep reinforcement learning framework for optimal trade execution that minimizes expected transaction costs while accounting for market impact and adverse selection. Our approach models the limit order book dynamics and uses a recurrent neural network to predict short-term price movements and liquidity conditions. We evaluate the algorithm on intraday equity data, demonstrating 15-20% reduction in implementation shortfall compared to classical VWAP and TWAP benchmarks. We further extend the framework to multi-asset execution with portfolio-level constraints and show that accounting for cross-asset correlations yields significant additional cost savings.",
+        "intent": "precise"
       }
     },
     {
@@ -385,7 +405,8 @@
         ],
         "dateWindowDays": 90,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present an agentic framework for automated financial document analysis that integrates large language models with document retrieval, entity extraction, and reasoning modules. The system processes diverse financial documents including SEC filings, earnings reports, and regulatory submissions, extracting key entities, relationships, and compliance-relevant information through multi-step reasoning with tool access. We demonstrate the approach on document classification, cross-document question answering, and risk signal extraction from unstructured text. Empirical results show significant improvements over baseline LLM approaches in accuracy and interpretability, with application to financial due diligence and compliance workflows."
+        "hypotheticalAbstract": "We present an agentic framework for automated financial document analysis that integrates large language models with document retrieval, entity extraction, and reasoning modules. The system processes diverse financial documents including SEC filings, earnings reports, and regulatory submissions, extracting key entities, relationships, and compliance-relevant information through multi-step reasoning with tool access. We demonstrate the approach on document classification, cross-document question answering, and risk signal extraction from unstructured text. Empirical results show significant improvements over baseline LLM approaches in accuracy and interpretability, with application to financial due diligence and compliance workflows.",
+        "intent": "mixed"
       }
     },
     {
@@ -402,7 +423,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We propose a systematic study of state space model architectures for long-range sequence modeling, comparing linear recurrent and semi-structured state space methods against transformer attention. Our key contribution is a unified framework analyzing how selective gating and parameterized state transitions enable effective context compression without quadratic attention complexity. We evaluate on long-context language modeling, time series forecasting, and synthetic tasks requiring 4K-16K token dependencies. Results demonstrate that properly designed SSM variants match or exceed transformer performance while maintaining linear or subquadratic complexity. We further provide ablations isolating the role of attention mechanisms, showing that structured state transitions and gating often subsume attention benefits. Code and benchmarks released for reproducibility."
+        "hypotheticalAbstract": "We propose a systematic study of state space model architectures for long-range sequence modeling, comparing linear recurrent and semi-structured state space methods against transformer attention. Our key contribution is a unified framework analyzing how selective gating and parameterized state transitions enable effective context compression without quadratic attention complexity. We evaluate on long-context language modeling, time series forecasting, and synthetic tasks requiring 4K-16K token dependencies. Results demonstrate that properly designed SSM variants match or exceed transformer performance while maintaining linear or subquadratic complexity. We further provide ablations isolating the role of attention mechanisms, showing that structured state transitions and gating often subsume attention benefits. Code and benchmarks released for reproducibility.",
+        "intent": "precise"
       }
     },
     {
@@ -419,7 +441,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Aligning large language models with human preferences typically requires computationally expensive reinforcement learning from human feedback (RLHF) with separate reward models. We propose and evaluate direct preference optimization (DPO), a simpler approach that extracts preference information directly from preference pairs without explicit reward modeling or reinforcement learning. We compare DPO against standard RLHF on open-source models up to 7B parameters, demonstrating comparable or superior alignment quality with significantly reduced training compute and memory requirements. Our results show DPO achieves comparable downstream task performance while being tractable on consumer-grade hardware, making preference-based alignment accessible for practitioners fine-tuning smaller open models."
+        "hypotheticalAbstract": "Aligning large language models with human preferences typically requires computationally expensive reinforcement learning from human feedback (RLHF) with separate reward models. We propose and evaluate direct preference optimization (DPO), a simpler approach that extracts preference information directly from preference pairs without explicit reward modeling or reinforcement learning. We compare DPO against standard RLHF on open-source models up to 7B parameters, demonstrating comparable or superior alignment quality with significantly reduced training compute and memory requirements. Our results show DPO achieves comparable downstream task performance while being tractable on consumer-grade hardware, making preference-based alignment accessible for practitioners fine-tuning smaller open models.",
+        "intent": "precise"
       }
     },
     {
@@ -436,7 +459,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a practical framework for accelerating large language model inference through speculative decoding, a technique that generates multiple candidate tokens in parallel and verifies them against the model in a single forward pass. Our method reduces per-token latency by leveraging lightweight drafting models to predict probable continuations, then validates predictions using cached key-value tensors to amortize compute cost. We demonstrate speedups of 1.5\u20132.5\u00D7 on various model sizes (7B\u201370B parameters) running on single-GPU hardware, with analysis of memory bandwidth trade-offs and draft model scaling. Experiments on standard benchmarks show consistent improvements across different sampling strategies and show negligible impact on output quality."
+        "hypotheticalAbstract": "We present a practical framework for accelerating large language model inference through speculative decoding, a technique that generates multiple candidate tokens in parallel and verifies them against the model in a single forward pass. Our method reduces per-token latency by leveraging lightweight drafting models to predict probable continuations, then validates predictions using cached key-value tensors to amortize compute cost. We demonstrate speedups of 1.5\u20132.5\u00D7 on various model sizes (7B\u201370B parameters) running on single-GPU hardware, with analysis of memory bandwidth trade-offs and draft model scaling. Experiments on standard benchmarks show consistent improvements across different sampling strategies and show negligible impact on output quality.",
+        "intent": "precise"
       }
     },
     {
@@ -454,7 +478,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "The key-value cache in transformer-based language models becomes a significant memory and latency bottleneck during long-context inference. We propose a multi-stage KV cache compression pipeline combining selective token pruning, post-training quantization to 4-bit precision, and learned low-rank decomposition of cache matrices. Our method maintains generation quality on long-context benchmarks while reducing cache memory by 6.5\u00D7 and improving throughput by 3.2\u00D7 on commodity GPUs. We demonstrate the approach on models up to 70B parameters and show compatibility with existing speculative decoding optimizations, achieving practical speedups on real serving workloads."
+        "hypotheticalAbstract": "The key-value cache in transformer-based language models becomes a significant memory and latency bottleneck during long-context inference. We propose a multi-stage KV cache compression pipeline combining selective token pruning, post-training quantization to 4-bit precision, and learned low-rank decomposition of cache matrices. Our method maintains generation quality on long-context benchmarks while reducing cache memory by 6.5\u00D7 and improving throughput by 3.2\u00D7 on commodity GPUs. We demonstrate the approach on models up to 70B parameters and show compatibility with existing speculative decoding optimizations, achieving practical speedups on real serving workloads.",
+        "intent": "precise"
       }
     },
     {
@@ -471,7 +496,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Large language models frequently generate plausible-sounding but factually incorrect statements with high confidence. We present a framework for detecting hallucinated outputs by combining uncertainty quantification from transformer hidden states with external knowledge verification. We evaluate our approach on multiple QA and dialogue benchmarks, achieving 78% hallucination detection accuracy while maintaining 92% recall on factual outputs. We additionally propose a training-time intervention using contrastive learning to reduce model confidence on out-of-distribution and unseen facts. Human evaluation confirms our method identifies problematic outputs before deployment in conversational agents."
+        "hypotheticalAbstract": "Large language models frequently generate plausible-sounding but factually incorrect statements with high confidence. We present a framework for detecting hallucinated outputs by combining uncertainty quantification from transformer hidden states with external knowledge verification. We evaluate our approach on multiple QA and dialogue benchmarks, achieving 78% hallucination detection accuracy while maintaining 92% recall on factual outputs. We additionally propose a training-time intervention using contrastive learning to reduce model confidence on out-of-distribution and unseen facts. Human evaluation confirms our method identifies problematic outputs before deployment in conversational agents.",
+        "intent": "exploratory"
       }
     },
     {
@@ -489,7 +515,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Deep neural networks achieve state-of-the-art accuracy but remain computationally expensive for deployment on mobile and edge devices. We propose a unified compression framework combining structured pruning, post-training quantization, and knowledge distillation to reduce model size and inference latency while maintaining task performance. Experiments on ImageNet and mobile vision tasks demonstrate 8-10\u00D7 compression and 4-6\u00D7 speedup with \u003C2% accuracy drop compared to full-precision baselines. The compressed models run efficiently on ARM processors without specialized hardware, enabling real-time inference on smartphones. Code and pre-compressed models are released for practitioners."
+        "hypotheticalAbstract": "Deep neural networks achieve state-of-the-art accuracy but remain computationally expensive for deployment on mobile and edge devices. We propose a unified compression framework combining structured pruning, post-training quantization, and knowledge distillation to reduce model size and inference latency while maintaining task performance. Experiments on ImageNet and mobile vision tasks demonstrate 8-10\u00D7 compression and 4-6\u00D7 speedup with \u003C2% accuracy drop compared to full-precision baselines. The compressed models run efficiently on ARM processors without specialized hardware, enabling real-time inference on smartphones. Code and pre-compressed models are released for practitioners.",
+        "intent": "exploratory"
       }
     },
     {
@@ -507,7 +534,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Detecting machine-generated text has become increasingly critical as large language models produce increasingly human-like outputs. We present a comprehensive analysis of linguistic signatures that distinguish text written by modern language models from human-authored content, including syntactic patterns, semantic coherence markers, and statistical distributional properties. We evaluate detection methods across multiple architectures (GPT-2, GPT-3, BERT-based generators) and datasets, achieving 87% F1-score on out-of-distribution test sets. Our findings reveal that detectors relying on single statistical features are vulnerable to adversarial paraphrasing, while ensemble approaches combining syntax, perplexity, and token-level confidence scores show robust generalization. We release an open-source detector and discuss implications for academic integrity and content authenticity verification."
+        "hypotheticalAbstract": "Detecting machine-generated text has become increasingly critical as large language models produce increasingly human-like outputs. We present a comprehensive analysis of linguistic signatures that distinguish text written by modern language models from human-authored content, including syntactic patterns, semantic coherence markers, and statistical distributional properties. We evaluate detection methods across multiple architectures (GPT-2, GPT-3, BERT-based generators) and datasets, achieving 87% F1-score on out-of-distribution test sets. Our findings reveal that detectors relying on single statistical features are vulnerable to adversarial paraphrasing, while ensemble approaches combining syntax, perplexity, and token-level confidence scores show robust generalization. We release an open-source detector and discuss implications for academic integrity and content authenticity verification.",
+        "intent": "exploratory"
       }
     },
     {
@@ -524,7 +552,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We address the challenge of training high-performance machine learning models when labeled data is severely limited. We propose a practical framework combining semi-supervised learning with self-supervised pretraining and active learning strategies to maximize model performance given a fixed annotation budget. Our method leverages unlabeled data through consistency regularization and pseudo-labeling while strategically selecting the most informative samples for manual labeling. Experiments on image and text classification tasks demonstrate that our approach achieves 85-92% of fully-supervised performance while requiring only 5-10% of the labeled data, making it suitable for resource-constrained production settings."
+        "hypotheticalAbstract": "We address the challenge of training high-performance machine learning models when labeled data is severely limited. We propose a practical framework combining semi-supervised learning with self-supervised pretraining and active learning strategies to maximize model performance given a fixed annotation budget. Our method leverages unlabeled data through consistency regularization and pseudo-labeling while strategically selecting the most informative samples for manual labeling. Experiments on image and text classification tasks demonstrate that our approach achieves 85-92% of fully-supervised performance while requiring only 5-10% of the labeled data, making it suitable for resource-constrained production settings.",
+        "intent": "exploratory"
       }
     },
     {
@@ -542,7 +571,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We investigate prompt injection and jailbreak vulnerabilities in large language models, where carefully crafted inputs circumvent intended constraints to elicit harmful or unintended behaviors. We present a taxonomy of attack techniques spanning direct instruction override, context confusion, and constraint relaxation. We evaluate these attacks across multiple LLM architectures and propose practical defense mechanisms including input sanitization, prompt anchoring, and constraint verification. Our evaluation demonstrates that combining syntactic and semantic defenses reduces attack success rates by up to 85% while maintaining utility. We provide open-source tooling for security auditing and defense validation."
+        "hypotheticalAbstract": "We investigate prompt injection and jailbreak vulnerabilities in large language models, where carefully crafted inputs circumvent intended constraints to elicit harmful or unintended behaviors. We present a taxonomy of attack techniques spanning direct instruction override, context confusion, and constraint relaxation. We evaluate these attacks across multiple LLM architectures and propose practical defense mechanisms including input sanitization, prompt anchoring, and constraint verification. Our evaluation demonstrates that combining syntactic and semantic defenses reduces attack success rates by up to 85% while maintaining utility. We provide open-source tooling for security auditing and defense validation.",
+        "intent": "precise"
       }
     },
     {
@@ -558,7 +588,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Accurate cardinality estimation is critical for query optimization, yet traditional statistical models struggle with complex predicates and correlated attributes. We propose a machine learning-based cardinality estimator that leverages deep neural networks to learn complex patterns in table statistics and query predicates, trained end-to-end on a workload of historical queries. Experiments on benchmark TPC-H and real OLTP workloads show 2-3\u00D7 improvements in query plan quality compared to PostgreSQL\u0027s default statistics-based estimator, with learned models that adapt dynamically to data distribution shifts. Our approach integrates seamlessly with existing query optimizers through a drop-in replacement for the selectivity computation layer, enabling immediate deployment in production databases."
+        "hypotheticalAbstract": "Accurate cardinality estimation is critical for query optimization, yet traditional statistical models struggle with complex predicates and correlated attributes. We propose a machine learning-based cardinality estimator that leverages deep neural networks to learn complex patterns in table statistics and query predicates, trained end-to-end on a workload of historical queries. Experiments on benchmark TPC-H and real OLTP workloads show 2-3\u00D7 improvements in query plan quality compared to PostgreSQL\u0027s default statistics-based estimator, with learned models that adapt dynamically to data distribution shifts. Our approach integrates seamlessly with existing query optimizers through a drop-in replacement for the selectivity computation layer, enabling immediate deployment in production databases.",
+        "intent": "precise"
       }
     },
     {
@@ -577,7 +608,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a framework for training machine learning models on sensitive financial transaction data while satisfying differential privacy guarantees required by regulatory compliance. The method combines federated learning with local differential privacy mechanisms to enable secure aggregation of transaction features across distributed payment systems without centralizing raw data. We demonstrate the approach on transaction classification and anomaly detection tasks, showing that privacy budgets compatible with GDPR Article 32 and PCI-DSS requirements can be achieved with acceptable utility-privacy tradeoffs. Our implementation uses secure multi-party computation primitives to protect intermediate model updates, and we validate compliance through formal privacy audits on real payment network data."
+        "hypotheticalAbstract": "We present a framework for training machine learning models on sensitive financial transaction data while satisfying differential privacy guarantees required by regulatory compliance. The method combines federated learning with local differential privacy mechanisms to enable secure aggregation of transaction features across distributed payment systems without centralizing raw data. We demonstrate the approach on transaction classification and anomaly detection tasks, showing that privacy budgets compatible with GDPR Article 32 and PCI-DSS requirements can be achieved with acceptable utility-privacy tradeoffs. Our implementation uses secure multi-party computation primitives to protect intermediate model updates, and we validate compliance through formal privacy audits on real payment network data.",
+        "intent": "precise"
       }
     },
     {
@@ -595,7 +627,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a graph neural network framework for detecting organized fraud rings and money laundering networks in financial transaction data. Our approach represents accounts as nodes and transactions as directed edges with attributes, applying graph convolutional layers to learn node embeddings that capture network structure and temporal patterns. We introduce a novel loss function combining graph-level anomaly scoring with local subgraph pattern detection to identify coordinated illicit behavior. Evaluated on synthetic and real financial networks, our method achieves 87% precision in detecting fraud rings while maintaining low false positive rates compared to transaction-level baselines, and demonstrates interpretability through subgraph visualization of detected criminal networks."
+        "hypotheticalAbstract": "We present a graph neural network framework for detecting organized fraud rings and money laundering networks in financial transaction data. Our approach represents accounts as nodes and transactions as directed edges with attributes, applying graph convolutional layers to learn node embeddings that capture network structure and temporal patterns. We introduce a novel loss function combining graph-level anomaly scoring with local subgraph pattern detection to identify coordinated illicit behavior. Evaluated on synthetic and real financial networks, our method achieves 87% precision in detecting fraud rings while maintaining low false positive rates compared to transaction-level baselines, and demonstrates interpretability through subgraph visualization of detected criminal networks.",
+        "intent": "precise"
       }
     },
     {
@@ -611,7 +644,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a practical framework for pretraining and fine-tuning language models on resource-constrained consumer devices. We demonstrate that aggressive parameter reduction, quantization, and gradient checkpointing enable full model training on a single CPU or low-power GPU. We validate our approach by successfully pretraining a 100M-parameter transformer on commodity hardware and fine-tuning it on diverse downstream tasks, achieving comparable performance to standard training while reducing memory footprint by 80% and computational cost by 60%. Our implementation is open-source and targets practitioners without datacenter access."
+        "hypotheticalAbstract": "We present a practical framework for pretraining and fine-tuning language models on resource-constrained consumer devices. We demonstrate that aggressive parameter reduction, quantization, and gradient checkpointing enable full model training on a single CPU or low-power GPU. We validate our approach by successfully pretraining a 100M-parameter transformer on commodity hardware and fine-tuning it on diverse downstream tasks, achieving comparable performance to standard training while reducing memory footprint by 80% and computational cost by 60%. Our implementation is open-source and targets practitioners without datacenter access.",
+        "intent": "exploratory"
       }
     },
     {
@@ -627,7 +661,8 @@
         ],
         "dateWindowDays": 90,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a lightweight real-time vision system for webcam-based human activity recognition using a single RGB camera. Our approach leverages pre-trained convolutional neural networks with transfer learning to detect and classify hand gestures and body poses from live video streams without specialized hardware. We demonstrate efficient inference on commodity laptop GPUs, achieving 30\u002B fps on standard webcam resolution with \u003C5% latency overhead. We provide an end-to-end implementation pipeline with minimal preprocessing and pre-trained weights suitable for deployment on consumer devices, evaluated on standard benchmark datasets."
+        "hypotheticalAbstract": "We present a lightweight real-time vision system for webcam-based human activity recognition using a single RGB camera. Our approach leverages pre-trained convolutional neural networks with transfer learning to detect and classify hand gestures and body poses from live video streams without specialized hardware. We demonstrate efficient inference on commodity laptop GPUs, achieving 30\u002B fps on standard webcam resolution with \u003C5% latency overhead. We provide an end-to-end implementation pipeline with minimal preprocessing and pre-trained weights suitable for deployment on consumer devices, evaluated on standard benchmark datasets.",
+        "intent": "exploratory"
       }
     },
     {
@@ -644,7 +679,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a lightweight, reproducible evaluation framework for large language model agents that enables individual researchers to systematically assess agent behavior across diverse tasks. Our approach combines task-level benchmarking with interpretable metrics for measuring decision-making quality, plan coherence, and task completion rates. We demonstrate the framework on 50\u002B autonomous agent workflows spanning reasoning, tool use, and multi-step planning, showing significant variance in performance across agent architectures. The framework requires minimal computational overhead and provides detailed diagnostic outputs suitable for single-researcher reproducibility without proprietary infrastructure."
+        "hypotheticalAbstract": "We present a lightweight, reproducible evaluation framework for large language model agents that enables individual researchers to systematically assess agent behavior across diverse tasks. Our approach combines task-level benchmarking with interpretable metrics for measuring decision-making quality, plan coherence, and task completion rates. We demonstrate the framework on 50\u002B autonomous agent workflows spanning reasoning, tool use, and multi-step planning, showing significant variance in performance across agent architectures. The framework requires minimal computational overhead and provides detailed diagnostic outputs suitable for single-researcher reproducibility without proprietary infrastructure.",
+        "intent": "mixed"
       }
     },
     {
@@ -663,7 +699,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present an accessible introduction to practical machine learning workflows for systems professionals transitioning from infrastructure and scripting backgrounds. We demonstrate end-to-end implementation of supervised learning models for common system-administration problems including anomaly detection, resource prediction, and automated classification, using standard Python libraries and publicly available datasets. Our approach emphasizes minimal mathematical prerequisite and maximum code-along reproducibility, showing how fundamental concepts like feature engineering, model selection, and evaluation directly apply to buildable projects. We provide annotated implementations and discuss practical considerations for deploying trained models in production environments, enabling practitioners to iteratively improve and adapt models for their specific domains without requiring advanced mathematical expertise."
+        "hypotheticalAbstract": "We present an accessible introduction to practical machine learning workflows for systems professionals transitioning from infrastructure and scripting backgrounds. We demonstrate end-to-end implementation of supervised learning models for common system-administration problems including anomaly detection, resource prediction, and automated classification, using standard Python libraries and publicly available datasets. Our approach emphasizes minimal mathematical prerequisite and maximum code-along reproducibility, showing how fundamental concepts like feature engineering, model selection, and evaluation directly apply to buildable projects. We provide annotated implementations and discuss practical considerations for deploying trained models in production environments, enabling practitioners to iteratively improve and adapt models for their specific domains without requiring advanced mathematical expertise.",
+        "intent": "exploratory"
       }
     },
     {
@@ -683,7 +720,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a novel distributed system architecture addressing fundamental challenges in fault-tolerant consensus and strong consistency under network partitions. Our system implements a new protocol combining Byzantine fault tolerance with efficient state machine replication, achieving lower latency and higher throughput than prior work while maintaining strict safety guarantees. We prove correctness using formal methods and evaluate performance across large-scale deployments with realistic failure scenarios. Experimental results demonstrate 3\u00D7 improvement in tail latency and support for 100k\u002B concurrent operations with sub-second recovery times during Byzantine node failures."
+        "hypotheticalAbstract": "We present a novel distributed system architecture addressing fundamental challenges in fault-tolerant consensus and strong consistency under network partitions. Our system implements a new protocol combining Byzantine fault tolerance with efficient state machine replication, achieving lower latency and higher throughput than prior work while maintaining strict safety guarantees. We prove correctness using formal methods and evaluate performance across large-scale deployments with realistic failure scenarios. Experimental results demonstrate 3\u00D7 improvement in tail latency and support for 100k\u002B concurrent operations with sub-second recovery times during Byzantine node failures.",
+        "intent": "exploratory"
       }
     },
     {
@@ -700,7 +738,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "Sim-to-real transfer for robot manipulation remains challenging due to the reality gap between simulated and physical environments. We propose a domain randomization approach combined with adaptive control policies that enable manipulation skills trained in physics simulators to transfer effectively to low-cost robotic arm hardware. Through systematic exploration of visual and dynamics randomization parameters, our method achieves robust grasping and placement tasks on commodity manipulators without expensive real-world data collection. We demonstrate generalization across multiple hardware platforms and manipulation primitives, providing practical guidance for practitioners deploying learning-based control on resource-constrained robotic systems."
+        "hypotheticalAbstract": "Sim-to-real transfer for robot manipulation remains challenging due to the reality gap between simulated and physical environments. We propose a domain randomization approach combined with adaptive control policies that enable manipulation skills trained in physics simulators to transfer effectively to low-cost robotic arm hardware. Through systematic exploration of visual and dynamics randomization parameters, our method achieves robust grasping and placement tasks on commodity manipulators without expensive real-world data collection. We demonstrate generalization across multiple hardware platforms and manipulation primitives, providing practical guidance for practitioners deploying learning-based control on resource-constrained robotic systems.",
+        "intent": "precise"
       }
     },
     {
@@ -718,7 +757,8 @@
         ],
         "dateWindowDays": null,
         "requireNoCode": null,
-        "hypotheticalAbstract": "We present a deep learning framework for environmental sound event detection that achieves robust classification of non-speech acoustic phenomena including traffic, machinery, animal calls, and weather sounds. Our approach combines convolutional neural networks with temporal modeling to capture both spectral patterns and temporal dynamics in mel-spectrograms, addressing the challenge of limited labeled audio data through semi-supervised learning and data augmentation techniques. Evaluated on multiple environmental sound datasets, our method outperforms baseline approaches and demonstrates strong transfer learning capabilities across diverse acoustic scenes. We demonstrate practical deployment considerations for embedded audio processing and provide analysis of failure modes in noisy urban environments."
+        "hypotheticalAbstract": "We present a deep learning framework for environmental sound event detection that achieves robust classification of non-speech acoustic phenomena including traffic, machinery, animal calls, and weather sounds. Our approach combines convolutional neural networks with temporal modeling to capture both spectral patterns and temporal dynamics in mel-spectrograms, addressing the challenge of limited labeled audio data through semi-supervised learning and data augmentation techniques. Evaluated on multiple environmental sound datasets, our method outperforms baseline approaches and demonstrates strong transfer learning capabilities across diverse acoustic scenes. We demonstrate practical deployment considerations for embedded audio processing and provide analysis of failure modes in noisy urban environments.",
+        "intent": "exploratory"
       }
     }
   ]

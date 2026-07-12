@@ -41,4 +41,22 @@ public class PlanParsingTests
 
         Assert.Null(plan.HypotheticalAbstract);
     }
+
+    [Theory]
+    [InlineData("\"precise\"", "precise")]
+    [InlineData("\"  Exploratory \"", "exploratory")]
+    [InlineData("\"MIXED\"", "mixed")]
+    [InlineData("\"adventurous\"", null)] // unknown value = no signal, never throw
+    [InlineData("null", null)]
+    public void ParsePlan_NormalizesIntent(string intentJson, string? expected)
+    {
+        var json = $$"""
+        {"interpretation":"i","anchor_text":"a","categories":[],
+         "date_window_days":null,"require_no_code":null,"query_style":{{intentJson}}}
+        """;
+
+        var plan = AnthropicSearchPlanCompiler.ParsePlan(json, KnownCategories);
+
+        Assert.Equal(expected, plan.Intent);
+    }
 }

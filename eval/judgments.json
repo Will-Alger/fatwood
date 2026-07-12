@@ -37521,6 +37521,262 @@
       "rationale": "This concerns safety vulnerabilities in LLM alignment through reinforcement learning, with no connection to audio or sound classification.",
       "judgeModel": "claude-haiku-4-5",
       "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.18976",
+      "grade": 0,
+      "rationale": "Focuses on LLM-based automated assessment of software architecture deliverables in education, not on software testing, fuzzing, or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.22704",
+      "grade": 1,
+      "rationale": "Addresses automated patch backporting and vulnerability fixing but is tangential to the core intent of testing automation, fuzzing, and flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.16692",
+      "grade": 0,
+      "rationale": "Proposes a reference architecture for service reusability; entirely outside the domain of software testing, fuzzing, and test reliability.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2605.31058",
+      "grade": 1,
+      "rationale": "Addresses code synthesis and LLM training via RLVR with verifiable rewards, which shares automated verification principles but does not directly target testing automation, fuzzing, or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.24661",
+      "grade": 1,
+      "rationale": "LLM evaluation framework is tangential to backend/ML-adjacent roles; lacks clear buildable scope for a weekend portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.19488",
+      "grade": 1,
+      "rationale": "Domain adaptation for LLMs is ML-focused but theoretical; not a buildable project without pre-existing ML infrastructure and expertise.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.19243",
+      "grade": 0,
+      "rationale": "Pure manifold-learning mathematics with no connection to backend roles, ML applications, or portfolio-worthy implementation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.20167",
+      "grade": 3,
+      "rationale": "Directly relevant: concrete ML system (flood-alert) with clear data sources, real-world deployment (SMS/WhatsApp), reproducible pipeline, and achievable scope for a backend-skilled engineer to build as a portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.15370",
+      "grade": 1,
+      "rationale": "Quantum ML for geophysics is specialized and experimental; not practical for a weekend project or ML-adjacent resume building for typical roles.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.23981",
+      "grade": 0,
+      "rationale": "Position paper on AI governance and metacognition lacks technical implementation details or buildable system design.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.06330",
+      "grade": 2,
+      "rationale": "Fine-tuning SLMs for Windows event log analysis is relevant to backend/ML-adjacent roles and demonstrates practical LoRA usage, though scope and data availability for a portfolio project are unclear.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2606.20610",
+      "grade": 0,
+      "rationale": "OSINT methodology paper on AI safety monitoring; lacks technical implementation and is not suited for a portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.18931",
+      "grade": 1,
+      "rationale": "Theoretical VAE decoder improvement for heavy-tailed distributions; publishable research but not a buildable portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.06714",
+      "grade": 2,
+      "rationale": "Survey on edge deep learning and medical diagnostics is relevant to ML-adjacent roles and practical deployment, but as a survey lacks a specific buildable system design.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2606.02959",
+      "grade": 2,
+      "rationale": "Highly relevant evaluation methodology for LLM security with clear, reproducible components (cross-validation, threshold selection, diagnostics) that would make a solid reference implementation, though the contribution is methodological rather than algorithmic.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.31279",
+      "grade": 2,
+      "rationale": "Practical wireless channel prediction framework combining physics and deep learning with clear methodology; buildable as a portfolio project with accessible domain and defined benchmarks, though signal processing expertise may be required.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2607.06596",
+      "grade": 1,
+      "rationale": "Interesting analysis of monitor generalization across model families with rigorous evaluation, but the work is primarily empirical analysis and protocol design rather than a self-contained algorithm or system that would serve as a portfolio implementation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.22036",
+      "grade": 3,
+      "rationale": "Directly on-target: proposes a complete, reproducible vision-language navigation system (GA-BEV representation) with clear architectural components, standard benchmarks, and reasonable scope for individual implementation as a portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.26842",
+      "grade": 2,
+      "rationale": "Clear optimizer contribution with convergence analysis and comprehensive benchmarks across model scales; implementable and relevant, but requires significant compute resources to fully reproduce and validate the main claims.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.29849",
+      "grade": 3,
+      "rationale": "Excellent match: introduces BuilDyn, a usable package for generating training data with customizable excitation strategies; directly addresses the data-generation bottleneck for building control modeling with clear, reproducible methodology suitable for independent implementation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.24031",
+      "grade": 1,
+      "rationale": "Comparative study of neural architectures for volatility surface reconstruction with domain-specific constraints; relevant to deep learning but lacks a novel core contribution or system design that would make it a compelling standalone portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.05553",
+      "grade": 0,
+      "rationale": "Federated learning and knowledge distillation are machine learning infrastructure topics, not relevant to agentic LLM systems for financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.18224",
+      "grade": 1,
+      "rationale": "Web coding agents are tangentially related to LLM agents but focus on UI/code generation rather than financial document analysis, which is the searcher\u0027s specific intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.05104",
+      "grade": 0,
+      "rationale": "This paper studies grokking phenomena in toy transformer models, with no connection to LLM agents, financial applications, or document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.08499",
+      "grade": 0,
+      "rationale": "Graph neural networks for recommendation systems are unrelated to agentic LLM systems or financial document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.17693",
+      "grade": 1,
+      "rationale": "Multi-agent reinforcement learning for sequential cooperation mentions language systems but focuses on credit assignment algorithms rather than building agentic LLM systems for document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.00095",
+      "grade": 0,
+      "rationale": "Vision-language navigation in embodied agents is unrelated to financial document analysis or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2606.00467",
+      "grade": 0,
+      "rationale": "This paper focuses on LLM annotation tasks and prompt engineering, which is neither computer vision nor a webcam-based project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2607.01775",
+      "grade": 0,
+      "rationale": "This paper presents a language model architecture for text generation decoding; it is not related to computer vision or webcam-based projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2606.07550",
+      "grade": 0,
+      "rationale": "This paper concerns offline reinforcement learning for nuclear fusion plasma control using tokamak data, which requires specialized domain knowledge and hardware unrelated to computer vision or webcam projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2606.03584",
+      "grade": 1,
+      "rationale": "While this is a computer vision paper on ImageNet classification, it requires training on massive datasets and computational resources far beyond a weekend project with only a webcam.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2605.27219",
+      "grade": 0,
+      "rationale": "This paper addresses data collaboration and privacy-preserving integration using kernel methods for decentralized datasets, not computer vision or webcam-based applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
     }
   ]
 }

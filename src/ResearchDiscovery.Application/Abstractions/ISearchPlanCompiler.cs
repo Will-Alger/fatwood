@@ -7,6 +7,10 @@ namespace ResearchDiscovery.Application.Abstractions;
 /// search endpoint accepts plans, not natural language.
 /// HypotheticalAbstract (HyDE) is nullable: plans logged before the field
 /// existed deserialize with null and retrieval simply skips the extra anchor.
+/// Intent is the compiler's read of the query's style — "precise" (the exact
+/// words ARE the search: named methods, systems, acronyms), "exploratory"
+/// (goal/career phrasing, vocabulary mismatch likely), or "mixed". Nullable
+/// for old plans; ranking treats null as mixed.
 /// </summary>
 public sealed record SearchPlan(
     string Interpretation,
@@ -14,7 +18,8 @@ public sealed record SearchPlan(
     IReadOnlyList<string> Categories,
     int? DateWindowDays,
     bool? RequireNoCode,
-    string? HypotheticalAbstract = null);
+    string? HypotheticalAbstract = null,
+    string? Intent = null);
 
 /// <summary>
 /// LLM call site #1: natural-language intent → SearchPlan. The key job is

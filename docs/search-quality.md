@@ -154,13 +154,21 @@ and future learning-to-rank features.
    vague-career (+0.10). The losses concentrate on exact-term queries whose
    topic anchors were already ideal (speculative-decoding −0.21,
    llm-agents-swe −0.17): the abstract can hijack the best-topic max with
-   plausible-but-off content. That loss pattern is the strongest evidence
-   yet for per-intent ranking profiles (backlog #10) — e.g. skip HyDE when
-   the query is acronym-dense. Implementation notes: the abstract embeds
+   plausible-but-off content. Implementation notes: the abstract embeds
    WITHOUT the query prefix (document-shaped text matching document-side
    vectors); eval plans got abstracts grafted onto frozen anchors so the
    baseline stayed bit-identical (`eval compile` backfills this
    automatically for plans that predate the field).
+9. **Intent-gated HyDE lost** (2026-07-12, same day): the obvious follow-up
+   — compiler classifies query_style (precise/exploratory/mixed), precise
+   queries skip the HyDE anchor — scored 0.610 vs 0.620, because HyDE helps
+   17 of the 21 precise queries (kv-cache-serving −0.09 under the gate,
+   testing-research −0.12) and only 4 wanted it off. "Acronym-dense ⇒ HyDE
+   hurts" is FALSE as a class rule; speculative-decoding and llm-agents-swe
+   are outliers with an as-yet-unknown cause (likely off-target abstracts —
+   inspect those two before inventing any new gate). The plumbing ships
+   anyway with `Ranking:UseIntentProfiles=false`: plans now carry `intent`,
+   which is useful for eval slicing, telemetry, and as a future LTR feature.
 
 ## 4. Using the data as it accumulates
 
@@ -210,12 +218,15 @@ via `eval adopt` as real usage accumulates).
 ~~Reranker retry~~ — CLOSED for the MS MARCO family (lesson 7); reopen only
 with a sentencepiece/BPE tokenizer path for a genuinely different model.
 
-1. **Per-intent ranking profiles** — promoted by HyDE's loss pattern
-   (lesson 8): exact-term/acronym queries want HyDE off and BM25 heavy;
-   vague-career queries want the opposite. A cheap intent signal from the
-   compiler (one enum field) could gate stages per query.
-2. **Judge calibration**: human spot-audit + sonnet double-judge agreement
+~~Per-intent HyDE gating~~ — MEASURED AND REJECTED same day (lesson 9);
+the `intent` field remains on plans for slicing/telemetry/LTR.
+
+1. **Judge calibration**: human spot-audit + sonnet double-judge agreement
    (makes all numbers trustworthy).
+1b. **HyDE outlier autopsy** (cheap): read the compiled hypothetical
+   abstracts for speculative-decoding and llm-agents-swe against their
+   result lists — if the abstracts are off-target, the fix is compiler
+   prompt wording, not ranking.
 3. **Recency-normalized citations** (citations/day) as a blend feature.
 4. **Interleaving in anger**: HyDE-off vs HyDE-on as first live candidate —
    the offline delta is +0.02; a click-vote confirmation would be free.

@@ -28,6 +28,12 @@ public class RankingProfile
     /// No-op when the plan predates the field.</summary>
     public bool UseHyde { get; set; }
 
+    /// <summary>Per-intent stage gating: queries the compiler classified as
+    /// "precise" (exact terms ARE the search) skip the HyDE anchor — measured
+    /// 2026-07-12: HyDE hurt exactly those queries. Null/unknown intent is
+    /// treated as mixed (no gating).</summary>
+    public bool UseIntentProfiles { get; set; }
+
     [Range(0.01, 10)]
     public float SimilarityWeight { get; set; } = 1f;
 

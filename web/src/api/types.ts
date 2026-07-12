@@ -69,6 +69,8 @@ export interface SearchPlan {
   requireNoCode: boolean | null
   /** HyDE anchor (not user-edited); optional so old plans round-trip. */
   hypotheticalAbstract?: string | null
+  /** Compiler's query-style read: 'precise' | 'exploratory' | 'mixed'. */
+  intent?: string | null
 }
 
 export interface SearchHit {

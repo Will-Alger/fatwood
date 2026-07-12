@@ -45,7 +45,7 @@ public class EvalRunner(
         var queries = set.Queries.ToList();
         for (var i = 0; i < queries.Count; i++)
         {
-            if (queries[i].Plan is { HypotheticalAbstract: not null })
+            if (queries[i].Plan is { HypotheticalAbstract: not null, Intent: not null })
             {
                 continue;
             }
@@ -60,15 +60,19 @@ public class EvalRunner(
             }
             else
             {
-                // Plan predates HyDE: recompile but graft ONLY the hypothetical
-                // abstract onto the frozen plan. Anchors/categories must stay
-                // bit-identical or every baseline comparison is contaminated.
+                // Plan predates newer fields: recompile but graft ONLY the
+                // missing fields onto the frozen plan. Anchors/categories must
+                // stay bit-identical or every baseline comparison is contaminated.
                 var fresh = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
                 queries[i] = q with
                 {
-                    Plan = q.Plan with { HypotheticalAbstract = fresh.HypotheticalAbstract },
+                    Plan = q.Plan with
+                    {
+                        HypotheticalAbstract = q.Plan.HypotheticalAbstract ?? fresh.HypotheticalAbstract,
+                        Intent = q.Plan.Intent ?? fresh.Intent,
+                    },
                 };
-                logger.LogInformation("Backfilled HyDE abstract for eval query {Id}", q.Id);
+                logger.LogInformation("Backfilled missing plan fields for eval query {Id}", q.Id);
             }
             compiled++;
 
