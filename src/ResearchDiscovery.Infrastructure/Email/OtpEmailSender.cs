@@ -71,10 +71,9 @@ public class OtpEmailSender(IOptions<EmailOptions> options, ILogger<OtpEmailSend
             <tr><td align="center">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:460px;background-color:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e4e4e7;">
                 <tr>
-                  <td style="background-color:#141416;padding:22px 32px;">
-                    <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#f0f0f2;">
-                      <span style="color:#d97a45;">&#9650;</span>&nbsp;Fatwood
-                    </span>
+                  <td style="background-color:#141416;padding:20px 32px;">
+                    <img src="https://www.fatwood.io/email-banner.png" width="245" height="36" alt="Fatwood"
+                         style="display:block;border:0;outline:none;max-width:245px;height:auto;" />
                   </td>
                 </tr>
                 <tr>
