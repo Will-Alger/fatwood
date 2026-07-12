@@ -24,6 +24,7 @@ public class SearchController(
 
     [HttpPost("compile")]
     [Authorize(Policy = AuthPolicies.ActiveUser)]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("llm")]
     public async Task<IActionResult> Compile(
         [FromBody] CompileRequest request,
         [FromServices] ISearchPlanCompiler compiler,

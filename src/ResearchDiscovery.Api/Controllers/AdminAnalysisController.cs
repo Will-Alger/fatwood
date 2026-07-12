@@ -85,6 +85,7 @@ public class AdminAnalysisController(
     /// enqueued set costs at most its stale members.
     /// </summary>
     [HttpPost("selection")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("llm")]
     public async Task<IActionResult> TriggerSelection(
         [FromBody] SelectionRequest request,
         [FromServices] ISearchTelemetry telemetry,

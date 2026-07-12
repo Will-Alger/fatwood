@@ -256,6 +256,16 @@ export default function App() {
           onSettingsChanged={setLlmSettings}
         />
       )}
+
+      <footer className="app-footer">
+        <span>© 2026 Fatwood</span>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <span className="app-footer-note">
+          Analyses are AI-generated — verify before you build. Paper data from arXiv
+          (thank you to arXiv for use of its open access interoperability).
+        </span>
+      </footer>
     </div>
   )
 }

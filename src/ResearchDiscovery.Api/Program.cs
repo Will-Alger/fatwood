@@ -1,5 +1,7 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Cli;
 using ResearchDiscovery.Api.Hosting;
@@ -85,6 +87,43 @@ builder.Services.AddAuthorization(options =>
         .RequireClaim(AuthPolicies.ActiveClaim, "true"));
 });
 
+// Abuse braking distinct from the dollar budget: generous global per-caller
+// limit (bots hammering anonymous endpoints), tight bucket on the endpoints
+// that spend tokens. Keyed by account when signed in, by IP otherwise.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        RateLimitPartition.GetTokenBucketLimiter(
+            RateLimiterKey(ctx),
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 300,
+                TokensPerPeriod = 150,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(10),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    options.AddPolicy("llm", ctx =>
+        RateLimitPartition.GetTokenBucketLimiter(
+            RateLimiterKey(ctx),
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 10,
+                TokensPerPeriod = 5,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    static string RateLimiterKey(HttpContext ctx) =>
+        ctx.User.FindFirst("oid")?.Value
+            ?? ctx.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown";
+});
+
 builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
 builder.Services.AddHostedService<DailyIngestionHostedService>();
@@ -101,11 +140,44 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+if (!app.Environment.IsDevelopment())
+{
+    // TLS terminates upstream (Cloudflare edge / ACA ingress); HSTS still
+    // pins browsers to https for the domain.
+    app.UseHsts();
+}
+
+// Baseline security headers on every response, SPA and API alike. The CSP
+// allows exactly what the app uses: self-hosted assets, inline style
+// attributes (React), and the External ID endpoints MSAL talks to.
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data:; " +
+        "font-src 'self'; " +
+        "connect-src 'self' https://fatwoodio.ciamlogin.com https://login.microsoftonline.com; " +
+        "frame-src https://fatwoodio.ciamlogin.com; " +
+        "frame-ancestors 'none'; " +
+        "base-uri 'self'; " +
+        "form-action 'self' https://fatwoodio.ciamlogin.com";
+    await next();
+});
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseMiddleware<UserContextMiddleware>();
+// After authentication so signed-in callers are limited per account, not per
+// NAT'd IP.
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
