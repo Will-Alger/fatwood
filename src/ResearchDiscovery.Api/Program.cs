@@ -77,8 +77,14 @@ if (authOptions.Enabled)
         authBuilder.AddJwtBearer(ResearchDiscovery.Api.Controllers.AuthEventsController.Scheme, options =>
         {
             options.Authority = authOptions.Authority;
-            options.Audience = authEvents.Audience;
             options.MapInboundClaims = false;
+            // Entra's extension tokens carry either the bare app id or an
+            // api://<host>/<appId> identifier URI as the audience, depending
+            // on the extension's resource configuration. Accept both forms.
+            options.TokenValidationParameters.AudienceValidator = (audiences, _, _) =>
+                audiences.Any(a =>
+                    string.Equals(a, authEvents.Audience, StringComparison.OrdinalIgnoreCase) ||
+                    a.EndsWith("/" + authEvents.Audience, StringComparison.OrdinalIgnoreCase));
         });
     }
 }

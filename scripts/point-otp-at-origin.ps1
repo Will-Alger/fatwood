@@ -38,17 +38,34 @@ while ((Get-Date) -lt $deadline) {
 if (-not $token) { throw 'Device login timed out.' }
 
 $h = @{ Authorization = "Bearer $token"; 'Content-Type' = 'application/json' }
+# Graph pairs the auth resourceId's domain with the target URL's domain, so
+# both move together (the app registration already carries both identifier
+# URIs).
 $body = @"
 {
   "@odata.type": "#microsoft.graph.onOtpSendCustomExtension",
+  "authenticationConfiguration": {
+    "@odata.type": "#microsoft.graph.azureAdTokenAuthentication",
+    "resourceId": "api://rdisc-api.gentleflower-aa2882c7.centralus.azurecontainerapps.io/514ae1c4-4ca2-45d5-8dad-ad79a6b85c15"
+  },
   "endpointConfiguration": {
     "@odata.type": "#microsoft.graph.httpRequestEndpoint",
     "targetUrl": "$originUrl"
   }
 }
 "@
-Invoke-RestMethod -Method Patch -Uri "https://graph.microsoft.com/beta/identity/customAuthenticationExtensions/$extensionId" -Headers $h -Body $body | Out-Null
+try {
+    Invoke-RestMethod -Method Patch -Uri "https://graph.microsoft.com/beta/identity/customAuthenticationExtensions/$extensionId" -Headers $h -Body $body | Out-Null
+} catch {
+    Write-Host 'PATCH FAILED:' -ForegroundColor Red
+    Write-Host $_.ErrorDetails.Message
+    exit 1
+}
 
 $check = Invoke-RestMethod -Uri "https://graph.microsoft.com/beta/identity/customAuthenticationExtensions/$extensionId" -Headers $h
+if ($check.endpointConfiguration.targetUrl -ne $originUrl) {
+    Write-Host ("STILL WRONG - targetUrl is: " + $check.endpointConfiguration.targetUrl) -ForegroundColor Red
+    exit 1
+}
 Write-Host ("targetUrl is now: " + $check.endpointConfiguration.targetUrl) -ForegroundColor Green
 Write-Host 'DONE - retry Forgot password in a couple of minutes; the code should arrive as the Fatwood-branded email.'
