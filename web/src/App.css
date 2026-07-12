@@ -5,6 +5,12 @@
    element allowed a glow; everything else is borders and tone.
    ============================================================ */
 
+:root {
+  --font-sans: 'IBM Plex Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Source Serif 4 Variable', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
 :root,
 :root[data-theme='dark'] {
   --bg: #141416;
@@ -62,7 +68,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
   transition: background-color 180ms ease, color 180ms ease;
@@ -103,8 +109,10 @@ body {
 
 .app-brand h1 {
   margin: 0;
-  font-size: 1.45rem;
-  letter-spacing: 0.01em;
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 0.005em;
 }
 
 .app-brand p {
@@ -273,7 +281,7 @@ body {
 }
 
 .category-code {
-  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
 }
 
@@ -368,8 +376,9 @@ select {
 
 .paper-card h3 {
   margin: 0 0 0.4rem;
-  font-size: 1.02rem;
-  line-height: 1.4;
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  line-height: 1.45;
   font-weight: 600;
 }
 
@@ -423,7 +432,7 @@ select {
 }
 
 .badge {
-  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   border: 1px solid var(--border);
   border-radius: 999px;
