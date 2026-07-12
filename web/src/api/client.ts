@@ -1,6 +1,8 @@
 import { getAccessToken } from '../auth/auth'
 import type {
+  AdminUserView,
   CategoryDto,
+  InviteView,
   LlmSettingsView,
   MeView,
   PagedResult,
@@ -190,6 +192,29 @@ export function setThemePreference(theme: 'dark' | 'light'): Promise<void> {
 
 export function redeemInvite(code: string): Promise<void> {
   return sendJson('POST', '/api/me/invite', { code })
+}
+
+// --- Admin: accounts ---
+
+export function getAdminUsers(query?: string, signal?: AbortSignal): Promise<AdminUserView[]> {
+  const qs = query ? `?query=${encodeURIComponent(query)}` : ''
+  return getJson(`/api/admin/users${qs}`, signal)
+}
+
+export function grantBudget(userId: number, amountMicros: number, note?: string): Promise<void> {
+  return sendJson('POST', `/api/admin/users/${userId}/grants`, { amountMicros, note })
+}
+
+export function setUserRole(userId: number, role: 'Member' | 'Admin'): Promise<void> {
+  return sendJson('PUT', `/api/admin/users/${userId}/role`, { role })
+}
+
+export function getInvites(signal?: AbortSignal): Promise<InviteView[]> {
+  return getJson('/api/admin/invites', signal)
+}
+
+export function createInvite(maxUses: number, expiresDays?: number): Promise<InviteView> {
+  return sendJson('POST', '/api/admin/invites', { maxUses, expiresDays })
 }
 
 // --- Settings ---

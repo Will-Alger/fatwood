@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getLlmSettings, redeemInvite, setThemePreference } from './api/client'
 import type { LlmSettingsView, SortOrder } from './api/types'
 import { signIn } from './auth/auth'
+import { AdminPanel } from './components/AdminPanel'
 import { CategoryFilter } from './components/CategoryFilter'
 import { Discover } from './components/Discover'
 import { Logo } from './components/Logo'
@@ -15,7 +16,7 @@ import './App.css'
 
 const PAGE_SIZE = 25
 
-type Tab = 'discover' | 'browse'
+type Tab = 'discover' | 'browse' | 'admin'
 type Theme = 'dark' | 'light'
 
 function currentTheme(): Theme {
@@ -166,6 +167,15 @@ export default function App() {
           >
             Browse
           </button>
+          {me?.role === 'Admin' && (
+            <button
+              type="button"
+              className={tab === 'admin' ? 'tab tab-active' : 'tab'}
+              onClick={() => setTab('admin')}
+            >
+              Admin
+            </button>
+          )}
         </nav>
       </header>
 
@@ -199,6 +209,12 @@ export default function App() {
       <div style={{ display: tab === 'discover' ? undefined : 'none' }}>
         <Discover llmSettings={llmSettings} me={me} signedOut={signedOut} />
       </div>
+      {tab === 'admin' && me?.role === 'Admin' && (
+        <div className="app-body app-body-single">
+          <AdminPanel me={me} />
+        </div>
+      )}
+
       <div className="app-body" style={{ display: tab === 'browse' ? undefined : 'none' }}>
         <CategoryFilter
           categories={categories}

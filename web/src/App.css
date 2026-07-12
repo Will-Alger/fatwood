@@ -229,6 +229,88 @@ body {
   opacity: 0.8;
 }
 
+/* ---- Admin panel ---- */
+
+.app-body-single {
+  display: block;
+}
+
+.admin-panel {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.admin-panel section {
+  margin-bottom: 2.5rem;
+}
+
+.admin-panel h2 {
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.admin-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.admin-muted {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.admin-actions button,
+.admin-panel section > button {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-actions button:hover,
+.admin-panel section > button:hover {
+  border-color: var(--accent);
+}
+
+.admin-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .icon-button {
   font: inherit;
   font-size: 1rem;

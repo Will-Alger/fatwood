@@ -139,3 +139,24 @@ export interface MeView {
   theme: 'dark' | 'light' | null
   budget: BudgetView
 }
+
+export interface AdminUserView {
+  id: number
+  email: string
+  displayName: string
+  role: 'Member' | 'Admin'
+  isActive: boolean
+  createdUtc: string
+  lastSeenUtc: string
+  grantedMicros: number
+  spentMicros: number
+}
+
+export interface InviteView {
+  id: number
+  code: string
+  maxUses: number
+  usedCount: number
+  expiresUtc: string | null
+  createdUtc: string
+}
