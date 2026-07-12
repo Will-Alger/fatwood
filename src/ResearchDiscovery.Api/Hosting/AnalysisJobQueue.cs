@@ -6,6 +6,13 @@ namespace ResearchDiscovery.Api.Hosting;
 /// <summary>An admin-triggered analysis job: a category sweep or an explicit paper selection.</summary>
 public abstract record AnalysisJob
 {
+    /// <summary>
+    /// Account the run's token spend is billed to. Carried in the job because
+    /// execution happens in a background scope where the request's identity
+    /// is long gone; null bills nobody (system spend).
+    /// </summary>
+    public long? RequestedByUserId { get; init; }
+
     public sealed record Category(AnalysisRequest Request) : AnalysisJob;
 
     public sealed record Selection(IReadOnlyList<string> ArxivIds) : AnalysisJob;

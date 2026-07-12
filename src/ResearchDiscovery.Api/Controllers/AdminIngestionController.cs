@@ -1,6 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ResearchDiscovery.Api.Filters;
+using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Hosting;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Domain.Entities;
@@ -8,14 +9,10 @@ using ResearchDiscovery.Infrastructure.Persistence;
 
 namespace ResearchDiscovery.Api.Controllers;
 
-/// <summary>
-/// Ops-only ingestion triggers. Every action requires the X-Admin-Api-Key
-/// header; when no key is configured the whole controller answers 404, so a
-/// deployment without the secret has no admin surface at all.
-/// </summary>
+/// <summary>Ops-only ingestion triggers, admin-role gated.</summary>
 [ApiController]
 [Route("api/admin/ingestion")]
-[ServiceFilter(typeof(AdminApiKeyFilter))]
+[Authorize(Policy = AuthPolicies.Admin)]
 public class AdminIngestionController(IngestionJobQueue queue, AppDbContext db) : ControllerBase
 {
     public sealed record BackfillRequest(int? WindowDays, int? MaxPapersPerCategory);

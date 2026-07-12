@@ -1,5 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ResearchDiscovery.Api.Filters;
+using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Infrastructure.Profile;
 
@@ -7,7 +8,8 @@ namespace ResearchDiscovery.Api.Controllers;
 
 /// <summary>
 /// Smart search. Two endpoints with deliberately different postures:
-/// - compile (admin key): the one LLM call, natural language → SearchPlan.
+/// - compile (signed-in, budget-gated): the one LLM call, natural language →
+///   SearchPlan.
 /// - search (public): executes a plan deterministically — DB + local
 ///   embeddings only, no tokens — so edited chips just re-submit the plan.
 /// </summary>
@@ -21,10 +23,11 @@ public class SearchController(
     public sealed record CompileRequest(string Query);
 
     [HttpPost("compile")]
-    [ServiceFilter(typeof(AdminApiKeyFilter))]
+    [Authorize(Policy = AuthPolicies.ActiveUser)]
     public async Task<IActionResult> Compile(
         [FromBody] CompileRequest request,
         [FromServices] ISearchPlanCompiler compiler,
+        [FromServices] IBudgetService budget,
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Query))
@@ -38,12 +41,18 @@ public class SearchController(
 
         try
         {
+            await budget.EnsureCanSpendAsync(HttpContext.GetAppUser()!.Id, ct);
+
             var plan = await compiler.CompileAsync(
                 request.Query,
                 ProfileService.Describe(profile),
                 categories.Select(c => c.Code).ToList(),
                 ct);
             return Ok(plan);
+        }
+        catch (BudgetExceededException ex)
+        {
+            return Problem(statusCode: StatusCodes.Status402PaymentRequired, detail: ex.Message);
         }
         catch (InvalidOperationException ex)
         {

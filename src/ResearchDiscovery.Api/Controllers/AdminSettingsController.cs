@@ -1,5 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ResearchDiscovery.Api.Filters;
+using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Infrastructure.Profile;
 
@@ -7,13 +8,12 @@ namespace ResearchDiscovery.Api.Controllers;
 
 /// <summary>
 /// LLM model assignments and the user profile — both spend-adjacent, both
-/// behind the admin key (404 when no key is configured, like all admin
-/// surfaces). The registry ships pricing so the UI can show live cost
+/// admin-role gated. The registry ships pricing so the UI can show live cost
 /// estimates next to every action button.
 /// </summary>
 [ApiController]
 [Route("api/admin/settings")]
-[ServiceFilter(typeof(AdminApiKeyFilter))]
+[Authorize(Policy = AuthPolicies.Admin)]
 public class AdminSettingsController(
     ILlmSettingsService llmSettings,
     ProfileService profileService) : ControllerBase

@@ -19,6 +19,7 @@ namespace ResearchDiscovery.Infrastructure.Analysis;
 public class AnthropicPaperAnalyzer(
     AnthropicClient client,
     ILlmSettingsService settings,
+    ILlmUsageRecorder usage,
     IOptions<AnalysisOptions> options,
     ILogger<AnthropicPaperAnalyzer> logger) : IPaperAnalyzer
 {
@@ -86,6 +87,10 @@ public class AnthropicPaperAnalyzer(
             };
 
         var response = await client.Beta.Messages.Create(parameters, cancellationToken: ct);
+
+        await usage.RecordAsync(
+            LlmOptions.StepPaperAnalysis, model.Id,
+            response.Usage?.InputTokens ?? 0, response.Usage?.OutputTokens ?? 0, ct);
 
         // Check stop_reason before touching content: a refusal can arrive with
         // an empty content array. A refusal (from the model, or from the whole

@@ -17,6 +17,7 @@ namespace ResearchDiscovery.Infrastructure.Eval;
 public class AnthropicRelevanceJudge(
     AnthropicClient client,
     ILlmSettingsService settings,
+    ILlmUsageRecorder usage,
     ILogger<AnthropicRelevanceJudge> logger) : IRelevanceJudge
 {
     private const int BatchSize = 10;
@@ -140,6 +141,12 @@ public class AnthropicRelevanceJudge(
                 },
             ],
         }, cancellationToken: ct);
+
+        // Judge runs are CLI-only: the usage context has no user, so these
+        // land as system rows — ops visibility without billing anyone.
+        await usage.RecordAsync(
+            LlmOptions.StepRelevanceJudge, modelId,
+            response.Usage?.InputTokens ?? 0, response.Usage?.OutputTokens ?? 0, ct);
 
         if ($"{response.StopReason}" == "refusal")
         {

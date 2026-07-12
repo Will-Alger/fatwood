@@ -1,7 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using ResearchDiscovery.Api.Filters;
+using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Hosting;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
@@ -10,14 +11,13 @@ using ResearchDiscovery.Infrastructure.Persistence;
 namespace ResearchDiscovery.Api.Controllers;
 
 /// <summary>
-/// Ops-only analysis triggers (Phase 2). Same admin posture as ingestion:
-/// every action requires the X-Admin-Api-Key header, and with no key
-/// configured the controller answers 404. Analysis is never reachable by
-/// regular users — cost control by construction.
+/// Ops-only analysis triggers (Phase 2), admin-role gated. Bulk analysis
+/// spends real tokens per paper; opening selection runs to regular
+/// (budget-gated) users is planned with the multi-user data model.
 /// </summary>
 [ApiController]
 [Route("api/admin/analysis")]
-[ServiceFilter(typeof(AdminApiKeyFilter))]
+[Authorize(Policy = AuthPolicies.Admin)]
 public class AdminAnalysisController(
     AnalysisJobQueue queue,
     AppDbContext db,
@@ -59,7 +59,10 @@ public class AdminAnalysisController(
             request.MaxPapers ?? options.Value.DefaultMaxPapers,
             request.SinceDays is { } d and > 0 ? DateTimeOffset.UtcNow.AddDays(-d) : null);
 
-        if (!queue.TryEnqueue(new AnalysisJob.Category(job)))
+        if (!queue.TryEnqueue(new AnalysisJob.Category(job)
+        {
+            RequestedByUserId = HttpContext.GetAppUser()?.Id,
+        }))
         {
             return Problem(statusCode: StatusCodes.Status429TooManyRequests,
                 detail: "The analysis queue is full; try again once queued runs complete.");
@@ -99,7 +102,10 @@ public class AdminAnalysisController(
                 detail: "At most 200 papers per selection run.");
         }
 
-        if (!queue.TryEnqueue(new AnalysisJob.Selection(request.ArxivIds)))
+        if (!queue.TryEnqueue(new AnalysisJob.Selection(request.ArxivIds)
+        {
+            RequestedByUserId = HttpContext.GetAppUser()?.Id,
+        }))
         {
             return Problem(statusCode: StatusCodes.Status429TooManyRequests,
                 detail: "The analysis queue is full; try again once queued runs complete.");

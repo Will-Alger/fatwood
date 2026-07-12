@@ -22,18 +22,37 @@ public class ApiFactory : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
 
-    /// <summary>Set before the host is first used to enable the admin surface.</summary>
-    public string? AdminApiKey { get; init; }
+    /// <summary>
+    /// When set, requests authenticate as this external identity instead of
+    /// the default local-dev admin — the account layer provisions it as a
+    /// regular member, so tests can exercise the non-admin posture.
+    /// </summary>
+    public string? TestUserExternalId { get; init; }
+
+    public string TestUserEmail { get; init; } = "member@test.local";
+
+    /// <summary>Turns on the invite-code signup gate for this host.</summary>
+    public bool RequireInviteCode { get; init; }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Database:MigrateOnStartup", "false");
         builder.UseSetting("Ingestion:Schedule:Enabled", "false");
-        builder.UseSetting("Admin:ApiKey", AdminApiKey ?? string.Empty);
+        builder.UseSetting("Accounts:RequireInviteCode", RequireInviteCode ? "true" : "false");
 
         builder.ConfigureServices(services =>
         {
+            if (TestUserExternalId is not null)
+            {
+                services.AddAuthentication(TestAuthHandler.SchemeName)
+                    .AddScheme<TestAuthOptions, TestAuthHandler>(TestAuthHandler.SchemeName, o =>
+                    {
+                        o.ExternalId = TestUserExternalId;
+                        o.Email = TestUserEmail;
+                    });
+            }
+
             _connection.Open();
 
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));

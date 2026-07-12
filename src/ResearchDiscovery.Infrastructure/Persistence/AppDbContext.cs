@@ -36,6 +36,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<PaperSignal> PaperSignals => Set<PaperSignal>();
 
+    public DbSet<AppUser> AppUsers => Set<AppUser>();
+
+    public DbSet<BudgetGrant> BudgetGrants => Set<BudgetGrant>();
+
+    public DbSet<LlmUsageEvent> LlmUsageEvents => Set<LlmUsageEvent>();
+
+    public DbSet<InviteCode> InviteCodes => Set<InviteCode>();
+
+    public DbSet<AdminActionLog> AdminActionLogs => Set<AdminActionLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

@@ -137,10 +137,9 @@ public class TelemetryApiTests
     [Fact]
     public async Task AnalyzeSelection_WithSearchContext_LogsAnalyzedInteractions()
     {
-        using var factory = new ApiFactory { AdminApiKey = "k" };
+        using var factory = new ApiFactory();
         await SeedWithEmbeddingsAsync(factory);
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
 
         var search = await client.PostAsJsonAsync(
             "/api/search", PlanBody("Newest ML paper abstract"));

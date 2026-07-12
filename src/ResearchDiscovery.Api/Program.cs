@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Cli;
-using ResearchDiscovery.Api.Filters;
 using ResearchDiscovery.Api.Hosting;
+using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.DependencyInjection;
 using ResearchDiscovery.Infrastructure.Persistence;
 
@@ -41,7 +44,47 @@ builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<AdminApiKeyFilter>();
+// Identity lives in Entra External ID (JWT bearer); authority comes from the
+// account row, stamped by UserContextMiddleware. Without a configured tenant
+// the API runs as a synthetic local admin — never in production, which
+// fails fast instead of silently deploying an open admin surface.
+var authOptions = builder.Configuration
+    .GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
+
+if (authOptions.Enabled)
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = authOptions.Authority;
+            options.Audience = authOptions.Audience;
+            // Keep the raw OIDC claim names (oid/email/name) instead of the
+            // legacy SOAP-era claim-type mapping.
+            options.MapInboundClaims = false;
+            options.TokenValidationParameters.NameClaimType = "name";
+            options.TokenValidationParameters.RoleClaimType = "roles";
+        });
+}
+else if (builder.Environment.IsProduction() && !authOptions.DangerouslyAllowAnonymous)
+{
+    throw new InvalidOperationException(
+        "Auth:Authority is not configured. Production requires real authentication; " +
+        "set Auth:DangerouslyAllowAnonymous=true only to run deliberately open.");
+}
+else
+{
+    builder.Services.AddAuthentication(DevAuthHandler.SchemeName)
+        .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>(DevAuthHandler.SchemeName, null);
+}
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthPolicies.Admin, p => p.RequireRole(nameof(ResearchDiscovery.Domain.Entities.UserRole.Admin)));
+    options.AddPolicy(AuthPolicies.ActiveUser, p => p
+        .RequireAuthenticatedUser()
+        .RequireClaim(AuthPolicies.ActiveClaim, "true"));
+});
+
 builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
 builder.Services.AddHostedService<DailyIngestionHostedService>();
@@ -60,6 +103,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+app.UseAuthentication();
+app.UseMiddleware<UserContextMiddleware>();
+app.UseAuthorization();
 
 app.MapControllers();
 

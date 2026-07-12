@@ -17,6 +17,12 @@ public class AnalysisQueueHostedService(
             try
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
+
+                // Point the scope's usage context at the requester so every
+                // Anthropic call in this run lands on their ledger.
+                scope.ServiceProvider.GetRequiredService<ILlmUsageContext>()
+                    .UserId = job.RequestedByUserId;
+
                 var analysis = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
 
                 var summary = job switch

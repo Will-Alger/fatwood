@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
+using ResearchDiscovery.Infrastructure.Accounts;
 using ResearchDiscovery.Infrastructure.Analysis;
 using ResearchDiscovery.Infrastructure.Arxiv;
 using ResearchDiscovery.Infrastructure.Embeddings;
@@ -39,8 +40,21 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddOptions<AdminOptions>()
-            .Bind(configuration.GetSection(AdminOptions.SectionName));
+        services.AddOptions<AuthOptions>()
+            .Bind(configuration.GetSection(AuthOptions.SectionName));
+
+        services.AddOptions<AccountOptions>()
+            .Bind(configuration.GetSection(AccountOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        // Accounts + budget ledger. The usage context is scoped: request
+        // scopes get the signed-in user, background analysis scopes get the
+        // requesting user from the job payload, CLI scopes stay system.
+        services.AddScoped<ILlmUsageContext, LlmUsageContext>();
+        services.AddScoped<ILlmUsageRecorder, LlmUsageRecorder>();
+        services.AddScoped<IBudgetService, BudgetService>();
+        services.AddScoped<IUserAccountService, UserAccountService>();
 
         // The single provider-specific registration in the entire codebase.
         // Swapping to SQL Server = swap the Npgsql package for

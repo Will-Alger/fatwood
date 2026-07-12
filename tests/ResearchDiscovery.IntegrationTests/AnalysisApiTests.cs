@@ -10,38 +10,24 @@ namespace ResearchDiscovery.IntegrationTests;
 public class AnalysisApiTests
 {
     [Fact]
-    public async Task AdminAnalysisEndpoints_NoKeyConfigured_Return404()
+    public async Task AdminAnalysisEndpoints_AsMember_Return403()
     {
-        using var factory = new ApiFactory();
+        using var factory = new ApiFactory { TestUserExternalId = "member-1" };
         using var client = factory.CreateClient();
 
         var run = await client.PostAsJsonAsync("/api/admin/analysis/run", new { categoryCode = "cs.LG" });
         var coverage = await client.GetAsync("/api/admin/analysis/coverage");
 
-        Assert.Equal(HttpStatusCode.NotFound, run.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, coverage.StatusCode);
-    }
-
-    [Fact]
-    public async Task AdminAnalysisRun_WrongKey_Returns401()
-    {
-        using var factory = new ApiFactory { AdminApiKey = "correct-key" };
-        using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "wrong-key");
-
-        var response = await client.PostAsJsonAsync(
-            "/api/admin/analysis/run", new { categoryCode = "cs.LG" });
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, run.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, coverage.StatusCode);
     }
 
     [Fact]
     public async Task AdminAnalysisRun_UnknownCategory_Returns404()
     {
-        using var factory = new ApiFactory { AdminApiKey = "correct-key" };
+        using var factory = new ApiFactory();
         await factory.SeedAsync(TestData.SeedPapersAsync);
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "correct-key");
 
         var response = await client.PostAsJsonAsync(
             "/api/admin/analysis/run", new { categoryCode = "nope.XX" });
@@ -52,10 +38,9 @@ public class AnalysisApiTests
     [Fact]
     public async Task AdminAnalysisRun_ValidCategory_QueuesAndCoverageReports()
     {
-        using var factory = new ApiFactory { AdminApiKey = "correct-key" };
+        using var factory = new ApiFactory();
         await factory.SeedAsync(TestData.SeedPapersAsync);
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "correct-key");
 
         var run = await client.PostAsJsonAsync(
             "/api/admin/analysis/run", new { categoryCode = "cs.LG", maxPapers = 5 });

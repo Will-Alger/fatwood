@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using ResearchDiscovery.Application.Abstractions;
@@ -32,9 +32,8 @@ public class SettingsApiTests
     [Fact]
     public async Task LlmSettings_ExposeRegistryWithPricing_AndAcceptOverrides()
     {
-        using var factory = new ApiFactory { AdminApiKey = "k" };
+        using var factory = new ApiFactory();
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
 
         var settings = await client.GetFromJsonAsync<LlmSettingsView>("/api/admin/settings/llm");
         Assert.NotNull(settings);
@@ -58,9 +57,8 @@ public class SettingsApiTests
     [Fact]
     public async Task LlmSettings_RejectUnknownModelsAndSteps()
     {
-        using var factory = new ApiFactory { AdminApiKey = "k" };
+        using var factory = new ApiFactory();
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
 
         var badModel = await client.PutAsJsonAsync("/api/admin/settings/llm",
             new { step = "PaperAnalysis", modelId = "gpt-42" });
@@ -74,10 +72,9 @@ public class SettingsApiTests
     [Fact]
     public async Task Profile_SaveBumpsVersion_AndMarksAnalysesStale()
     {
-        using var factory = new ApiFactory { AdminApiKey = "k" };
+        using var factory = new ApiFactory();
         await factory.SeedAsync(TestData.SeedPapersAsync);
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
 
         // Analyze everything in cs.LG once (profile v0).
         var first = await AnalyzeAsync(factory, "cs.LG");
@@ -101,14 +98,14 @@ public class SettingsApiTests
     }
 
     [Fact]
-    public async Task SettingsEndpoints_WithoutKey_Return404()
+    public async Task SettingsEndpoints_AsMember_Return403()
     {
-        using var factory = new ApiFactory();
+        using var factory = new ApiFactory { TestUserExternalId = "member-1" };
         using var client = factory.CreateClient();
 
-        Assert.Equal(HttpStatusCode.NotFound,
+        Assert.Equal(HttpStatusCode.Forbidden,
             (await client.GetAsync("/api/admin/settings/llm")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound,
+        Assert.Equal(HttpStatusCode.Forbidden,
             (await client.GetAsync("/api/admin/settings/profile")).StatusCode);
     }
 

@@ -2,7 +2,7 @@
 // Scope: resource group. Scaling up is a parameter change, not a rewrite.
 //
 //   az deployment group create -g <rg> -f infra/main.bicep -p infra/main.bicepparam \
-//     -p pgAdminPassword=... adminApiKey=... anthropicApiKey=...
+//     -p pgAdminPassword=... anthropicApiKey=...
 //
 // Deliberate minimal-footprint tradeoffs (each has a documented upgrade path):
 //   - Postgres uses a public endpoint restricted to Azure services; the
@@ -28,12 +28,18 @@ param containerImage string = 'mcr.microsoft.com/dotnet/samples:aspnetapp'
 param pgAdminPassword string
 
 @secure()
-@description('Admin API key protecting /api/admin/* surfaces. Re-supply on every infra deploy.')
-param adminApiKey string
-
-@secure()
 @description('Anthropic API key for LLM steps. May be empty — the app runs without analysis until set.')
 param anthropicApiKey string = ''
+
+// ------------------------------------------------- user accounts (JWT auth)
+@description('Entra External ID authority (https://<tenant>.ciamlogin.com/<tenantId>/v2.0). Empty = user auth off; the API then runs open behind Easy Auth via an explicit transition flag.')
+param userAuthAuthority string = ''
+
+@description('Expected JWT audience: the Fatwood API app registration client id.')
+param userAuthAudience string = ''
+
+@description('Email promoted to Admin on first sign-in (bootstraps the first admin account).')
+param bootstrapAdminEmail string = 'algerw@icloud.com'
 
 // ------------------------------------------------------- Entra ID Easy Auth
 // When authClientId is set, Container Apps authentication (Easy Auth) fronts
@@ -164,12 +170,6 @@ resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   properties: { value: dbConnectionString }
 }
 
-resource secretAdminKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name: 'admin-api-key'
-  properties: { value: adminApiKey }
-}
-
 resource secretAnthropicKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'anthropic-api-key'
@@ -231,11 +231,6 @@ var kvSecrets = [
     identity: appIdentity.id
   }
   {
-    name: 'admin-api-key'
-    keyVaultUrl: '${keyVault.properties.vaultUri}secrets/admin-api-key'
-    identity: appIdentity.id
-  }
-  {
     name: 'anthropic-api-key'
     keyVaultUrl: '${keyVault.properties.vaultUri}secrets/anthropic-api-key'
     identity: appIdentity.id
@@ -284,8 +279,14 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           resources: { cpu: json(apiCpu), memory: apiMemory }
           env: [
             { name: 'ConnectionStrings__Default', secretRef: 'db-connection' }
-            { name: 'Admin__ApiKey', secretRef: 'admin-api-key' }
             { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }
+            // User-account auth (Entra External ID JWT). While the authority
+            // is empty the API runs open behind Easy Auth; the transition
+            // flag acknowledges that deliberately instead of failing startup.
+            { name: 'Auth__Authority', value: userAuthAuthority }
+            { name: 'Auth__Audience', value: userAuthAudience }
+            { name: 'Auth__DangerouslyAllowAnonymous', value: empty(userAuthAuthority) ? 'true' : 'false' }
+            { name: 'Accounts__BootstrapAdminEmails__0', value: bootstrapAdminEmail }
             // Migrations run as a one-off job in CD, never at app startup.
             { name: 'Database__MigrateOnStartup', value: 'false' }
             // The in-process scheduler dies with scale-to-zero; the cron job
@@ -309,7 +310,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
   // The secret resources are explicit dependencies: referencing only the
   // vault URI would let the app provision before the secrets exist, and the
   // ACA data plane resolves them at provision time.
-  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAdminKey, secretAnthropicKey]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey]
 }
 
 // Entra ID login in front of the entire site: unauthenticated requests are
@@ -375,7 +376,7 @@ resource migrateJob 'Microsoft.App/jobs@2024-03-01' = {
       ]
     }
   }
-  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAdminKey, secretAnthropicKey]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey]
 }
 
 // Daily delta ingestion as an ACA cron job on the same image (the README's
@@ -422,7 +423,7 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
       ]
     }
   }
-  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAdminKey, secretAnthropicKey]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey]
 }
 
 output acrLoginServer string = acr.properties.loginServer

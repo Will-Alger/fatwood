@@ -1,5 +1,6 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ResearchDiscovery.Application.Abstractions;
@@ -110,23 +111,47 @@ public class SearchApiTests
     }
 
     [Fact]
-    public async Task Compile_WithoutAdminKey_Returns404()
+    public async Task Compile_AsGatedInactiveMember_Returns403()
     {
-        using var factory = new ApiFactory();
+        // With the invite-code gate on, a fresh member account is inactive
+        // and must not be able to spend tokens.
+        using var factory = new ApiFactory
+        {
+            TestUserExternalId = "gated-member",
+            RequireInviteCode = true,
+        };
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/api/search/compile", new { query = "x" });
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
-    public async Task Compile_WithKey_ReturnsPlanFromCompiler()
+    public async Task Compile_AsMember_UsesStarterBudget()
     {
-        using var factory = new ApiFactory { AdminApiKey = "k" };
+        // Open signup: a fresh member is active with the $1 starter grant and
+        // can compile (the LLM itself is stubbed; only the gate is real).
+        using var factory = new ApiFactory { TestUserExternalId = "open-member" };
         await SeedWithEmbeddingsAsync(factory);
         using var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Admin-Api-Key", "k");
+
+        var response = await client.PostAsJsonAsync(
+            "/api/search/compile", new { query = "anomaly detection projects" });
+        response.EnsureSuccessStatusCode();
+
+        var me = await client.GetFromJsonAsync<JsonElement>("/api/me");
+        Assert.False(me.GetProperty("isActive").ValueKind == JsonValueKind.False);
+        Assert.Equal(1_000_000, me.GetProperty("budget").GetProperty("grantedMicros").GetInt64());
+        Assert.False(me.GetProperty("budget").GetProperty("unlimited").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Compile_AsDevAdmin_ReturnsPlanFromCompiler()
+    {
+        using var factory = new ApiFactory();
+        await SeedWithEmbeddingsAsync(factory);
+        using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync(
             "/api/search/compile", new { query = "anomaly detection projects" });

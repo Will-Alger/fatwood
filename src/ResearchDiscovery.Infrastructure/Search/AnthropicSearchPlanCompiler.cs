@@ -17,6 +17,7 @@ namespace ResearchDiscovery.Infrastructure.Search;
 public class AnthropicSearchPlanCompiler(
     AnthropicClient client,
     ILlmSettingsService settings,
+    ILlmUsageRecorder usage,
     ILogger<AnthropicSearchPlanCompiler> logger) : ISearchPlanCompiler
 {
     private const int MaxOutputTokens = 2048;
@@ -101,6 +102,10 @@ public class AnthropicSearchPlanCompiler(
                 },
             ],
         }, cancellationToken: ct);
+
+        await usage.RecordAsync(
+            LlmOptions.StepQueryCompiler, model.Id,
+            response.Usage?.InputTokens ?? 0, response.Usage?.OutputTokens ?? 0, ct);
 
         if ($"{response.StopReason}" == "refusal")
         {
