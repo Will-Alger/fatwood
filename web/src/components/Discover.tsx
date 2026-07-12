@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   analyzeSelection,
   compileSearch,
@@ -7,8 +7,9 @@ import {
 } from '../api/client'
 import type { LlmSettingsView, MeView, SearchPlan, SearchResult } from '../api/types'
 import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
+import { EmberSift } from './EmberSift'
 import { PaperCard } from './PaperCard'
-import { EmberDots, PaperSkeletons } from './Skeletons'
+import { EmberDots } from './Skeletons'
 
 const RESULT_LIMIT = 30
 const ANALYZE_TOP_N = 25
@@ -49,6 +50,23 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
   const [sortBy, setSortBy] = useState<'match' | 'score'>('match')
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
+
+  // The ember-sift panel outlives the first search by a beat so it can flare
+  // out over the arriving results instead of vanishing mid-frame.
+  const showSift = busy === 'search' && !result
+  const [siftState, setSiftState] = useState<'hidden' | 'active' | 'finishing'>('hidden')
+  useEffect(() => {
+    if (showSift) {
+      setSiftState('active')
+      return
+    }
+    setSiftState((s) => (s === 'active' ? 'finishing' : s))
+  }, [showSift])
+  useEffect(() => {
+    if (siftState !== 'finishing') return
+    const id = window.setTimeout(() => setSiftState('hidden'), 800)
+    return () => window.clearTimeout(id)
+  }, [siftState])
 
   const placeholder = useTypingPlaceholder(EXAMPLE_QUERIES, query === '')
 
@@ -351,8 +369,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
         </div>
       )}
 
-      {/* First search in flight: skeletons instead of a blank page. */}
-      {busy === 'search' && !result && <PaperSkeletons count={4} />}
+      {/* First search in flight: the corpus sifts, the best embers rise. */}
+      {siftState !== 'hidden' && <EmberSift finishing={siftState === 'finishing'} />}
 
       {!result && busy === null && (
         <div className="discover-intro">
