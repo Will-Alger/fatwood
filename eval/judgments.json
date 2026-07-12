@@ -37777,6 +37777,1734 @@
       "rationale": "This paper addresses data collaboration and privacy-preserving integration using kernel methods for decentralized datasets, not computer vision or webcam-based applications.",
       "judgeModel": "claude-haiku-4-5",
       "source": "random"
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2605.20552",
+      "grade": 0,
+      "rationale": "Machine learning research on bandit algorithms and recommender systems is not relevant to fintech portfolio projects or typical fintech engineering work.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2604.23318",
+      "grade": 0,
+      "rationale": "Research on reinforcement learning and mathematical reasoning in LLMs is academically interesting but not aligned with fintech domain expertise or buildable fintech projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2604.14550",
+      "grade": 0,
+      "rationale": "Hardware design and RTL generation using LLMs is a specialized domain unrelated to fintech and not a practical portfolio project for a fintech career pivot.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2605.21104",
+      "grade": 0,
+      "rationale": "Sparse transformer optimization is machine learning research with no connection to fintech applications or the engineering skills fintech companies prioritize.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2605.10419",
+      "grade": 1,
+      "rationale": "LLMs for querying datasets touches on data analytics relevant to fintech, but the paper focuses on LLM capabilities rather than providing a buildable fintech project with clear implementation scope.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2605.18069",
+      "grade": 0,
+      "rationale": "This paper focuses on theoretical mathematical bounds for diffusion models via Wasserstein distance and F\u00F6llmer processes, with no connection to payment fraud detection, risk assessment, or practical ML implementations for fraud systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2604.16499",
+      "grade": 0,
+      "rationale": "Focuses on adversarial attacks against vision-language models; entirely unrelated to trading, reinforcement learning for markets, or portfolio projects in finance.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2604.24665",
+      "grade": 0,
+      "rationale": "Studies linguistic properties of Turkish morphology and LLM behavior; no connection to trading, reinforcement learning, or financial markets.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2605.17620",
+      "grade": 0,
+      "rationale": "Medical imaging toolkit for aneurysm synthesis; irrelevant to trading strategies, reinforcement learning for markets, or financial applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2605.19444",
+      "grade": 1,
+      "rationale": "Uses test-time reinforcement learning but applies it to mathematical reasoning and reasoning benchmarks rather than trading strategies or financial markets.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2607.05391",
+      "grade": 0,
+      "rationale": "LLM verification frameworks are unrelated to limit order book modeling and market microstructure.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2605.05089",
+      "grade": 3,
+      "rationale": "Directly addresses market microstructure through dynamic collateral control for spot-perpetual basis trading with execution frictions, order-level considerations, and a buildable quantitative framework.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "portfolio-optimization",
+      "arxivId": "2604.26116",
+      "grade": 0,
+      "rationale": "This paper focuses on federated learning and image classification robustness, which is entirely orthogonal to portfolio optimization methods that the searcher seeks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2605.30470",
+      "grade": 0,
+      "rationale": "Addresses security vulnerabilities in explainability interfaces rather than building interpretable models for credit scoring, making it irrelevant to the searcher\u0027s core need for auditable loan default prediction systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2605.28626",
+      "grade": 2,
+      "rationale": "Directly relevant to regulatory auditability by examining fairness in hybrid interpretable models and ensuring interpretability is equitably distributed across demographics, a key concern for banking regulators, though not specifically focused on credit scoring applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.22724",
+      "grade": 0,
+      "rationale": "The paper focuses on theoretical approximation and statistical complexity of neural operators for multi-task learning, not financial time series forecasting or transformer comparison.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.14217",
+      "grade": 0,
+      "rationale": "This paper addresses efficient LLM serving with parameter-efficient finetuning, unrelated to time series forecasting or financial data applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.28854",
+      "grade": 0,
+      "rationale": "The paper studies in-context learning and representational geometry in LLMs, which does not address time series forecasting or financial data analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.14359",
+      "grade": 0,
+      "rationale": "This paper focuses on vector quantization and embedding compression via mixture of experts, not time series forecasting or financial data.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2606.22817",
+      "grade": 0,
+      "rationale": "Focuses on differential privacy and synthetic data generation for structured text, unrelated to DeFi protocols, DEX mechanics, or blockchain engineering.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2604.12064",
+      "grade": 0,
+      "rationale": "Addresses privacy-preserving techniques for LLM API requests and PII redaction, not relevant to decentralized finance or blockchain analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2604.21860",
+      "grade": 0,
+      "rationale": "Examines LLM adversarial attacks and jailbreaking techniques, disconnected from DeFi protocols, DEX mechanics, or on-chain data analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.04690",
+      "grade": 2,
+      "rationale": "Directly addresses financial risk modeling through neural parameterization of Markov dynamics with demonstrated regime-shift detection relevant to tail risk, though the paper is theoretical rather than emphasizing portfolio buildability.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.13998",
+      "grade": 3,
+      "rationale": "Excellent fit: combines tail risk modeling (Jump-HMM, cross-asset tail dependence), synthetic data generation for risk analysis, provides an open-source Julia implementation, and is concretely buildable as a portfolio project with clear methodology and data access.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.21475",
+      "grade": 0,
+      "rationale": "Addresses relational deep learning and graph neural networks for database applications; unrelated to financial risk modeling, value at risk, or trading applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2604.24663",
+      "grade": 0,
+      "rationale": "Focuses on control theory and state estimation for linear systems; no connection to financial risk modeling, trading, or portfolio applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2606.00862",
+      "grade": 0,
+      "rationale": "Meta-learning framework for black-box optimization; while optimization-related, has no application to financial risk modeling or trading contexts.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2604.18242",
+      "grade": 1,
+      "rationale": "Statistical depth and robustness theory on manifolds has tangential relevance to robust risk estimation and tail-risk quantification, but lacks financial context and practical trading applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2606.06563",
+      "grade": 2,
+      "rationale": "Directly relevant survey on LLM-based test generation from natural language, covering techniques and tools that would help build an automated testing portfolio project, though it\u0027s a survey rather than a specific buildable approach.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2606.00530",
+      "grade": 3,
+      "rationale": "Excellent match: presents Sakura, a concrete multi-agent LLM system for generating complex tests from natural language descriptions with clear methodology, evaluation benchmarks, and directly buildable framework for a portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.13496",
+      "grade": 0,
+      "rationale": "Focuses on LLM inference optimization in datacenters using multi-agent RL; not related to code review, bug fixing, or test generation tasks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2604.20472",
+      "grade": 0,
+      "rationale": "Addresses calibration in vision-language-action models for robotics; unrelated to software engineering tasks like code review or test generation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.23935",
+      "grade": 1,
+      "rationale": "Discusses execution control in autonomous agents with focus on runtime authority; tangentially relevant to agent systems but not specifically addressing software engineering tasks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.16818",
+      "grade": 0,
+      "rationale": "Concerns learning physical dynamics from incomplete observations in oceanographic data; unrelated to software engineering or LLM agents.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.21820",
+      "grade": 0,
+      "rationale": "Addresses autonomous microscopy experiments and nanoscale discovery using Bayesian optimization; not relevant to software engineering tasks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2607.06065",
+      "grade": 3,
+      "rationale": "Excellent match: presents SWE-Review, a concrete agentic framework for code review and PR revision with closed-loop issue resolution, directly addressing the searcher\u0027s intent with clear methodology and evaluation benchmarks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.06098",
+      "grade": 1,
+      "rationale": "Focuses on algorithm recognition using AST patterns; tangentially related to software analysis but does not address LLM agents for code review, bug fixing, or test generation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2607.07330",
+      "grade": 0,
+      "rationale": "Focuses on uncertainty estimation in hypergraph neural networks, which is unrelated to retrieval-augmented generation, embeddings for search, or retrieval quality improvements.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2604.11986",
+      "grade": 1,
+      "rationale": "Addresses interpretable graph learning with concept bottlenecks, which shares some conceptual overlap with embedding-based representations but does not directly address retrieval augmentation or search quality improvements.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2605.09516",
+      "grade": 0,
+      "rationale": "Proposes architectural improvements to transformer models via sparse routing, unrelated to RAG, embedding-based search, or retrieval quality.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2605.16770",
+      "grade": 0,
+      "rationale": "Explores lightweight LLMs for legal document generation and charge prediction, orthogonal to the searcher\u0027s focus on retrieval-augmented generation and embedding-based search quality.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2605.07177",
+      "grade": 0,
+      "rationale": "This paper focuses on multimodal search agents and reinforcement learning for information retrieval, which is unrelated to vulnerability detection in source code.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2605.15959",
+      "grade": 0,
+      "rationale": "This paper addresses physics-informed neural networks and differential equations, with no connection to vulnerability detection or application security in source code.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2604.25832",
+      "grade": 0,
+      "rationale": "This paper focuses on causal inference and real-world evidence in clinical trials, which is unrelated to ML security attacks and defenses.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2604.16575",
+      "grade": 1,
+      "rationale": "While this paper addresses security (DDoS detection) and uses ML techniques, it focuses on anomaly detection for network intrusion rather than adversarial attacks on ML models, poisoning, or model stealing.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "privacy-preserving-ml",
+      "arxivId": "2605.16435",
+      "grade": 0,
+      "rationale": "This paper focuses on GPU-accelerated deep learning for heatwave prediction using ConvLSTM models, which is unrelated to federated learning, differential privacy, or privacy-preserving techniques that the searcher seeks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2604.24550",
+      "grade": 0,
+      "rationale": "Focuses on monolith-to-serverless migration using LLM agents, not on software testing, fuzzing, or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.10209",
+      "grade": 0,
+      "rationale": "Addresses context engineering for enterprise tool-use workflows, not software testing or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2607.01904",
+      "grade": 0,
+      "rationale": "Studies productivity gains from AI coding tools in enterprise settings, unrelated to testing, fuzzing, or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.19814",
+      "grade": 0,
+      "rationale": "Presents a tool for commit message generation, not relevant to automated testing, fuzzing, or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.26979",
+      "grade": 0,
+      "rationale": "Investigates static analysis anchors for code navigation in LLM agents, not related to software testing or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.28436",
+      "grade": 1,
+      "rationale": "Addresses program verification for coding agents through patch evaluation, which tangentially relates to testing but focuses on verification methodology rather than flaky tests, fuzzing, or automated test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2605.08017",
+      "grade": 0,
+      "rationale": "Analyzes PR lifecycle workflows and governance between AI agents and humans, unrelated to testing, fuzzing, or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.17779",
+      "grade": 3,
+      "rationale": "Directly addresses recommender systems with techniques (variable-length tokenization, generative approaches) applicable at small scale and handling cold-start (tail items with sparse data), clearly buildable as a portfolio project with concrete methodology.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2604.17966",
+      "grade": 0,
+      "rationale": "Focuses on LLM evaluation for aerospace engineering calculations; entirely unrelated to recommender systems, e-commerce, or ranking problems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.11380",
+      "grade": 0,
+      "rationale": "Addresses EEG signal processing and representation learning for neuroscience; no relevance to recommender systems or e-commerce applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.21428",
+      "grade": 0,
+      "rationale": "Theoretical machine learning paper on multiclass linear classification under Gaussian marginals; not related to recommender systems or practical ranking for e-commerce.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2604.12191",
+      "grade": 0,
+      "rationale": "Proposes diagnostic evaluation framework for LLM abilities; unrelated to recommender systems, ranking, or e-commerce needs.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.15673",
+      "grade": 0,
+      "rationale": "Computer vision paper on tree crown segmentation from drone imagery; no connection to recommender systems or e-commerce ranking.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2604.17956",
+      "grade": 1,
+      "rationale": "While addressing machine learning in distributed/federated settings with interpretability, it focuses on medical diagnosis rather than recommender systems or ranking, making it tangential to the core intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.13784",
+      "grade": 1,
+      "rationale": "While relevant to backend optimization, this paper focuses on GPU-level transformer inference engineering that would require deep ML infrastructure knowledge and specialized hardware\u2014not a realistic weekend project for a .NET developer with no ML experience.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.07451",
+      "grade": 0,
+      "rationale": "This is a formal verification paper for neural networks with heavy theorem-prover foundations; it does not involve building practical systems and is far removed from the searcher\u0027s intent to create a portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.06485",
+      "grade": 2,
+      "rationale": "Relevant to both backend optimization and ML-adjacent work; implementing CPU-based LLM inference with SIMD is plausible as a portfolio project, though SIMD programming and ML model integration may require learning new skills.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.25230",
+      "grade": 0,
+      "rationale": "This paper focuses on advanced neural network inference techniques for recursive models; it requires significant ML expertise and is not buildable as a weekend portfolio project without substantial prior knowledge.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.26422",
+      "grade": 2,
+      "rationale": "Directly relevant: microservice tail-latency prediction is a backend systems problem with clear applicability to production environments; implementing a trace-based predictor is a realistic portfolio project for a backend engineer.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.27409",
+      "grade": 0,
+      "rationale": "This is an advanced ML research paper on knowledge distillation for spiking neural networks; it requires deep ML expertise and is not suitable for a weekend portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.15782",
+      "grade": 1,
+      "rationale": "While it involves machine learning for traffic estimation, this is domain-specific infrastructure work requiring specialized data and geospatial knowledge; not practical as an independent weekend portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.05317",
+      "grade": 1,
+      "rationale": "Medical imaging with topological features is specialized ML-adjacent work; while interesting, it requires medical domain expertise, specialized datasets, and deep learning knowledge unsuitable for a quick portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.13928",
+      "grade": 2,
+      "rationale": "Relevant: anomaly detection in industrial time series is a practical backend/ML-adjacent project that could be built as a portfolio piece, though it requires learning time-series modeling techniques.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.18714",
+      "grade": 0,
+      "rationale": "This paper on multimodal model training with generative tuning is advanced ML research requiring significant expertise in vision transformers and generative modeling; not a weekend project for a .NET developer.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.30563",
+      "grade": 0,
+      "rationale": "Classical planning and SAT solver encoding is neither backend/ML-adjacent nor practically buildable as a weekend portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.23268",
+      "grade": 2,
+      "rationale": "Directly relevant as ML-adjacent backend work with a clear, implementable method for training models with privileged information that could demonstrate ML competency.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.28213",
+      "grade": 1,
+      "rationale": "While interesting for ML and GPU optimization, this is highly specialized hardware work requiring deep CUDA expertise and GPU-kernel lineage data, making it impractical as a solo weekend project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.23780",
+      "grade": 1,
+      "rationale": "Multimodal LLM editing is ML-adjacent but requires access to MLLM infrastructure and extensive implementation depth beyond a weekend scope.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.06762",
+      "grade": 2,
+      "rationale": "ML-adjacent genotype prediction with a clear hybrid architecture applicable to genomic selection; demonstrates end-to-end predictive modeling that could be built as a portfolio project with publicly available genomic datasets.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.14260",
+      "grade": 1,
+      "rationale": "Fairness-focused research on conformal prediction calibration is theoretically sound but more academic than practical for a buildable portfolio project demonstrating marketable backend/ML skills.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2607.01740",
+      "grade": 1,
+      "rationale": "While the paper describes a reproducible meta-benchmarking framework, it primarily involves organizing existing benchmarks and taxonomy work rather than implementing novel algorithmic methods suitable as a technical portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.23365",
+      "grade": 3,
+      "rationale": "Proposes a novel RL algorithm (SOM) with clear methodology, demonstrates improvements on standard locomotion benchmarks, and would make an excellent portfolio project implementing the actor-critic approach with score-based velocity field construction.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.23994",
+      "grade": 2,
+      "rationale": "Introduces a benchmark and a watermarking method (WALT) with concrete implementation details; relevant for reproduction but the 3D face reconstruction dependency and avatar-specific domain may limit general portfolio appeal.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.15252",
+      "grade": 2,
+      "rationale": "Presents PDRNN, a modular RNN-based fusion system for sensor data with clear methodology; reproducible but requires access to dynamic sports movement datasets and multimodal sensor streams that may be difficult to obtain.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.22940",
+      "grade": 1,
+      "rationale": "Primarily theoretical work on entropy regularization in representation learning with dynamical systems framing; while containing interesting ideas, it is more suitable for research reproducibility than for a concrete engineering portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.26459",
+      "grade": 1,
+      "rationale": "Focuses on numerical approximations and mathematical properties of matrix operations in Muon optimizer variants; primarily theoretical optimization mathematics rather than a substantive algorithmic contribution amenable to portfolio implementation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.28298",
+      "grade": 2,
+      "rationale": "Proposes REED, a post-training representation editing method for cross-domain steganalysis with clear methodology; reproducible but niche domain application and dependence on specific source/target domain datasets limit broader portfolio value.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.13032",
+      "grade": 0,
+      "rationale": "Graph neural networks for OOD detection in node classification is unrelated to trading infrastructure, market making, or trade execution systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.29355",
+      "grade": 0,
+      "rationale": "Neural decoding of monkey movement is a neuroscience domain paper with no relevance to trading, market making, or transaction cost analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2606.15531",
+      "grade": 0,
+      "rationale": "Adversarial attacks on language models via diffusion is a security/AI safety topic unrelated to trading infrastructure or execution strategies.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2604.12896",
+      "grade": 0,
+      "rationale": "Vision-language models and visual reasoning tools have no relevance to trading execution, market making, or financial systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.01345",
+      "grade": 0,
+      "rationale": "Vision-language models with perceptual bandwidth constraints for visual reasoning are unrelated to trading infrastructure or financial markets.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.01852",
+      "grade": 1,
+      "rationale": "While it addresses RAG systems relevant to document analysis, it focuses on chunking strategy evaluation rather than building an agentic LLM system or financial document processing pipeline.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.20571",
+      "grade": 2,
+      "rationale": "Directly relevant to financial document analysis automation with RAG and LLMs; demonstrates practical implementation on edge devices, though less explicitly focused on agentic systems or fintech specifics.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.04963",
+      "grade": 2,
+      "rationale": "Covers LLM agent training for long-horizon tasks with clear methodology, highly relevant to agentic systems; however, focuses on RL rather than document analysis specific to finance.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.17678",
+      "grade": 0,
+      "rationale": "Theoretical machine learning paper on Q-learning convergence rates; not relevant to building LLM agents or financial document analysis applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.26837",
+      "grade": 0,
+      "rationale": "Systems-level optimization for long-context LLM serving; addresses infrastructure concerns but not agent design, financial applications, or document analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.30664",
+      "grade": 0,
+      "rationale": "Focuses on policy tree search algorithms for single-agent deterministic problems; unrelated to LLM agents, document analysis, or financial domains.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.25062",
+      "grade": 0,
+      "rationale": "Biophysics and gene regulation modeling paper; completely unrelated to fintech, financial documents, or LLM agents.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.21877",
+      "grade": 3,
+      "rationale": "Excellent match: directly addresses security and capability scoping for agentic AI systems with tool-use, credential management, and audit trails\u2014critical for fintech demos; provides concrete JSON schema and risk scenarios for building production-ready agents.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2607.03951",
+      "grade": 0,
+      "rationale": "Formal verification tool for statistical analysis in Python; unrelated to LLM agents, financial systems, or document processing.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.10429",
+      "grade": 0,
+      "rationale": "This paper focuses on molecular NMR spectroscopy and chemistry representation learning, which is unrelated to financial document analysis, agentic LLM systems, or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.11167",
+      "grade": 2,
+      "rationale": "Directly relevant to agentic LLM systems with tool integration and constraint solving; demonstrates multi-model coordination patterns applicable to financial document processing, though lacks explicit fintech domain focus and buildability would depend on accessing suitable financial tools and data.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2606.00732",
+      "grade": 2,
+      "rationale": "Directly addresses long-range temporal pattern learning without transformers using a sleep-inspired replay mechanism, but the hierarchical memory approach differs from the state-space model direction the searcher is exploring.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2605.11855",
+      "grade": 3,
+      "rationale": "Directly compares parallelizable RNNs and state-space models (LRUs, minGRUs) for long-term dependencies with clear performance benchmarks, making it an excellent on-target exploration of SSM alternatives to transformers.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2605.12683",
+      "grade": 3,
+      "rationale": "Explicitly studies parallel state-space models and nonlinear alternatives for long sequences with practical implementations (GTF-DEER), directly addressing whether linear SSMs suffice and providing a buildable framework for long-sequence learning.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2605.28684",
+      "grade": 0,
+      "rationale": "Focuses on reduced-order models for dynamical systems simulation, which is orthogonal to the searcher\u0027s interest in sequence models and post-transformer architectures for time series.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2606.04031",
+      "grade": 0,
+      "rationale": "Theoretical analysis of coupled gradient descent and transient amplification in optimization, unrelated to sequence models, state-space models, or time-series architectures.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2605.20088",
+      "grade": 1,
+      "rationale": "Addresses time-series classification through interpretable shapelet discovery, which is tangentially related to temporal patterns but does not engage with state-space models, attention alternatives, or the architectural comparison the searcher seeks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2604.14626",
+      "grade": 0,
+      "rationale": "Requires specialized 3D-stacked hybrid-bonding hardware (PIM/NMP) that is not available on standard GPUs, making it impractical to benchmark on a single consumer GPU.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.27390",
+      "grade": 2,
+      "rationale": "Directly addresses speculative decoding speedups with practical real-time adaptation techniques that could be benchmarked and prototyped on a single GPU without special hardware requirements.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "kv-cache-serving",
+      "arxivId": "2605.10205",
+      "grade": 0,
+      "rationale": "This paper focuses on theoretical generalization bounds for decentralized SGD training, which is orthogonal to the searcher\u0027s intent of KV cache compression and quantization techniques for serving long-context LLMs.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hallucination-plain",
+      "arxivId": "2605.27006",
+      "grade": 0,
+      "rationale": "This paper focuses on sampling techniques for diffusion models with no connection to chatbot hallucination detection or prevention, making it irrelevant to the searcher\u0027s intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hallucination-plain",
+      "arxivId": "2604.12183",
+      "grade": 0,
+      "rationale": "This paper addresses intrusion detection in industrial control systems using domain adaptation, which is unrelated to chatbot hallucination or factual grounding issues.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "hallucination-plain",
+      "arxivId": "2607.05375",
+      "grade": 0,
+      "rationale": "This paper concerns offline reinforcement learning and policy evaluation with no relevance to detecting or preventing chatbots from confidently generating false information.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2605.05659",
+      "grade": 2,
+      "rationale": "Directly relevant to making neural networks smaller through low-rank parameter-efficient structures (LoRA, DLoR), with theoretical foundations for compression without accuracy loss, suitable for on-device deployment understanding.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2606.00494",
+      "grade": 3,
+      "rationale": "Excellent match: proposes ProjQ framework combining quantization and LoRA for LLM compression to 3-4 bits with working code, directly addressing the goal of smaller faster models for deployment with clear methodology and proven results.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2606.17197",
+      "grade": 0,
+      "rationale": "Focuses on automotive test specification generation using LLMs and clustering, entirely unrelated to model compression, on-device deployment, or neural network optimization.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2605.26302",
+      "grade": 0,
+      "rationale": "Addresses agent reliability and lifespan evaluation in deployed AI systems; while deployment-related, it concerns behavioral degradation not model compression or efficiency, missing the core intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2605.10474",
+      "grade": 1,
+      "rationale": "Discusses analog neural networks and circuit-level verification under manufacturing variations, tangential to on-device model compression since it focuses on hardware implementation robustness rather than model size/speed reduction.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2605.21102",
+      "grade": 0,
+      "rationale": "Presents a question-answering system for research papers using extractive QA with ModernBERT, unrelated to model compression or on-device optimization.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2606.03338",
+      "grade": 2,
+      "rationale": "Directly addresses evaluating SSL representations without labeled data; proposes an efficient alternative to linear probing, making it relevant for low-label scenarios, though evaluation methodology rather than model training is the primary focus.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2605.26542",
+      "grade": 0,
+      "rationale": "Focuses on agent safety and tool composition, unrelated to the intent of training models with minimal labeled data.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2604.20943",
+      "grade": 1,
+      "rationale": "Addresses LLM memory architecture improvements but is tangential to the core intent of training models with limited labeled data; concerns persistent memory rather than label scarcity.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2606.01386",
+      "grade": 3,
+      "rationale": "Directly on-target: demonstrates federated fine-tuning of LLMs with limited domain-specific data (39 pages total) while preserving privacy, highly practical for a small company with no labeling budget and clear buildable methodology.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2606.10904",
+      "grade": 3,
+      "rationale": "Directly addresses LLM safety defenses with practical inference-time methods demonstrable on real models, perfectly aligned with the searcher\u0027s intent to understand and demo defenses against multimodal attacks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.25354",
+      "grade": 0,
+      "rationale": "Focuses on context learning capabilities of LLMs rather than security, prompt injection, jailbreaks, or defenses; unrelated to the searcher\u0027s intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.13054",
+      "grade": 0,
+      "rationale": "About offline reinforcement learning and domain adaptation, with no connection to LLM security, prompt injection, jailbreaks, or defenses.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.29963",
+      "grade": 1,
+      "rationale": "Involves LLMs and adversarial testing but focuses on honeypot evaluation for cyber defense rather than prompt injection/jailbreak attacks and defenses against them.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2606.05503",
+      "grade": 0,
+      "rationale": "About Bitcoin mining incentives and security, completely unrelated to LLM application security or adversarial attacks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.26769",
+      "grade": 0,
+      "rationale": "Discusses epistemology and bias in AI training data from a critical studies perspective, not related to prompt injection, jailbreaks, or security defenses.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2605.31176",
+      "grade": 0,
+      "rationale": "About retrieval-augmented generation (RAG) and multi-retriever selection for QA systems\u2014entirely unrelated to database internals, query optimization, or index tuning.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2607.08197",
+      "grade": 1,
+      "rationale": "Addresses ML over encrypted databases with index-based techniques, touching on database concepts, but focuses on security/encryption rather than the core optimization and performance-tuning intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2605.00457",
+      "grade": 0,
+      "rationale": "Applies deep reinforcement learning to wireless network resource management (NR-U/Wi-Fi coexistence)\u2014no connection to databases or database optimization.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2605.00201",
+      "grade": 0,
+      "rationale": "Theoretical matroid algorithms and oracle complexity\u2014a pure algorithmic theory paper unrelated to databases, ML, query optimization, or index tuning.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2606.07277",
+      "grade": 2,
+      "rationale": "Directly addresses secure aggregation of user data without exposing individual updates, highly relevant to privacy-preserving analytics over financial transactions with reduced communication overhead.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2605.24054",
+      "grade": 2,
+      "rationale": "Proposes verifiable secure aggregation for federated learning with lightweight cryptography, directly applicable to privacy-preserving financial analytics with minimal computational overhead.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2606.26664",
+      "grade": 3,
+      "rationale": "Explicitly focuses on privacy-preserving GNN inference over large financial transaction graphs using homomorphic encryption, demonstrating scalability to millions of nodes\u2014a perfect fit for the searcher\u0027s constrained financial analytics use case.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2606.10595",
+      "grade": 1,
+      "rationale": "Comprehensive federated learning survey covering data heterogeneity and convergence but lacks specific focus on privacy-preserving techniques or financial/transaction data applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2604.27833",
+      "grade": 2,
+      "rationale": "Addresses privacy-preserving personalized federated learning with differential privacy guarantees, relevant to analytics constraints though not specifically tailored to financial transaction data.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2604.22909",
+      "grade": 0,
+      "rationale": "Focuses on climate data analysis using self-supervised learning; unrelated to financial transactions, payments, or compliance-constrained analytics.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2607.06855",
+      "grade": 0,
+      "rationale": "Addresses reasoning generalization in large language models through self-distillation; unrelated to privacy-preserving analytics or financial data.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2605.26135",
+      "grade": 1,
+      "rationale": "Focuses on single-transaction anomaly detection via Isolation Forest augmentation, not graph-based network analysis of fraud rings or money laundering networks that the searcher explicitly seeks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2605.14267",
+      "grade": 0,
+      "rationale": "Image restoration using diffusion models is entirely unrelated to fraud detection, money laundering, or network analysis.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2607.06111",
+      "grade": 0,
+      "rationale": "Addresses industrial process measurement credibility using LLMs, with no connection to fraud detection, graph neural networks, or financial crime networks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2606.03938",
+      "grade": 1,
+      "rationale": "Addresses pretraining efficiency but focuses on multi-epoch ensemble strategies requiring significant compute and complex hyperparameter management unsuitable for single-laptop hobbyist learning.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2605.26489",
+      "grade": 1,
+      "rationale": "Provides theoretical insights into pretraining dynamics but is primarily an analysis paper without clear guidance on implementing a functional tiny LLM on resource-constrained hardware.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2605.18460",
+      "grade": 0,
+      "rationale": "About clustering algorithms and robotic sensor networks; completely unrelated to language model pretraining or fine-tuning.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2604.12290",
+      "grade": 0,
+      "rationale": "Focuses on benchmarking LLM agents for engineering tasks, not on training or pretraining models from scratch on local hardware.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2605.01361",
+      "grade": 0,
+      "rationale": "About decision-focused learning with optimization solvers; unrelated to language model training.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2605.17795",
+      "grade": 0,
+      "rationale": "Addresses noisy label learning and OOD detection in classification; not relevant to pretraining or fine-tuning language models.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2605.06507",
+      "grade": 0,
+      "rationale": "About reinforcement learning fine-tuning for diffusion models; concerns reward balancing rather than fundamental LLM pretraining on laptops.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2607.08725",
+      "grade": 2,
+      "rationale": "Directly relevant to computer vision with pose estimation, but requires pre-trained 3D pose estimators and biomechanical datasets that may be difficult to set up in two weekends without prior ML experience.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2605.00242",
+      "grade": 0,
+      "rationale": "Requires mmWave radar hardware which the searcher doesn\u0027t have; explicitly not a webcam-based project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2605.22924",
+      "grade": 0,
+      "rationale": "Federated recommendation system with mobile focus; entirely unrelated to computer vision or webcam-based projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2604.19414",
+      "grade": 0,
+      "rationale": "E-commerce sequential recommendation system; no connection to computer vision or the stated intent.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2605.28775",
+      "grade": 0,
+      "rationale": "Computer-use agents and domain specialization; unrelated to computer vision or webcam projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2605.21763",
+      "grade": 0,
+      "rationale": "Theoretical reinforcement learning paper on sample complexity; not a computer vision project and unsuitable for a two-weekend timeline.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2607.04145",
+      "grade": 1,
+      "rationale": "Computer vision adjacent (adversarial attacks on image classifiers), but not a practical webcam project\u2014focuses on attacking existing models rather than building a vision system from scratch.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2605.25233",
+      "grade": 2,
+      "rationale": "Directly relevant to LLM agent evaluation with verification mechanisms and error attribution, but focuses on system construction rather than benchmarks/harnesses for reproducible evaluation by one person.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2604.25047",
+      "grade": 0,
+      "rationale": "Entirely unrelated\u2014this is an educational study about online hospitality instruction with no connection to LLM agents, benchmarks, or AI evaluation engineering.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2605.10052",
+      "grade": 2,
+      "rationale": "Relevant to multi-agent coordination engineering with clear technical frameworks and self-evolution mechanisms, but centers on specification and portability rather than reproducible evaluation benchmarks or harnesses.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2604.13882",
+      "grade": 2,
+      "rationale": "Directly relevant to ML fundamentals and evaluation practices; accessible starting point for understanding model assessment without requiring deep mathematical background, though not a buildable portfolio project per se.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2606.06535",
+      "grade": 2,
+      "rationale": "Highly relevant MLOps guidelines paper covering integration and deployment\u2014core practical skills an IT support engineer could apply; synthesizes industry best practices but is primarily advisory rather than a technical hands-on project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.27144",
+      "grade": 1,
+      "rationale": "Specialized computer vision research combining transformers and superpixels; technically advanced and assumes ML background; not a clear entry point for someone with no ML experience seeking buildable starter projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2606.05714",
+      "grade": 3,
+      "rationale": "Excellent fit: applies ML to cybersecurity (domain engineer understands), uses standard libraries (Random Forest, XGBoost, CNN, LSTM), clear dataset provided (CSE-CIC-IDS2018), and is buildable as a portfolio project with reasonable scope.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.17862",
+      "grade": 0,
+      "rationale": "Advanced LLM distillation research requiring prior knowledge of on-policy learning and large language models; not suitable for someone with no ML background seeking entry-level buildable projects.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.09875",
+      "grade": 1,
+      "rationale": "Research on cross-model LLM interpretability and representation transfer; highly specialized and assumes existing ML/LLM knowledge; too advanced for a no-background starter project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.20416",
+      "grade": 1,
+      "rationale": "Niche application combining MLLMs with materials science; requires domain knowledge in crystallography and physics; not a practical entry-level project for building foundational AI skills.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.09085",
+      "grade": 1,
+      "rationale": "Theoretical density estimation framework; mathematically dense and addresses advanced probabilistic modeling; not suitable as an introductory buildable project for someone new to ML.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.13997",
+      "grade": 0,
+      "rationale": "Highly specialized research on Sparse MoE compression using topological methods; requires advanced ML and mathematical background; completely unsuitable for an engineer with no ML experience.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.11559",
+      "grade": 1,
+      "rationale": "Research on MLLM hallucination detection; assumes knowledge of transformers and attention mechanisms; not a practical buildable entry-point project for someone learning AI from scratch.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.30219",
+      "grade": 1,
+      "rationale": "While the paper addresses AI/LLM capabilities, it focuses on theoretical evaluation and reinforcement learning approaches that require deep ML expertise and abstract benchmarking\u2014not a concrete buildable project for someone with no ML background seeking practical portfolio work.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.10641",
+      "grade": 2,
+      "rationale": "Knowledge distillation of vision-language models is a relevant AI project with clear practical goals (model compression, deployment), and the paper cites existing LLaVA codebases that a skilled engineer could potentially adapt and experiment with, making it a plausible portfolio entry point despite the ML background gap.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2604.15238",
+      "grade": 0,
+      "rationale": "Focuses on theoretical neural network stability and control theory via contraction-based LMIs; not related to robot manipulation, sim-to-real transfer, or practical hardware deployment.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2604.27667",
+      "grade": 2,
+      "rationale": "Addresses robot policy learning with sample efficiency improvements, directly relevant to manipulation control; however, lacks explicit sim-to-real transfer focus or discussion of cheap hardware constraints.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2605.02735",
+      "grade": 0,
+      "rationale": "Concerns visual reasoning in multimodal language models; unrelated to robot manipulation, sim-to-real transfer, or embedded control on hardware.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2605.16647",
+      "grade": 0,
+      "rationale": "Focuses on homomorphic encryption for privacy-preserving sequence inference; not applicable to robot manipulation, simulation, or hardware control tasks.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2605.15622",
+      "grade": 1,
+      "rationale": "Zeroth-order optimization without backpropagation could theoretically benefit resource-constrained robot learning, but the paper is abstract methodology without concrete robotics applications or sim-to-real demonstrations.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2605.20971",
+      "grade": 0,
+      "rationale": "Addresses fake image detection and GAN forensics using CNNs; entirely unrelated to robot manipulation, simulation, or hardware control.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2607.01295",
+      "grade": 2,
+      "rationale": "Directly relevant to environmental audio analysis using deep learning for acoustic imaging, but the focus on microphone array processing is somewhat specialized and may not align as strongly with general audio event detection classification.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.16087",
+      "grade": 0,
+      "rationale": "Pure game theory and reinforcement learning paper with no connection to audio, environmental sound classification, or DSP.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.26880",
+      "grade": 0,
+      "rationale": "Clinical NLP and question-answering system entirely unrelated to audio processing, event detection, or environmental sound classification.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2607.03006",
+      "grade": 0,
+      "rationale": "Computer vision paper about scientific poster generation with no relevance to audio, sound classification, or DSP.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.11922",
+      "grade": 0,
+      "rationale": "Mathematical theory paper on free probability and information inequalities with no connection to audio, acoustic analysis, or practical signal processing applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.17076",
+      "grade": 0,
+      "rationale": "This paper focuses on concurrency control for multi-agent LLM state coordination, which is entirely unrelated to the searcher\u0027s stated intent of time series forecasting for financial data and transformer vs. classical methods comparison.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2605.01853",
+      "grade": 0,
+      "rationale": "Focuses on analyzing internal reasoning dynamics in LLMs through hidden-state examination, unrelated to the searcher\u0027s intent of building retrieval-augmented generation and embedding-based search systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2606.00794",
+      "grade": 0,
+      "rationale": "A materials science paper on catalysis prediction using ML models, with no relevance to retrieval augmentation, embedding-based search, or information retrieval systems.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2605.30865",
+      "grade": 0,
+      "rationale": "This paper on continuous glucose monitoring foundation models is entirely unrelated to machine learning for detecting vulnerabilities in source code.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "privacy-preserving-ml",
+      "arxivId": "2607.01295",
+      "grade": 0,
+      "rationale": "This paper addresses acoustic signal processing and microphone array imaging, which has no connection to the searcher\u0027s intent of learning federated learning and differential privacy techniques for healthcare applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2604.15573",
+      "grade": 0,
+      "rationale": "This paper addresses recommender systems and collaborative filtering, which is unrelated to the searcher\u0027s intent of anomaly detection for logs, metrics, or system telemetry.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.08793",
+      "grade": 2,
+      "rationale": "Directly relevant to automated testing and quality engineering with actionable insights on test prioritization and defect prediction, though the focus on architecture and AI integration is broader than the specific intent of fuzzing or flaky test detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "pool"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.26502",
+      "grade": 1,
+      "rationale": "Domain-specific ML application (thin-film optical design) with no connection to clinical research or backend software development, making it tangential to the searcher\u0027s career goals.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.01656",
+      "grade": 2,
+      "rationale": "Clinical domain relevance (neuropsychiatric disorders, biomarker discovery) aligns with background, but requires significant ML expertise and neuroscience data access that would be challenging for a solo weekend project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.10075",
+      "grade": 1,
+      "rationale": "Advanced ML research (LLM evaluation, active learning) is highly technical and not buildable as a weekend project without substantial existing ML expertise.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2606.01443",
+      "grade": 0,
+      "rationale": "Specialized self-supervised learning research with no connection to clinical work or backend engineering relevance.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.07097",
+      "grade": 1,
+      "rationale": "Multi-agent LLM safety evaluation is interesting for ML-adjacent roles but primarily involves prompt engineering and evaluation frameworks rather than building a tangible backend system.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.13904",
+      "grade": 1,
+      "rationale": "Brain encoding and neuroscience visualization research requires specialized domain knowledge and pre-trained models, unsuitable as an independent weekend portfolio project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.25057",
+      "grade": 3,
+      "rationale": "Excellent fit: buildable citation platform combining data engineering, API integration, and web visualization\u2014directly demonstrating backend skills with clear scope, multiple data sources, and a tangible deliverable that showcases versatility for portfolio.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.28639",
+      "grade": 2,
+      "rationale": "Clearly relevant to understanding model behavior and safety; reproducing the probing and attention analysis experiments is plausible and valuable, though implementation complexity and data/model access requirements are moderate.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.15340",
+      "grade": 1,
+      "rationale": "Addresses theoretical learning properties with potential open-science value, but the heavy information-theoretic framing and abstract nature make it tangential to typical portfolio project ambitions around implementable methods or clear empirical protocols.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.27718",
+      "grade": 0,
+      "rationale": "This is a theoretical statistics paper on robust moment-based estimation methods with no connection to financial document analysis, LLM systems, or fintech applications.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.00891",
+      "grade": 0,
+      "rationale": "This paper focuses on vision-language segmentation for images and videos, unrelated to financial document analysis, agentic LLM systems, or fintech use cases.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2605.16352",
+      "grade": 0,
+      "rationale": "This paper focuses on repository navigation and code agent design, which is entirely unrelated to the searcher\u0027s intent of exploring state space models versus attention for time series.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2604.19592",
+      "grade": 0,
+      "rationale": "This paper addresses online learning, multicalibration, and regret minimization theory\u2014fields with no connection to the searcher\u0027s focus on state space models, transformers, or time series architectures.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2604.11315",
+      "grade": 2,
+      "rationale": "Directly addresses model compression through structured sparsity and pruning\u2014core techniques for on-device deployment\u2014though the paper focuses on the specification framework itself rather than end-to-end practical implementation details for mobile platforms.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2604.28028",
+      "grade": 2,
+      "rationale": "Directly addresses low-data scenarios by leveraging recurring patterns in small labeled workloads to improve model performance, making it a relevant and buildable approach for a resource-constrained data scientist.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2605.09225",
+      "grade": 0,
+      "rationale": "LLM security and jailbreak attacks are unrelated to the searcher\u0027s stated intent of ML applied to database internals, query optimization, and index tuning.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2605.02278",
+      "grade": 0,
+      "rationale": "Time series imputation with attention mechanisms is a general ML topic unconnected to database systems, query optimization, or cardinality estimation.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2605.26357",
+      "grade": 0,
+      "rationale": "Reinforcement learning and continual learning in non-stationary environments do not address the searcher\u0027s focus on ML-driven database optimization.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2604.23908",
+      "grade": 0,
+      "rationale": "This paper is about electricity price forecasting using ML/DL models, not about pretraining or fine-tuning language models, making it completely irrelevant to the searcher\u0027s stated goal of building a tiny LLM.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2607.04119",
+      "grade": 0,
+      "rationale": "This paper focuses on CAD modeling sequence reconstruction using reinforcement learning and Decision Transformers\u2014a specialized research problem requiring substantial training data, complex model architectures, and parametric CAD software integration, far beyond a two-weekend webcam project scope.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2606.04104",
+      "grade": 1,
+      "rationale": "While governance and control of agent systems is relevant to LLM evaluation, this paper focuses on runtime governance architecture and compliance rather than benchmarking or evaluation methodology, making it tangential to the searcher\u0027s core intent of finding reproducible evaluation harnesses.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.09382",
+      "grade": 0,
+      "rationale": "This paper addresses advanced neural optimization for specialized combinatorial problems requiring deep ML expertise and is not a practical entry point for someone with no ML background seeking to build their first AI project.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2604.18380",
+      "grade": 0,
+      "rationale": "This is a philosophical and ethical analysis of AI\u0027s role in weapons systems, not a technical paper offering buildable methods or systems that a portfolio-focused engineer could implement.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2605.04295",
+      "grade": 0,
+      "rationale": "Focuses on LLM uncertainty quantification and semantic entropy, which is unrelated to audio event detection or environmental sound classification.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2605.06724",
+      "grade": 1,
+      "rationale": "While it covers signal denoising with deep learning, it specifically targets EEG signals rather than audio/environmental sounds, making it tangential rather than directly applicable to audio event detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.26521",
+      "grade": 0,
+      "rationale": "Addresses neuro-symbolic AI and compositional reasoning using logic networks, with no connection to audio processing or environmental sound classification.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.11784",
+      "grade": 0,
+      "rationale": "Presents a GUI agent framework for automated app interaction; entirely unrelated to audio event detection or sound classification.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2605.08698",
+      "grade": 0,
+      "rationale": "Focuses on image generation and scaling Stable Diffusion models, with no relevance to audio or environmental sound detection.",
+      "judgeModel": "claude-haiku-4-5",
+      "source": "random"
     }
   ]
 }

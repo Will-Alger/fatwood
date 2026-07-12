@@ -29,10 +29,22 @@ public class RankingProfile
     public bool UseHyde { get; set; }
 
     /// <summary>Per-intent stage gating: queries the compiler classified as
-    /// "precise" (exact terms ARE the search) skip the HyDE anchor — measured
-    /// 2026-07-12: HyDE hurt exactly those queries. Null/unknown intent is
-    /// treated as mixed (no gating).</summary>
+    /// "precise" skip the HyDE anchor. Measured 2026-07-12: LOST (0.610 vs
+    /// 0.620) — HyDE helps most precise queries too. Kept for slicing
+    /// experiments; do not enable without a new measured win.</summary>
     public bool UseIntentProfiles { get; set; }
+
+    /// <summary>How the HyDE vector participates in dense retrieval:
+    /// "anchor" — an extra topic in the best-anchor max (shipped 2026-07-12);
+    /// "blend" — folded into the whole-intent vector, denying any single
+    /// plausible-but-off abstract the power to hijack a paper's score.</summary>
+    public string HydeMode { get; set; } = "anchor";
+
+    /// <summary>Blend mode only: the HyDE vector's share of the whole-intent
+    /// blend. 0.5 = equal weight (measured: fixes hijack outliers but dilutes
+    /// broadly — a wash); lower values trade hijack-proofing for less dilution.</summary>
+    [Range(0.05, 0.95)]
+    public float HydeBlendWeight { get; set; } = 0.5f;
 
     [Range(0.01, 10)]
     public float SimilarityWeight { get; set; } = 1f;

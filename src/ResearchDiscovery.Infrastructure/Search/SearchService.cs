@@ -160,16 +160,25 @@ public class SearchService(
             }
         }
 
-        // HyDE: the hypothetical ideal-paper abstract joins the anchor set.
+        // HyDE: the hypothetical ideal-paper abstract joins dense retrieval.
         // Embedded WITHOUT the query prefix — it's document-shaped text, and
-        // the point is matching it against document-side embeddings. Precise
-        // queries skip it under intent profiles: their exact words are already
-        // the best anchors, and the abstract can only dilute them.
+        // the point is matching it against document-side embeddings. "anchor"
+        // mode adds it to the best-topic max; "blend" folds it into the
+        // whole-intent vector instead, so an off-target abstract can tilt but
+        // never single-handedly hijack a paper's score.
         var hydeGatedOff = profile.UseIntentProfiles
             && string.Equals(plan.Intent, "precise", StringComparison.OrdinalIgnoreCase);
         if (profile.UseHyde && !hydeGatedOff && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract))
         {
-            topicVectors.Add(await embedder.EmbedAsync(plan.HypotheticalAbstract, ct));
+            var hydeVector = await embedder.EmbedAsync(plan.HypotheticalAbstract, ct);
+            if (string.Equals(profile.HydeMode, "blend", StringComparison.OrdinalIgnoreCase))
+            {
+                primaryVector = BlendUnit(primaryVector, hydeVector, profile.HydeBlendWeight);
+            }
+            else
+            {
+                topicVectors.Add(hydeVector);
+            }
         }
 
         var pool = (await index.TopMultiAsync(
@@ -398,6 +407,31 @@ public class SearchService(
     /// compiler's contract); each topic becomes its own query vector. Falls
     /// back to the whole text when there's nothing to split.
     /// </summary>
+    /// <summary>Weighted sum of two unit vectors, renormalized — cosine against
+    /// the result is the (weighted) average of the cosines against each part.
+    /// bWeight is b's share; a gets the rest.</summary>
+    internal static float[] BlendUnit(float[] a, float[] b, float bWeight = 0.5f)
+    {
+        var v = new float[a.Length];
+        var normSq = 0f;
+        for (var i = 0; i < a.Length; i++)
+        {
+            v[i] = (1 - bWeight) * a[i] + bWeight * b[i];
+            normSq += v[i] * v[i];
+        }
+
+        var norm = MathF.Sqrt(normSq);
+        if (norm > 0)
+        {
+            for (var i = 0; i < v.Length; i++)
+            {
+                v[i] /= norm;
+            }
+        }
+
+        return v;
+    }
+
     internal static List<string> SplitAnchors(string anchorText)
     {
         var topics = anchorText

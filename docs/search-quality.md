@@ -159,7 +159,16 @@ and future learning-to-rank features.
    vectors); eval plans got abstracts grafted onto frozen anchors so the
    baseline stayed bit-identical (`eval compile` backfills this
    automatically for plans that predate the field).
-9. **Intent-gated HyDE lost** (2026-07-12, same day): the obvious follow-up
+9. **HyDE blend modes lost twice** (2026-07-12): folding the HyDE vector
+   into the whole-intent vector instead of the anchor max. Equal-weight
+   blend: 0.617 vs 0.619 anchor — fixes both hijack outliers spectacularly
+   (speculative-decoding 0.587→0.772, llm-agents-swe 0.639→0.840, proving
+   the hijack mechanism) but pays a small dilution tax on ~20 other queries.
+   75/25 primary/hyde: 0.607 — worse than both; partial weight keeps the
+   dilution and loses the fix. Anchor mode stays; the two outliers are an
+   accepted, documented cost. `Ranking:HydeMode` + `HydeBlendWeight` remain
+   for future re-tests (e.g. under a different embedder).
+10. **Intent-gated HyDE lost** (2026-07-12, same day): the obvious follow-up
    — compiler classifies query_style (precise/exploratory/mixed), precise
    queries skip the HyDE anchor — scored 0.610 vs 0.620, because HyDE helps
    17 of the 21 precise queries (kv-cache-serving −0.09 under the gate,
@@ -218,15 +227,15 @@ via `eval adopt` as real usage accumulates).
 ~~Reranker retry~~ — CLOSED for the MS MARCO family (lesson 7); reopen only
 with a sentencepiece/BPE tokenizer path for a genuinely different model.
 
-~~Per-intent HyDE gating~~ — MEASURED AND REJECTED same day (lesson 9);
+~~Per-intent HyDE gating~~ — MEASURED AND REJECTED same day (lesson 10);
 the `intent` field remains on plans for slicing/telemetry/LTR.
+~~HyDE blend modes~~ — MEASURED AND REJECTED same day, twice (lesson 9).
 
 1. **Judge calibration**: human spot-audit + sonnet double-judge agreement
    (makes all numbers trustworthy).
-1b. **HyDE outlier autopsy** (cheap): read the compiled hypothetical
-   abstracts for speculative-decoding and llm-agents-swe against their
-   result lists — if the abstracts are off-target, the fix is compiler
-   prompt wording, not ranking.
+   (HyDE outlier autopsy: DONE — abstracts were on-target; cause is the
+   anchor-max hijack mechanism, confirmed by the blend experiment in
+   lesson 9; no compiler fix available, cost accepted.)
 3. **Recency-normalized citations** (citations/day) as a blend feature.
 4. **Interleaving in anger**: HyDE-off vs HyDE-on as first live candidate —
    the offline delta is +0.02; a click-vote confirmation would be free.
