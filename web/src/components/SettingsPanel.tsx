@@ -123,7 +123,14 @@ export function SettingsPanel({
                   </>
                 )}
               </p>
-              <button type="button" onClick={() => void signOut()}>
+              <button
+                type="button"
+                onClick={() => {
+                  // No redirect flow anymore: clear the local session and
+                  // reload so every piece of account state resets.
+                  void signOut().finally(() => window.location.reload())
+                }}
+              >
                 Sign out
               </button>
             </>

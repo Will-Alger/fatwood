@@ -118,11 +118,29 @@ builder.Services.AddRateLimiter(options =>
                 AutoReplenishment = true,
             }));
 
+    // Native-auth proxy: Entra sees our egress IP, so per-caller brute-force
+    // braking happens here. Generous enough for a real sign-up (start,
+    // challenge, OTP retries, token) with room to fumble a password.
+    options.AddPolicy("auth", ctx =>
+        RateLimitPartition.GetTokenBucketLimiter(
+            RateLimiterKey(ctx),
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 30,
+                TokensPerPeriod = 10,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
     static string RateLimiterKey(HttpContext ctx) =>
         ctx.User.FindFirst("oid")?.Value
             ?? ctx.Connection.RemoteIpAddress?.ToString()
             ?? "unknown";
 });
+
+builder.Services.AddHttpClient(NativeAuthProxy.HttpClientName, client =>
+    client.Timeout = TimeSpan.FromSeconds(30));
 
 builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
@@ -181,6 +199,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapNativeAuthProxy(authOptions.Authority);
 
 // Serves the built React SPA in the single-container deployment. Registered
 // after MapControllers so /api/* always wins.

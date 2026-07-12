@@ -6,7 +6,6 @@ import {
   runSearch,
 } from '../api/client'
 import type { LlmSettingsView, MeView, SearchPlan, SearchResult } from '../api/types'
-import { signIn } from '../auth/auth'
 import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
 import { PaperCard } from './PaperCard'
 import { EmberDots, PaperSkeletons } from './Skeletons'
@@ -35,9 +34,10 @@ interface DiscoverProps {
   llmSettings: LlmSettingsView | null
   me: MeView | null
   signedOut: boolean
+  onSignIn: () => void
 }
 
-export function Discover({ llmSettings, me, signedOut }: DiscoverProps) {
+export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps) {
   const [query, setQuery] = useState('')
   const [lastCompiledQuery, setLastCompiledQuery] = useState<string | null>(null)
   const [plan, setPlanState] = useState<SearchPlan | null>(null)
@@ -262,7 +262,7 @@ export function Discover({ llmSettings, me, signedOut }: DiscoverProps) {
 
       {signedOut && (
         <p className="status">
-          <button type="button" className="link-button" onClick={() => void signIn()}>
+          <button type="button" className="link-button" onClick={onSignIn}>
             Sign in
           </button>{' '}
           to search — every account gets a free search &amp; analysis budget. Browsing papers

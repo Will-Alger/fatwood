@@ -1,77 +1,69 @@
 import {
-  InteractionRequiredAuthError,
-  PublicClientApplication,
-  type AccountInfo,
-} from '@azure/msal-browser'
-import { AUTH_CONFIG, LOGIN_SCOPES } from './config'
+  CustomAuthPublicClientApplication,
+  type CustomAuthConfiguration,
+  type ICustomAuthPublicClientApplication,
+} from '@azure/msal-browser/custom-auth'
+import { AUTH_CONFIG } from './config'
 
-// One MSAL instance for the app. Redirect flow (not popup): it works on
-// mobile and inside strict popup blockers, and the app is fine with a full
-// page round-trip on sign-in.
-const msal = new PublicClientApplication({
+// Native authentication: sign-in/sign-up/reset render as our own UI and the
+// SDK talks to the tenant through our same-origin /auth-proxy (the native
+// auth API has no CORS support by design). The user never leaves fatwood.io.
+const config: CustomAuthConfiguration = {
+  customAuth: {
+    challengeTypes: ['password', 'oob', 'redirect'],
+    authApiProxyUrl: `${window.location.origin}/auth-proxy`,
+  },
   auth: {
     clientId: AUTH_CONFIG.clientId,
-    authority: AUTH_CONFIG.authority,
-    knownAuthorities: [AUTH_CONFIG.knownAuthority],
-    redirectUri: window.location.origin,
-    postLogoutRedirectUri: window.location.origin,
+    authority: `https://${AUTH_CONFIG.knownAuthority}`,
+    redirectUri: '/',
+    postLogoutRedirectUri: '/',
   },
   cache: {
     // localStorage so the session survives tab closes; tokens are short-lived
-    // and refresh silently.
+    // and refresh silently via the cached refresh token.
     cacheLocation: 'localStorage',
   },
-})
-
-let ready: Promise<void> | null = null
-
-/** Must complete before anything calls getAccessToken (handles the redirect return leg). */
-export function initAuth(): Promise<void> {
-  ready ??= (async () => {
-    await msal.initialize()
-    const result = await msal.handleRedirectPromise()
-    if (result?.account) {
-      msal.setActiveAccount(result.account)
-    } else if (!msal.getActiveAccount() && msal.getAllAccounts().length > 0) {
-      msal.setActiveAccount(msal.getAllAccounts()[0])
-    }
-  })()
-  return ready
 }
 
-export function getAccount(): AccountInfo | null {
-  return msal.getActiveAccount()
+let appPromise: Promise<ICustomAuthPublicClientApplication> | null = null
+
+function getApp(): Promise<ICustomAuthPublicClientApplication> {
+  appPromise ??= CustomAuthPublicClientApplication.create(config)
+  return appPromise
 }
 
-export function signIn(): Promise<void> {
-  return msal.loginRedirect({ scopes: [...LOGIN_SCOPES] })
+/** Kept for main.tsx: ensures the SDK is initialized before first render. */
+export async function initAuth(): Promise<void> {
+  await getApp()
 }
 
-export function signOut(): Promise<void> {
-  return msal.logoutRedirect()
+/** The SDK instance — the AuthPanel drives sign-in/sign-up/reset flows on it. */
+export function getAuthApp(): Promise<ICustomAuthPublicClientApplication> {
+  return getApp()
 }
 
 /**
  * Bearer token for the API, or null when nobody is signed in (anonymous
  * browse, or local dev where the server authenticates everything itself).
- * Silent first; an expired session falls back to the redirect flow.
+ * Served from cache; silently renewed with the refresh token when expired.
  */
 export async function getAccessToken(): Promise<string | null> {
-  await initAuth()
-  const account = msal.getActiveAccount()
-  if (!account) return null
+  const app = await getApp()
+  const account = app.getCurrentAccount()
+  if (!account.data) return null
 
-  try {
-    const result = await msal.acquireTokenSilent({
-      scopes: [AUTH_CONFIG.apiScope],
-      account,
-    })
-    return result.accessToken
-  } catch (error) {
-    if (error instanceof InteractionRequiredAuthError) {
-      await msal.acquireTokenRedirect({ scopes: [AUTH_CONFIG.apiScope], account })
-      return null // unreachable: redirect navigates away
-    }
-    throw error
+  const result = await account.data.getAccessToken({
+    forceRefresh: false,
+    scopes: [AUTH_CONFIG.apiScope],
+  })
+  return result.data?.accessToken ?? null
+}
+
+export async function signOut(): Promise<void> {
+  const app = await getApp()
+  const account = app.getCurrentAccount()
+  if (account.data) {
+    await account.data.signOut()
   }
 }

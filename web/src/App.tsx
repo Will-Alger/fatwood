@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getLlmSettings, redeemInvite, setThemePreference } from './api/client'
 import type { LlmSettingsView, SortOrder } from './api/types'
-import { signIn } from './auth/auth'
 import { AdminPanel } from './components/AdminPanel'
+import { AuthPanel } from './components/AuthPanel'
 import { CategoryFilter } from './components/CategoryFilter'
 import { Discover } from './components/Discover'
 import { Logo } from './components/Logo'
@@ -26,6 +26,7 @@ function currentTheme(): Theme {
 export default function App() {
   const [tab, setTab] = useState<Tab>('discover')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
   const [llmSettings, setLlmSettings] = useState<LlmSettingsView | null>(null)
   const [theme, setTheme] = useState<Theme>(currentTheme)
   const [inviteCode, setInviteCode] = useState('')
@@ -128,7 +129,7 @@ export default function App() {
               </span>
             )}
             {ready && signedOut && (
-              <button type="button" className="signin-button" onClick={() => void signIn()}>
+              <button type="button" className="signin-button" onClick={() => setAuthOpen(true)}>
                 Sign in
               </button>
             )}
@@ -207,7 +208,12 @@ export default function App() {
       {/* Both panes stay mounted so switching tabs never loses state
           (search results, filters, scroll positions). */}
       <div style={{ display: tab === 'discover' ? undefined : 'none' }}>
-        <Discover llmSettings={llmSettings} me={me} signedOut={signedOut} />
+        <Discover
+          llmSettings={llmSettings}
+          me={me}
+          signedOut={signedOut}
+          onSignIn={() => setAuthOpen(true)}
+        />
       </div>
       {tab === 'admin' && me?.role === 'Admin' && (
         <div className="app-body app-body-single">
@@ -268,6 +274,13 @@ export default function App() {
           />
         </main>
       </div>
+
+      {authOpen && (
+        <AuthPanel
+          onClose={() => setAuthOpen(false)}
+          onSignedIn={refresh}
+        />
+      )}
 
       {settingsOpen && (
         <SettingsPanel
