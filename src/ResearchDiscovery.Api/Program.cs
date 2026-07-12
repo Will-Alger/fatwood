@@ -53,9 +53,12 @@ builder.Services.AddOpenApi();
 var authOptions = builder.Configuration
     .GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
 
+var authEvents = builder.Configuration
+    .GetSection(AuthEventsOptions.SectionName).Get<AuthEventsOptions>() ?? new AuthEventsOptions();
+
 if (authOptions.Enabled)
 {
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    var authBuilder = builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
             options.Authority = authOptions.Authority;
@@ -66,6 +69,18 @@ if (authOptions.Enabled)
             options.TokenValidationParameters.NameClaimType = "name";
             options.TokenValidationParameters.RoleClaimType = "roles";
         });
+
+    // Entra's custom-extension callbacks (OTP emails) authenticate with a
+    // different audience: the auth-events app registration.
+    if (authEvents.Enabled)
+    {
+        authBuilder.AddJwtBearer(ResearchDiscovery.Api.Controllers.AuthEventsController.Scheme, options =>
+        {
+            options.Authority = authOptions.Authority;
+            options.Audience = authEvents.Audience;
+            options.MapInboundClaims = false;
+        });
+    }
 }
 else if (builder.Environment.IsProduction() && !authOptions.DangerouslyAllowAnonymous)
 {

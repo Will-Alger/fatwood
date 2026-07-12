@@ -41,6 +41,13 @@ param userAuthAudience string = ''
 @description('Email promoted to Admin on first sign-in (bootstraps the first admin account).')
 param bootstrapAdminEmail string = 'algerw@icloud.com'
 
+@secure()
+@description('Azure Communication Services connection string for branded OTP emails. Empty = Microsoft default emails.')
+param acsConnectionString string = ''
+
+@description('Auth-events app registration client id (audience of Entra custom-extension callbacks). Empty = hook disabled.')
+param authEventsAudience string = ''
+
 // ------------------------------------------------------- Entra ID Easy Auth
 // When authClientId is set, Container Apps authentication (Easy Auth) fronts
 // EVERY request: unauthenticated visitors are 302-redirected to Microsoft
@@ -176,6 +183,12 @@ resource secretAnthropicKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   properties: { value: anthropicApiKey }
 }
 
+resource secretAcsConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'acs-connection-string'
+  properties: { value: acsConnectionString }
+}
+
 resource secretAuthClient 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (authEnabled) {
   parent: keyVault
   name: 'auth-client-secret'
@@ -235,6 +248,11 @@ var kvSecrets = [
     keyVaultUrl: '${keyVault.properties.vaultUri}secrets/anthropic-api-key'
     identity: appIdentity.id
   }
+  {
+    name: 'acs-connection-string'
+    keyVaultUrl: '${keyVault.properties.vaultUri}secrets/acs-connection-string'
+    identity: appIdentity.id
+  }
 ]
 
 var registries = [
@@ -287,6 +305,10 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'Auth__Audience', value: userAuthAudience }
             { name: 'Auth__DangerouslyAllowAnonymous', value: empty(userAuthAuthority) ? 'true' : 'false' }
             { name: 'Accounts__BootstrapAdminEmails__0', value: bootstrapAdminEmail }
+            // Branded OTP verification email (Entra custom email provider →
+            // our /api/auth-events/otp-send → ACS). Empty = Microsoft's email.
+            { name: 'Email__AcsConnectionString', secretRef: 'acs-connection-string' }
+            { name: 'AuthEvents__Audience', value: authEventsAudience }
             // Migrations run as a one-off job in CD, never at app startup.
             { name: 'Database__MigrateOnStartup', value: 'false' }
             // The in-process scheduler dies with scale-to-zero; the cron job
@@ -310,7 +332,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
   // The secret resources are explicit dependencies: referencing only the
   // vault URI would let the app provision before the secrets exist, and the
   // ACA data plane resolves them at provision time.
-  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey, secretAcsConnection]
 }
 
 // Entra ID login in front of the entire site: unauthenticated requests are
@@ -376,7 +398,7 @@ resource migrateJob 'Microsoft.App/jobs@2024-03-01' = {
       ]
     }
   }
-  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey, secretAcsConnection]
 }
 
 // Daily delta ingestion as an ACA cron job on the same image (the README's
@@ -423,7 +445,7 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
       ]
     }
   }
-  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey]
+  dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey, secretAcsConnection]
 }
 
 output acrLoginServer string = acr.properties.loginServer

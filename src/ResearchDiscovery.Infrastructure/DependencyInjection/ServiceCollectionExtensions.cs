@@ -8,6 +8,7 @@ using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Accounts;
 using ResearchDiscovery.Infrastructure.Analysis;
+using ResearchDiscovery.Infrastructure.Email;
 using ResearchDiscovery.Infrastructure.Arxiv;
 using ResearchDiscovery.Infrastructure.Embeddings;
 using ResearchDiscovery.Infrastructure.Enrichment;
@@ -58,6 +59,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserAccountService, UserAccountService>();
         services.AddScoped<IUserKeyService, UserKeyService>();
         services.AddScoped<AnthropicCallFactory>();
+
+        // Branded OTP verification emails (Entra custom email provider hook).
+        services.AddOptions<EmailOptions>()
+            .Bind(configuration.GetSection(EmailOptions.SectionName));
+        services.AddOptions<AuthEventsOptions>()
+            .Bind(configuration.GetSection(AuthEventsOptions.SectionName));
+        services.AddSingleton<OtpEmailSender>();
 
         // Data Protection encrypts users' BYO Anthropic keys; the key ring
         // persists in the database so restarts/replicas share it. Upgrade
