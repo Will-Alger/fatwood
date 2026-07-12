@@ -13,4 +13,13 @@ export const AUTH_CONFIG = {
     'api://f3ab7456-495b-4264-af68-963341125d4e/access_as_user',
 } as const
 
-export const LOGIN_SCOPES = ['openid', 'profile', 'email', AUTH_CONFIG.apiScope]
+// offline_access is REQUIRED for native auth: without it the token endpoint
+// returns no refresh token and the custom-auth SDK fails the whole sign-in
+// ("Refresh token is missing in the response body").
+export const LOGIN_SCOPES = [
+  'openid',
+  'profile',
+  'email',
+  'offline_access',
+  AUTH_CONFIG.apiScope,
+]
