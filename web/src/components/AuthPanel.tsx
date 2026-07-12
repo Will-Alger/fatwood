@@ -178,6 +178,38 @@ export function AuthPanel({ onClose, onSignedIn }: AuthPanelProps) {
     }
   }
 
+  const [resent, setResent] = useState(false)
+
+  async function resendCode() {
+    setBusy(true)
+    setError(null)
+    setResent(false)
+    try {
+      const state = flowState as { resendCode?: () => Promise<never> }
+      if (!state.resendCode) {
+        fail('Could not resend — go back and start over.')
+        return
+      }
+      const result = (await state.resendCode()) as {
+        isFailed: () => boolean
+        error?: unknown
+        state?: unknown
+      }
+      if (result.isFailed()) {
+        fail(describeError(result.error))
+        return
+      }
+      // Resending yields a fresh code-required state; keep driving that one.
+      if (result.state) {
+        setFlowState(result.state)
+      }
+      setResent(true)
+      setBusy(false)
+    } catch (err) {
+      fail(err instanceof Error ? err.message : 'Could not resend the code.')
+    }
+  }
+
   async function submitNewPassword() {
     setBusy(true)
     setError(null)
@@ -270,8 +302,10 @@ export function AuthPanel({ onClose, onSignedIn }: AuthPanelProps) {
             }}
           >
             <p className="settings-hint">
-              We emailed a verification code to <strong>{email.trim()}</strong>. Enter it here.
+              We emailed a verification code to <strong>{email.trim()}</strong>. Enter it here —
+              and check your spam folder, the sender is Microsoft on our behalf.
             </p>
+            {resent && <p className="status status-notice">A fresh code is on its way.</p>}
             <label>
               Verification code
               <input
@@ -285,6 +319,14 @@ export function AuthPanel({ onClose, onSignedIn }: AuthPanelProps) {
             </label>
             <button type="submit" className="primary-button" disabled={busy || !code.trim()}>
               {busy ? 'Verifying…' : 'Verify'}
+            </button>
+            <button
+              type="button"
+              className="link-button"
+              disabled={busy}
+              onClick={() => void resendCode()}
+            >
+              Didn't get it? Resend the code
             </button>
           </form>
         )}
