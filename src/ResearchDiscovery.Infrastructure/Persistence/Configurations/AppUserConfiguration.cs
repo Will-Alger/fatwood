@@ -19,5 +19,7 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.Property(u => u.DisplayName).HasMaxLength(128).IsRequired();
         builder.Property(u => u.Role).HasConversion<string>().HasMaxLength(16);
         builder.Property(u => u.ThemePreference).HasMaxLength(16);
+        builder.Property(u => u.EncryptedAnthropicKey).HasMaxLength(1024);
+        builder.Property(u => u.AnthropicKeyLast4).HasMaxLength(8);
     }
 }

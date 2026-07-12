@@ -17,8 +17,7 @@ namespace ResearchDiscovery.Infrastructure.Analysis;
 /// optional configured fallback model.
 /// </summary>
 public class AnthropicPaperAnalyzer(
-    AnthropicClient client,
-    ILlmSettingsService settings,
+    Llm.AnthropicCallFactory callFactory,
     ILlmUsageRecorder usage,
     IOptions<AnalysisOptions> options,
     ILogger<AnthropicPaperAnalyzer> logger) : IPaperAnalyzer
@@ -27,7 +26,7 @@ public class AnthropicPaperAnalyzer(
         Paper paper, string? profileDescription, int profileVersion, CancellationToken ct)
     {
         var opts = options.Value;
-        var model = await settings.GetModelForStepAsync(LlmOptions.StepPaperAnalysis, ct);
+        var (client, model) = await callFactory.ResolveAsync(LlmOptions.StepPaperAnalysis, ct);
 
         var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
             AnalysisContract.SchemaJson)!;

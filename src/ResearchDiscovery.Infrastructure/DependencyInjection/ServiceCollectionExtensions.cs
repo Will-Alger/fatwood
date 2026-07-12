@@ -1,4 +1,5 @@
 using Anthropic;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +56,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILlmUsageRecorder, LlmUsageRecorder>();
         services.AddScoped<IBudgetService, BudgetService>();
         services.AddScoped<IUserAccountService, UserAccountService>();
+        services.AddScoped<IUserKeyService, UserKeyService>();
+        services.AddScoped<AnthropicCallFactory>();
+
+        // Data Protection encrypts users' BYO Anthropic keys; the key ring
+        // persists in the database so restarts/replicas share it. Upgrade
+        // path: ProtectKeysWithAzureKeyVault for at-rest key-ring encryption.
+        services.AddDataProtection()
+            .SetApplicationName("Fatwood")
+            .PersistKeysToDbContext<AppDbContext>();
 
         // The single provider-specific registration in the entire codebase.
         // Swapping to SQL Server = swap the Npgsql package for

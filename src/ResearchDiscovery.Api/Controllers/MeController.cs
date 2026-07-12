@@ -29,7 +29,8 @@ public class MeController(
         string Role,
         bool IsActive,
         string? Theme,
-        BudgetView Budget);
+        BudgetView Budget,
+        string? ByoKeyLast4);
 
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct)
@@ -46,7 +47,47 @@ public class MeController(
             user.ThemePreference,
             new BudgetView(
                 budget.GrantedMicros, budget.SpentMicros, budget.RemainingMicros,
-                budget.Unlimited)));
+                budget.Unlimited),
+            user.AnthropicKeyLast4));
+    }
+
+    public sealed record KeyRequest(string ApiKey);
+
+    /// <summary>
+    /// Stores the caller's own Anthropic API key (encrypted; write-only —
+    /// no endpoint ever returns it). Calls made with it are the caller's own
+    /// spend and never touch the platform budget.
+    /// </summary>
+    [HttpPut("anthropic-key")]
+    [Authorize(Policy = AuthPolicies.ActiveUser)]
+    public async Task<IActionResult> SetAnthropicKey(
+        [FromBody] KeyRequest request,
+        [FromServices] IUserKeyService keys,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.ApiKey))
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "apiKey is required.");
+        }
+
+        try
+        {
+            var last4 = await keys.SetAsync(HttpContext.GetAppUser()!.Id, request.ApiKey, ct);
+            return Ok(new { last4 });
+        }
+        catch (InvalidUserKeyException ex)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+        }
+    }
+
+    [HttpDelete("anthropic-key")]
+    public async Task<IActionResult> RemoveAnthropicKey(
+        [FromServices] IUserKeyService keys, CancellationToken ct)
+    {
+        await keys.RemoveAsync(HttpContext.GetAppUser()!.Id, ct);
+        return NoContent();
     }
 
     public sealed record ThemeRequest(string? Theme);

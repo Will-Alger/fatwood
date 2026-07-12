@@ -45,5 +45,11 @@ public class LlmOptions
         /// <summary>USD per million output tokens.</summary>
         [Range(0, 1000)]
         public decimal OutputPerMTok { get; set; }
+
+        /// <summary>
+        /// Premium models never run on the platform key: without a BYO key the
+        /// call silently falls back to the step's default model.
+        /// </summary>
+        public bool RequiresByoKey { get; set; }
     }
 }

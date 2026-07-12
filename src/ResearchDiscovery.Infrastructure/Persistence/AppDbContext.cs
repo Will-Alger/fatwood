@@ -1,11 +1,20 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ResearchDiscovery.Domain.Entities;
 
 namespace ResearchDiscovery.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+/// <summary>
+/// Also hosts the Data Protection key ring (IDataProtectionKeyContext) so
+/// encrypted-at-rest values (users' BYO Anthropic keys) survive container
+/// restarts without extra storage infrastructure.
+/// </summary>
+public class AppDbContext(DbContextOptions<AppDbContext> options)
+    : DbContext(options), IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public DbSet<Paper> Papers => Set<Paper>();
 
     public DbSet<Category> Categories => Set<Category>();

@@ -194,6 +194,14 @@ export function redeemInvite(code: string): Promise<void> {
   return sendJson('POST', '/api/me/invite', { code })
 }
 
+export function setAnthropicKey(apiKey: string): Promise<{ last4: string }> {
+  return sendJson('PUT', '/api/me/anthropic-key', { apiKey })
+}
+
+export function removeAnthropicKey(): Promise<void> {
+  return sendJson('DELETE', '/api/me/anthropic-key', undefined)
+}
+
 // --- Admin: accounts ---
 
 export function getAdminUsers(query?: string, signal?: AbortSignal): Promise<AdminUserView[]> {

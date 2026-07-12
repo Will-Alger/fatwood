@@ -15,8 +15,7 @@ namespace ResearchDiscovery.Infrastructure.Search;
 /// an embedding model can match against abstracts.
 /// </summary>
 public class AnthropicSearchPlanCompiler(
-    AnthropicClient client,
-    ILlmSettingsService settings,
+    Llm.AnthropicCallFactory callFactory,
     ILlmUsageRecorder usage,
     ILogger<AnthropicSearchPlanCompiler> logger) : ISearchPlanCompiler
 {
@@ -68,7 +67,7 @@ public class AnthropicSearchPlanCompiler(
         IReadOnlyList<string> knownCategories,
         CancellationToken ct)
     {
-        var model = await settings.GetModelForStepAsync(LlmOptions.StepQueryCompiler, ct);
+        var (client, model) = await callFactory.ResolveAsync(LlmOptions.StepQueryCompiler, ct);
         var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(SchemaJson)!;
 
         var profileBlock = string.IsNullOrWhiteSpace(profile)

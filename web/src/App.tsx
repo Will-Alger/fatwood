@@ -275,6 +275,7 @@ export default function App() {
           signedOut={signedOut}
           onClose={() => setSettingsOpen(false)}
           onSettingsChanged={setLlmSettings}
+          onAccountChanged={refresh}
         />
       )}
 

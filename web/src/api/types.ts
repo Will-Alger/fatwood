@@ -138,6 +138,7 @@ export interface MeView {
   isActive: boolean
   theme: 'dark' | 'light' | null
   budget: BudgetView
+  byoKeyLast4: string | null
 }
 
 export interface AdminUserView {

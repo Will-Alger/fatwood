@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import {
   getLlmSettings,
   getProfile,
+  removeAnthropicKey,
   saveProfile,
+  setAnthropicKey,
   setLlmAssignment,
 } from '../api/client'
 import type { LlmSettingsView, MeView, ProfileView } from '../api/types'
@@ -19,13 +21,23 @@ interface SettingsPanelProps {
   signedOut: boolean
   onClose: () => void
   onSettingsChanged: (settings: LlmSettingsView | null) => void
+  /** Called after account-level changes (BYO key set/removed) so /api/me refetches. */
+  onAccountChanged?: () => void
 }
 
-export function SettingsPanel({ me, signedOut, onClose, onSettingsChanged }: SettingsPanelProps) {
+export function SettingsPanel({
+  me,
+  signedOut,
+  onClose,
+  onSettingsChanged,
+  onAccountChanged,
+}: SettingsPanelProps) {
   const [settings, setSettings] = useState<LlmSettingsView | null>(null)
   const [profile, setProfile] = useState<ProfileView | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [keyInput, setKeyInput] = useState('')
+  const [keyBusy, setKeyBusy] = useState(false)
 
   const isAdmin = me?.role === 'Admin'
   const isActive = me?.isActive === true
@@ -121,6 +133,72 @@ export function SettingsPanel({ me, signedOut, onClose, onSettingsChanged }: Set
             <p className="settings-hint">Loading account…</p>
           )}
         </section>
+
+        {me?.isActive && (
+          <section>
+            <h3>Your Anthropic API key</h3>
+            <p className="settings-hint">
+              Optional. Add your own key and searches/analyses bill your Anthropic account
+              instead of your free budget here — it also unlocks premium models like Opus.
+              The key is stored encrypted and can never be viewed again through the app
+              (only replaced or removed). Plain talk: the server does decrypt it to call
+              Anthropic for you, so only add a key if you trust the operator — and set a
+              spend limit on it in the Anthropic console.
+            </p>
+            {me.byoKeyLast4 ? (
+              <div className="settings-row">
+                <span className="category-code">sk-ant-…{me.byoKeyLast4}</span>
+                <button
+                  type="button"
+                  disabled={keyBusy}
+                  onClick={() => {
+                    setKeyBusy(true)
+                    setError(null)
+                    removeAnthropicKey()
+                      .then(() => {
+                        setStatus('Your API key was removed.')
+                        onAccountChanged?.()
+                      })
+                      .catch((err: unknown) =>
+                        setError(err instanceof Error ? err.message : 'Could not remove the key'))
+                      .finally(() => setKeyBusy(false))
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="settings-row">
+                <input
+                  type="password"
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  placeholder="sk-ant-…"
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  disabled={keyBusy || keyInput.trim() === ''}
+                  onClick={() => {
+                    setKeyBusy(true)
+                    setError(null)
+                    setAnthropicKey(keyInput.trim())
+                      .then(() => {
+                        setKeyInput('')
+                        setStatus('Key verified and saved. Premium models are now available to you.')
+                        onAccountChanged?.()
+                      })
+                      .catch((err: unknown) =>
+                        setError(err instanceof Error ? err.message : 'Could not save the key'))
+                      .finally(() => setKeyBusy(false))
+                  }}
+                >
+                  {keyBusy ? 'Verifying…' : 'Save'}
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
         {profile && (
           <section>

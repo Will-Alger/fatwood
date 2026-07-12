@@ -28,6 +28,18 @@ public class AppUser
     /// <summary>"dark" or "light"; null = client default.</summary>
     public string? ThemePreference { get; set; }
 
+    /// <summary>
+    /// The user's own Anthropic API key, encrypted with Data Protection.
+    /// Write-only through the API: set, replace, or delete — never returned.
+    /// Calls made with it never debit the platform budget.
+    /// </summary>
+    public string? EncryptedAnthropicKey { get; set; }
+
+    /// <summary>Last 4 characters, the only fragment ever shown back.</summary>
+    public string? AnthropicKeyLast4 { get; set; }
+
+    public DateTimeOffset? AnthropicKeySetUtc { get; set; }
+
     public DateTimeOffset CreatedUtc { get; set; }
 
     public DateTimeOffset LastSeenUtc { get; set; }
