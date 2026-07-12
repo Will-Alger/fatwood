@@ -52,8 +52,12 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 - **Improve from real usage — with a human in the loop.** Every search and
   reaction is logged; reports surface biases and candidates; nothing retunes
   itself automatically. Detect automatically, tweak deliberately.
+- **Open to anyone, safe to run.** Real accounts (Entra External ID, rendered
+  natively in-app), a per-user dollar budget bounding every account's spend,
+  rate limiting and bot protection at every layer, and cost alarms above it
+  all — shareable without fearing the bill.
 - **Production-grade, portable engineering.** Provider-swappable database,
-  81 tests, infrastructure as code, CI/CD — built to hold up under review.
+  89 tests, infrastructure as code, CI/CD — built to hold up under review.
 
 ## How a sentence becomes insights
 
@@ -88,9 +92,11 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 | Search | Local ONNX embeddings (bge-small-en-v1.5) + in-memory BM25, Reciprocal Rank Fusion, optional cross-encoder |
 | LLM | Anthropic API (structured outputs), config-driven model registry with per-step selection and pricing |
 | Frontend | React + TypeScript (Vite), no UI framework |
+| Accounts | Entra External ID with native (in-app) auth, per-user budget ledger, BYO API keys (encrypted, write-only), branded email via Azure Communication Services |
+| Edge | Cloudflare (DDoS/bot protection, strict TLS), ASP.NET rate limiting, CSP/HSTS |
 | Quality | Offline IR eval harness (nDCG/Recall/MRR vs LLM-judged ground truth), search telemetry, interleaving experiments |
 | Delivery | Docker single-image (API + SPA), Bicep IaC, GitHub Actions CI/CD (OIDC, no cloud secrets), Azure Container Apps + cron jobs, Key Vault |
-| Tests | 81 xUnit tests: unit (real fixtures, pinned metrics) + integration (full API over in-memory Sqlite) |
+| Tests | 89 xUnit tests: unit (real fixtures, pinned metrics) + integration (full API over in-memory Sqlite) |
 
 ## Documentation
 
@@ -98,6 +104,7 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 |---|---|
 | [docs/running.md](docs/running.md) | Prerequisites, local dev loop, packaged app, configuration, SQL Server swap, tests |
 | [docs/operations.md](docs/operations.md) | Ingestion, embeddings, analysis, enrichment — CLI + admin API, cost controls |
+| [docs/accounts.md](docs/accounts.md) | Accounts platform: native auth, budget ledger, BYO keys, branded email, the perimeter |
 | [docs/search-quality.md](docs/search-quality.md) | The eval harness, measurement protocol, ranking campaign results, improvement roadmap |
 | [docs/design-decisions.md](docs/design-decisions.md) | Every explicit trade-off, from arXiv API choice to exploration guardrails |
 | [DEPLOY.md](DEPLOY.md) | Azure deployment: Bicep, OIDC CI/CD, Key Vault, migration bundles |

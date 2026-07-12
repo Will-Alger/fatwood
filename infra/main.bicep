@@ -48,23 +48,11 @@ param acsConnectionString string = ''
 @description('Auth-events app registration client id (audience of Entra custom-extension callbacks). Empty = hook disabled.')
 param authEventsAudience string = ''
 
-// ------------------------------------------------------- Entra ID Easy Auth
-// When authClientId is set, Container Apps authentication (Easy Auth) fronts
-// EVERY request: unauthenticated visitors are 302-redirected to Microsoft
-// login before anything reaches the container. Empty (the first deploy,
-// before the app registration exists) means no authConfig is created.
-@description('Client id of the Entra app registration used for sign-in. Empty disables Easy Auth (bootstrap deploy only).')
-param authClientId string = ''
-
-@secure()
-@description('Client secret of the Entra app registration. Required when authClientId is set; re-supply on every infra deploy.')
-param authClientSecret string = ''
-
-@description('Tenant accepted for sign-in. Defaults to the deployment tenant.')
-param authTenantId string = ''
-
-var authEnabled = !empty(authClientId)
-var effectiveAuthTenant = empty(authTenantId) ? tenant().tenantId : authTenantId
+// NOTE: the Easy Auth (authConfigs) wall that fronted the whole site during
+// the single-user era was RETIRED on 2026-07-12 — the app now does its own
+// Entra External ID JWT auth (userAuthAuthority/userAuthAudience above) with
+// anonymous browsing by design. Deliberately not declared here so an infra
+// deploy can never re-erect a login wall over the public site.
 
 // ------------------------------------------------------------------- scaling
 @description('Postgres compute SKU. Smallest burstable by default; e.g. Standard_D2ds_v5 for production.')
@@ -189,12 +177,6 @@ resource secretAcsConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   properties: { value: acsConnectionString }
 }
 
-resource secretAuthClient 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (authEnabled) {
-  parent: keyVault
-  name: 'auth-client-secret'
-  properties: { value: authClientSecret }
-}
-
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
   name: '${baseName}-pg-${suffix}'
   location: location
@@ -259,17 +241,7 @@ var registries = [
   { server: acr.properties.loginServer, identity: appIdentity.id }
 ]
 
-// The app (not the jobs) also carries the Easy Auth client secret when auth
-// is wired; authConfigs resolves it via clientSecretSettingName.
-var appSecrets = authEnabled
-  ? concat(kvSecrets, [
-      {
-        name: 'auth-client-secret'
-        keyVaultUrl: '${keyVault.properties.vaultUri}secrets/auth-client-secret'
-        identity: appIdentity.id
-      }
-    ])
-  : kvSecrets
+var appSecrets = kvSecrets
 
 resource api 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${baseName}-api'
@@ -333,35 +305,6 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
   // vault URI would let the app provision before the secrets exist, and the
   // ACA data plane resolves them at provision time.
   dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey, secretAcsConnection]
-}
-
-// Entra ID login in front of the entire site: unauthenticated requests are
-// redirected to Microsoft login (302), never passed through anonymously.
-// User allow-listing lives on the Entra service principal ("assignment
-// required" + explicit user assignments), not here.
-resource apiAuth 'Microsoft.App/containerApps/authConfigs@2024-03-01' = if (authEnabled) {
-  parent: api
-  name: 'current'
-  properties: {
-    platform: { enabled: true }
-    globalValidation: {
-      unauthenticatedClientAction: 'RedirectToLoginPage'
-      redirectToProvider: 'azureactivedirectory'
-    }
-    identityProviders: {
-      azureActiveDirectory: {
-        enabled: true
-        registration: {
-          openIdIssuer: 'https://login.microsoftonline.com/${effectiveAuthTenant}/v2.0'
-          clientId: authClientId
-          clientSecretSettingName: 'auth-client-secret'
-        }
-        validation: {
-          allowedAudiences: ['api://${authClientId}']
-        }
-      }
-    }
-  }
 }
 
 // One-off schema migration job: CD updates its image, starts it, and waits
