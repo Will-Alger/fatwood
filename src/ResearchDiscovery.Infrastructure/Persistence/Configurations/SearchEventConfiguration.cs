@@ -17,6 +17,9 @@ public class SearchEventConfiguration : IEntityTypeConfiguration<SearchEvent>
         builder.Property(e => e.PlanJson).IsRequired();
 
         builder.HasIndex(e => e.CreatedUtc);
+        // Per-user telemetry (bias reports, eval adopt personas). No FK: the
+        // log must survive account deletion without cascading away.
+        builder.HasIndex(e => e.UserId);
 
         builder.HasMany(e => e.Results)
             .WithOne(r => r.SearchEvent)
@@ -54,6 +57,7 @@ public class InteractionEventConfiguration : IEntityTypeConfiguration<Interactio
 
         builder.HasIndex(e => e.CreatedUtc);
         builder.HasIndex(e => e.PaperId);
+        builder.HasIndex(e => e.UserId);
 
         builder.HasOne(e => e.Paper)
             .WithMany()

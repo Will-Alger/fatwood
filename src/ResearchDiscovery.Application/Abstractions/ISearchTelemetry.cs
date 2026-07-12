@@ -13,7 +13,8 @@ public interface ISearchTelemetry
     /// <returns>The persisted search event id, echoed to the client so
     /// later interactions can carry their context.</returns>
     Task<long> LogSearchAsync(
-        string? queryText, SearchPlan plan, SearchResult result, CancellationToken ct);
+        long? userId, string? queryText, SearchPlan plan, SearchResult result,
+        CancellationToken ct);
 
     /// <summary>
     /// Logs a paper interaction. When <paramref name="searchEventId"/> is
@@ -21,6 +22,7 @@ public interface ISearchTelemetry
     /// Unknown papers are ignored (telemetry never fails a user action).
     /// </summary>
     Task LogInteractionAsync(
+        long? userId,
         string arxivId,
         InteractionType type,
         long? searchEventId,

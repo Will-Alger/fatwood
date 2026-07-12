@@ -51,7 +51,8 @@ public class SearchService(
     private const int RrfK = 60;
 
     public async Task<SearchResult> SearchAsync(
-        SearchPlan plan, int limit, CancellationToken ct, RankingWeights? weights = null)
+        SearchPlan plan, int limit, long? userId, CancellationToken ct,
+        RankingWeights? weights = null)
     {
         limit = Math.Clamp(limit, 1, 200);
         var options = rankingOptions.Value;
@@ -97,7 +98,7 @@ public class SearchService(
         }
 
         // Experience annotation + wildcards need the profile's experience vector.
-        var profile = await profileService.GetAsync(ct);
+        var profile = await profileService.GetAsync(userId, ct);
         IReadOnlyDictionary<long, float>? experienceScores = null;
         if (!string.IsNullOrWhiteSpace(profile?.ExperienceSummary))
         {
@@ -113,7 +114,7 @@ public class SearchService(
             pool.Select(p => p.Paper).ToList(), limit, experienceScores);
 
         var dtos = await queryService.GetPapersByIdsAsync(
-            selection.Select(s => s.Paper.PaperId).ToList(), ct);
+            selection.Select(s => s.Paper.PaperId).ToList(), userId, ct);
 
         var hits = selection
             .Where(s => dtos.ContainsKey(s.Paper.PaperId))

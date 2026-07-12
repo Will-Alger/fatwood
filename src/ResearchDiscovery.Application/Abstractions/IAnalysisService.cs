@@ -7,15 +7,19 @@ namespace ResearchDiscovery.Application.Abstractions;
 /// </summary>
 public interface IAnalysisService
 {
-    Task<AnalysisSummary> AnalyzeAsync(AnalysisRequest request, CancellationToken ct);
+    /// <param name="userId">Account the analyses belong to (results are
+    /// personalized to that user's profile). Null = system/CLI runs, whose
+    /// rows are visible to nobody until claimed.</param>
+    Task<AnalysisSummary> AnalyzeAsync(AnalysisRequest request, long? userId, CancellationToken ct);
 
     /// <summary>
     /// Analyzes a specific set of papers (typically the top slice of a search)
-    /// rather than a category sweep. Papers with a current analysis (same
-    /// schema and profile version) are skipped — no tokens are spent twice.
+    /// rather than a category sweep. Papers with a current analysis for that
+    /// user (same schema and profile version) are skipped — no tokens are
+    /// spent twice.
     /// </summary>
     Task<AnalysisSummary> AnalyzeSelectionAsync(
-        IReadOnlyList<string> arxivIds, CancellationToken ct);
+        IReadOnlyList<string> arxivIds, long? userId, CancellationToken ct);
 }
 
 public sealed record AnalysisRequest(

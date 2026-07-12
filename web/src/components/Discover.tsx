@@ -443,6 +443,7 @@ export function Discover({ llmSettings, me, signedOut }: DiscoverProps) {
             {displayedHits.map((hit, i) => (
               <div className="ignite" style={{ '--i': i } as React.CSSProperties} key={hit.paper.arxivId}>
                 <PaperCard
+                  canInteract={canSpend}
                   paper={hit.paper}
                   matchScore={hit.matchScore}
                   topMatchScore={topMatchScore}

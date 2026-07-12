@@ -16,6 +16,7 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
     public async Task<PagedResult<PaperDto>> GetPapersAsync(PaperListQuery query, CancellationToken ct)
     {
         IQueryable<Domain.Entities.Paper> papers = db.Papers.AsNoTracking();
+        var userId = query.UserId;
 
         if (query.CategoryCodes.Count > 0)
         {
@@ -23,14 +24,16 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             papers = papers.Where(p => p.PaperCategories.Any(pc => codes.Contains(pc.Category.Code)));
         }
 
+        // Analyses and bookmarks are per-user; anonymous callers using these
+        // filters simply match nothing.
         if (query.AnalyzedOnly)
         {
-            papers = papers.Where(p => p.AnalysisResult != null);
+            papers = papers.Where(p => p.AnalysisResults.Any(a => a.UserId == userId));
         }
 
         if (query.BookmarkedOnly)
         {
-            papers = papers.Where(p => p.Bookmark != null);
+            papers = papers.Where(p => p.Bookmarks.Any(b => b.UserId == userId));
         }
 
         var totalItems = await papers.CountAsync(ct);
@@ -42,8 +45,11 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             // Unanalyzed papers (null score) sort last so a mixed listing still
             // leads with scored candidates.
             PaperSortOrder.ScoreDesc =>
-                papers.OrderByDescending(p => p.AnalysisResult != null)
-                    .ThenByDescending(p => p.AnalysisResult!.CompositeScore)
+                papers.OrderByDescending(p => p.AnalysisResults.Any(a => a.UserId == userId))
+                    .ThenByDescending(p => p.AnalysisResults
+                        .Where(a => a.UserId == userId)
+                        .Select(a => a.CompositeScore)
+                        .FirstOrDefault())
                     .ThenByDescending(p => p.PublishedUtc)
                     .ThenByDescending(p => p.Id),
             _ =>
@@ -51,7 +57,7 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
         };
 
         var rows = await ProjectRows(
-                papers.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize))
+                papers.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize), userId)
             .ToListAsync(ct);
 
         var items = rows.Select(r => ToDto(r)).ToList();
@@ -61,17 +67,18 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
     }
 
     public async Task<IReadOnlyDictionary<long, PaperDto>> GetPapersByIdsAsync(
-        IReadOnlyCollection<long> paperIds, CancellationToken ct)
+        IReadOnlyCollection<long> paperIds, long? userId, CancellationToken ct)
     {
         var ids = paperIds.ToList();
         var rows = await ProjectRows(
-                db.Papers.AsNoTracking().Where(p => ids.Contains(p.Id)))
+                db.Papers.AsNoTracking().Where(p => ids.Contains(p.Id)), userId)
             .ToListAsync(ct);
 
         return rows.ToDictionary(r => r.Id, r => ToDto(r));
     }
 
-    private static IQueryable<PaperRow> ProjectRows(IQueryable<Domain.Entities.Paper> papers) =>
+    private static IQueryable<PaperRow> ProjectRows(
+        IQueryable<Domain.Entities.Paper> papers, long? userId) =>
         papers.Select(p => new PaperRow(
             p.Id,
             p.ArxivId,
@@ -86,13 +93,16 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             p.PdfUrl,
             p.Doi,
             p.CodeUrl,
-            p.Bookmark != null,
-            p.AnalysisResult == null ? null : new AnalysisRow(
-                p.AnalysisResult.CompositeScore,
-                p.AnalysisResult.Model,
-                p.AnalysisResult.SchemaVersion,
-                p.AnalysisResult.CreatedUtc,
-                p.AnalysisResult.ResultJson)));
+            userId != null && p.Bookmarks.Any(b => b.UserId == userId),
+            p.AnalysisResults
+                .Where(a => a.UserId == userId)
+                .Select(a => new AnalysisRow(
+                    a.CompositeScore,
+                    a.Model,
+                    a.SchemaVersion,
+                    a.CreatedUtc,
+                    a.ResultJson))
+                .FirstOrDefault()));
 
     private static PaperDto ToDto(PaperRow r) =>
         new(

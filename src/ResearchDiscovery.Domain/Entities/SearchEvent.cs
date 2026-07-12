@@ -12,6 +12,9 @@ public class SearchEvent
 {
     public long Id { get; set; }
 
+    /// <summary>Account that searched; null for anonymous/pre-account events.</summary>
+    public long? UserId { get; set; }
+
     public DateTimeOffset CreatedUtc { get; set; }
 
     /// <summary>

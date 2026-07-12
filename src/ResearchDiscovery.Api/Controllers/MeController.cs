@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Domain.Entities;
+using ResearchDiscovery.Infrastructure.Profile;
 
 namespace ResearchDiscovery.Api.Controllers;
 
@@ -61,6 +62,51 @@ public class MeController(
 
         await accounts.SetThemeAsync(HttpContext.GetAppUser()!.Id, request.Theme, ct);
         return NoContent();
+    }
+
+    public sealed record ProfileView(
+        string ExperienceSummary, string Goals, int? WeeklyHours, int Version,
+        DateTimeOffset? UpdatedUtc);
+
+    /// <summary>The caller's own research profile — drives analysis personalization.</summary>
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetProfile(
+        [FromServices] ProfileService profileService, CancellationToken ct)
+    {
+        var profile = await profileService.GetAsync(HttpContext.GetAppUser()!.Id, ct);
+        return Ok(profile is null
+            ? new ProfileView(string.Empty, string.Empty, null, 0, null)
+            : new ProfileView(
+                profile.ExperienceSummary, profile.Goals, profile.WeeklyHours,
+                profile.Version, profile.UpdatedUtc));
+    }
+
+    public sealed record SaveProfileRequest(
+        string ExperienceSummary, string Goals, int? WeeklyHours);
+
+    [HttpPut("profile")]
+    [Authorize(Policy = AuthPolicies.ActiveUser)]
+    public async Task<IActionResult> SaveProfile(
+        [FromBody] SaveProfileRequest request,
+        [FromServices] ProfileService profileService,
+        CancellationToken ct)
+    {
+        if (request.WeeklyHours is < 0 or > 100)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "weeklyHours must be between 0 and 100.");
+        }
+
+        var profile = await profileService.SaveAsync(
+            HttpContext.GetAppUser()!.Id,
+            request.ExperienceSummary?.Trim() ?? string.Empty,
+            request.Goals?.Trim() ?? string.Empty,
+            request.WeeklyHours,
+            ct);
+
+        return Ok(new ProfileView(
+            profile.ExperienceSummary, profile.Goals, profile.WeeklyHours,
+            profile.Version, profile.UpdatedUtc));
     }
 
     public sealed record InviteRequest(string Code);

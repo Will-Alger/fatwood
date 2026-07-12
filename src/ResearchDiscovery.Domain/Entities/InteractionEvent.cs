@@ -23,6 +23,9 @@ public class InteractionEvent
 {
     public long Id { get; set; }
 
+    /// <summary>Account that acted; null for pre-account events.</summary>
+    public long? UserId { get; set; }
+
     public DateTimeOffset CreatedUtc { get; set; }
 
     public long PaperId { get; set; }

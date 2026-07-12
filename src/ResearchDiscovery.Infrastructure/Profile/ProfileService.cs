@@ -5,28 +5,35 @@ using ResearchDiscovery.Infrastructure.Persistence;
 namespace ResearchDiscovery.Infrastructure.Profile;
 
 /// <summary>
-/// Single-user profile access. Every save bumps <see cref="UserProfile.Version"/>,
-/// which invalidates cached per-paper analyses (they re-run on demand).
+/// Per-user profile access. Every save bumps <see cref="UserProfile.Version"/>,
+/// which invalidates that user's cached per-paper analyses (they re-run on
+/// demand). A null userId (anonymous, CLI/system scopes) has no profile.
 /// </summary>
 public class ProfileService(IDbContextFactory<AppDbContext> dbFactory)
 {
-    public async Task<UserProfile?> GetAsync(CancellationToken ct)
+    public async Task<UserProfile?> GetAsync(long? userId, CancellationToken ct)
     {
+        if (userId is null)
+        {
+            return null;
+        }
+
         await using var db = await dbFactory.CreateDbContextAsync(ct);
         return await db.UserProfiles.AsNoTracking()
-            .SingleOrDefaultAsync(p => p.Id == UserProfile.SingletonId, ct);
+            .SingleOrDefaultAsync(p => p.UserId == userId, ct);
     }
 
     public async Task<UserProfile> SaveAsync(
-        string experienceSummary, string goals, int? weeklyHours, CancellationToken ct)
+        long userId, string experienceSummary, string goals, int? weeklyHours,
+        CancellationToken ct)
     {
         await using var db = await dbFactory.CreateDbContextAsync(ct);
         var profile = await db.UserProfiles
-            .SingleOrDefaultAsync(p => p.Id == UserProfile.SingletonId, ct);
+            .SingleOrDefaultAsync(p => p.UserId == userId, ct);
 
         if (profile is null)
         {
-            profile = new UserProfile { Id = UserProfile.SingletonId };
+            profile = new UserProfile { UserId = userId };
             db.UserProfiles.Add(profile);
         }
 

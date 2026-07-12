@@ -10,10 +10,11 @@ namespace ResearchDiscovery.Infrastructure.Analysis;
 
 /// <summary>
 /// Orchestrates bounded analysis runs — a category sweep or an explicit
-/// selection (the top slice of a search). Results cache per (paper, schema
-/// version, profile version): re-running is idempotent, and editing the
-/// profile invalidates without deleting (rows re-analyze on demand). Each
-/// result persists immediately so a cancelled run keeps its progress.
+/// selection (the top slice of a search) — for one user. Results cache per
+/// (user, paper, schema version, that user's profile version): re-running is
+/// idempotent, and editing the profile invalidates without deleting (rows
+/// re-analyze on demand). Each result persists immediately so a cancelled run
+/// keeps its progress.
 /// </summary>
 public class AnalysisService(
     AppDbContext db,
@@ -21,7 +22,8 @@ public class AnalysisService(
     ProfileService profileService,
     ILogger<AnalysisService> logger) : IAnalysisService
 {
-    public async Task<AnalysisSummary> AnalyzeAsync(AnalysisRequest request, CancellationToken ct)
+    public async Task<AnalysisSummary> AnalyzeAsync(
+        AnalysisRequest request, long? userId, CancellationToken ct)
     {
         var categoryExists = await db.Categories
             .AnyAsync(c => c.Code == request.CategoryCode, ct);
@@ -30,10 +32,10 @@ public class AnalysisService(
             throw new UnknownCategoryException(request.CategoryCode);
         }
 
-        var profile = await profileService.GetAsync(ct);
+        var profile = await profileService.GetAsync(userId, ct);
         var profileVersion = profile?.Version ?? 0;
 
-        var candidates = SelectStale(profileVersion)
+        var candidates = SelectStale(userId, profileVersion)
             .Where(p => p.PaperCategories.Any(pc => pc.Category.Code == request.CategoryCode));
 
         if (request.Since is { } since)
@@ -48,42 +50,42 @@ public class AnalysisService(
             .ToListAsync(ct);
 
         logger.LogInformation(
-            "Analysis run for {Category}: {Count} paper(s) selected (max {Max}, since {Since}, profile v{ProfileVersion})",
-            request.CategoryCode, papers.Count, request.MaxPapers, request.Since, profileVersion);
+            "Analysis run for {Category}: {Count} paper(s) selected (max {Max}, since {Since}, user {UserId}, profile v{ProfileVersion})",
+            request.CategoryCode, papers.Count, request.MaxPapers, request.Since, userId, profileVersion);
 
-        return await RunAsync(request.CategoryCode, papers, profile, ct);
+        return await RunAsync(request.CategoryCode, papers, userId, profile, ct);
     }
 
     public async Task<AnalysisSummary> AnalyzeSelectionAsync(
-        IReadOnlyList<string> arxivIds, CancellationToken ct)
+        IReadOnlyList<string> arxivIds, long? userId, CancellationToken ct)
     {
         var ids = arxivIds.Distinct(StringComparer.Ordinal).ToList();
-        var profile = await profileService.GetAsync(ct);
+        var profile = await profileService.GetAsync(userId, ct);
         var profileVersion = profile?.Version ?? 0;
 
-        var papers = await SelectStale(profileVersion)
+        var papers = await SelectStale(userId, profileVersion)
             .Where(p => ids.Contains(p.ArxivId))
             .ToListAsync(ct);
 
         logger.LogInformation(
-            "Selection analysis: {Stale} of {Requested} paper(s) need analysis (profile v{ProfileVersion})",
-            papers.Count, ids.Count, profileVersion);
+            "Selection analysis: {Stale} of {Requested} paper(s) need analysis (user {UserId}, profile v{ProfileVersion})",
+            papers.Count, ids.Count, userId, profileVersion);
 
-        return await RunAsync("selection", papers, profile, ct);
+        return await RunAsync("selection", papers, userId, profile, ct);
     }
 
-    /// <summary>Papers whose analysis is missing or stale for the current schema + profile.</summary>
-    private IQueryable<Paper> SelectStale(int profileVersion) =>
+    /// <summary>Papers whose analysis FOR THIS USER is missing or stale for the current schema + profile.</summary>
+    private IQueryable<Paper> SelectStale(long? userId, int profileVersion) =>
         db.Papers
             .Include(p => p.PrimaryCategory)
             .Include(p => p.PaperCategories).ThenInclude(pc => pc.Category)
-            .Include(p => p.AnalysisResult)
-            .Where(p => p.AnalysisResult == null
-                || p.AnalysisResult.SchemaVersion < AnalysisOptions.CurrentSchemaVersion
-                || p.AnalysisResult.ProfileVersion != profileVersion);
+            .Include(p => p.AnalysisResults.Where(a => a.UserId == userId))
+            .Where(p => !p.AnalysisResults.Any(a => a.UserId == userId
+                && a.SchemaVersion >= AnalysisOptions.CurrentSchemaVersion
+                && a.ProfileVersion == profileVersion));
 
     private async Task<AnalysisSummary> RunAsync(
-        string label, List<Paper> papers, UserProfile? profile, CancellationToken ct)
+        string label, List<Paper> papers, long? userId, UserProfile? profile, CancellationToken ct)
     {
         var profileDescription = ProfileService.Describe(profile);
         var profileVersion = profile?.Version ?? 0;
@@ -106,7 +108,8 @@ public class AnalysisService(
                     continue;
                 }
 
-                if (paper.AnalysisResult is { } stale)
+                // The filtered Include above loaded only this user's rows.
+                if (paper.AnalysisResults.FirstOrDefault(a => a.UserId == userId) is { } stale)
                 {
                     stale.SchemaVersion = analysis.SchemaVersion;
                     stale.ProfileVersion = analysis.ProfileVersion;
@@ -120,6 +123,7 @@ public class AnalysisService(
                     db.AnalysisResults.Add(new AnalysisResult
                     {
                         PaperId = paper.Id,
+                        UserId = userId,
                         SchemaVersion = analysis.SchemaVersion,
                         ProfileVersion = analysis.ProfileVersion,
                         Model = analysis.Model,
@@ -144,8 +148,8 @@ public class AnalysisService(
             }
             catch (DbUpdateException ex)
             {
-                // Unique PaperId index tripped: a concurrent run analyzed this
-                // paper first. Drop our copy and move on.
+                // Unique (UserId, PaperId) index tripped: a concurrent run
+                // analyzed this paper for this user first. Drop our copy.
                 db.ChangeTracker.Clear();
                 failed++;
                 logger.LogWarning(ex,

@@ -97,8 +97,9 @@ public class AnalysisServiceTests
 
     private static async Task<AnalysisSummary> RunAsync(ApiFactory factory, AnalysisRequest request)
     {
+        var userId = await factory.EnsureDevUserAsync();
         await using var scope = factory.Services.CreateAsyncScope();
         var service = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
-        return await service.AnalyzeAsync(request, CancellationToken.None);
+        return await service.AnalyzeAsync(request, userId, CancellationToken.None);
     }
 }

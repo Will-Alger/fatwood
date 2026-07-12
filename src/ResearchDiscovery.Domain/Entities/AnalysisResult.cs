@@ -1,9 +1,10 @@
 namespace ResearchDiscovery.Domain.Entities;
 
 /// <summary>
-/// Phase 2 seam: stored LLM analysis for a paper (1:1). The table exists from
-/// Phase 1 so the analysis layer slots in without a schema rewrite, but no
-/// Phase 1 code ever writes to it.
+/// Stored LLM analysis of a paper FOR a specific user — analyses are
+/// personalized to the requesting user's profile, so the same paper can carry
+/// one row per user. Cache key = (user, paper, schema version, that user's
+/// profile version).
 /// </summary>
 public class AnalysisResult
 {
@@ -13,12 +14,20 @@ public class AnalysisResult
 
     public Paper Paper { get; set; } = null!;
 
+    /// <summary>
+    /// Owning account. Null only for pre-account rows (claimed by the
+    /// bootstrap admin) or CLI runs with no user context.
+    /// </summary>
+    public long? UserId { get; set; }
+
+    public AppUser? User { get; set; }
+
     /// <summary>Version of the analysis JSON contract, for forward migration.</summary>
     public int SchemaVersion { get; set; }
 
     /// <summary>
-    /// UserProfile.Version this analysis was produced against. Analyses go
-    /// stale when the profile changes (0 = pre-personalization rows).
+    /// The owning user's UserProfile.Version this analysis was produced
+    /// against. Analyses go stale when that profile changes.
     /// </summary>
     public int ProfileVersion { get; set; }
 

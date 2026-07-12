@@ -249,12 +249,25 @@ public class TelemetryAnalyzer(
             .AsNoTracking()
             .Where(e => e.QueryText != null)
             .OrderByDescending(e => e.CreatedUtc)
-            .Select(e => new { e.QueryText, e.PlanJson })
+            .Select(e => new { e.QueryText, e.PlanJson, e.UserId })
             .ToListAsync(ct);
 
-        var profile = await profileService.GetAsync(ct);
-        var persona = ProfileService.Describe(profile)
-            ?? "(no saved profile at adoption time)";
+        // Persona comes from the profile of whoever ran the search, cached
+        // per user across the loop.
+        var personaByUser = new Dictionary<long, string>();
+        async Task<string> PersonaForAsync(long? userId)
+        {
+            var key = userId ?? 0;
+            if (!personaByUser.TryGetValue(key, out var persona))
+            {
+                var profile = await profileService.GetAsync(userId, ct);
+                persona = ProfileService.Describe(profile)
+                    ?? "(no saved profile at adoption time)";
+                personaByUser[key] = persona;
+            }
+
+            return persona;
+        }
 
         var queries = set.Queries.ToList();
         var adopted = 0;
@@ -275,7 +288,8 @@ public class TelemetryAnalyzer(
             var id = Slug(newest.QueryText!, existingIds);
             existingIds.Add(id);
             existingTexts.Add(group.Key);
-            queries.Add(new EvalQuery(id, persona, newest.QueryText!.Trim(), plan));
+            queries.Add(new EvalQuery(
+                id, await PersonaForAsync(newest.UserId), newest.QueryText!.Trim(), plan));
             adopted++;
             logger.LogInformation("Adopted real query into eval set as {Id}: {Query}", id, newest.QueryText);
         }

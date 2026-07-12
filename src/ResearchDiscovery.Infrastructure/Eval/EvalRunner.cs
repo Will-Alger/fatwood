@@ -149,7 +149,10 @@ public class EvalRunner(
                 continue;
             }
 
-            var result = await search.SearchAsync(query.Plan, ScoreLimit, ct, weights);
+            // userId null: eval measures the unpersonalized ranker (experience
+            // annotation never ranks anyway, and eval must not depend on
+            // whoever happens to run it).
+            var result = await search.SearchAsync(query.Plan, ScoreLimit, null, ct, weights);
 
             // Wildcards are contractual serendipity, not ranking claims — the
             // metric measures the relevance ordering only.
@@ -277,7 +280,7 @@ public class EvalRunner(
     private async Task<List<(JudgeCandidate Candidate, string Source)>> BuildPoolAsync(
         EvalQuery query, int poolSize, int randomSample, CancellationToken ct)
     {
-        var result = await search.SearchAsync(query.Plan!, poolSize, ct);
+        var result = await search.SearchAsync(query.Plan!, poolSize, null, ct);
         var pooled = result.Hits.Select(h => h.Paper.ArxivId).ToList();
         var pooledSet = pooled.ToHashSet(StringComparer.Ordinal);
 

@@ -71,6 +71,11 @@ public class UserAccountService(
             logger.LogInformation(
                 "Provisioned account {Email} ({Role}, active={Active})",
                 email, user.Role, user.IsActive);
+
+            if (isBootstrapAdmin)
+            {
+                await ClaimLegacyDataAsync(db, user.Id, ct);
+            }
         }
         catch (DbUpdateException)
         {
@@ -81,6 +86,35 @@ public class UserAccountService(
         }
 
         return user;
+    }
+
+    /// <summary>
+    /// Rows written before accounts existed (profile, bookmarks, analyses,
+    /// telemetry) have a null UserId. The first bootstrap admin inherits them
+    /// — this app was single-user before it had sign-in, and that user is the
+    /// operator. Runs once: after the claim no null rows remain.
+    /// </summary>
+    private async Task ClaimLegacyDataAsync(AppDbContext db, long userId, CancellationToken ct)
+    {
+        var profiles = await db.UserProfiles.Where(p => p.UserId == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.UserId, userId), ct);
+        var bookmarks = await db.Bookmarks.Where(b => b.UserId == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.UserId, userId), ct);
+        var analyses = await db.AnalysisResults.Where(a => a.UserId == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.UserId, userId), ct);
+        var searches = await db.SearchEvents.Where(e => e.UserId == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.UserId, userId), ct);
+        var interactions = await db.InteractionEvents.Where(e => e.UserId == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.UserId, userId), ct);
+
+        if (profiles + bookmarks + analyses + searches + interactions > 0)
+        {
+            logger.LogInformation(
+                "Bootstrap admin {UserId} claimed legacy data: {Profiles} profile(s), " +
+                "{Bookmarks} bookmark(s), {Analyses} analysis rows, {Searches} searches, " +
+                "{Interactions} interactions",
+                userId, profiles, bookmarks, analyses, searches, interactions);
+        }
     }
 
     public async Task<bool> RedeemInviteAsync(long userId, string code, CancellationToken ct)

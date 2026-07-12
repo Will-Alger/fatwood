@@ -6,9 +6,10 @@ interface PaperListProps {
   data: PagedResult<PaperDto> | null
   loading: boolean
   error: string | null
+  canInteract?: boolean
 }
 
-export function PaperList({ data, loading, error }: PaperListProps) {
+export function PaperList({ data, loading, error, canInteract = false }: PaperListProps) {
   if (error) {
     return <p className="status status-error">Could not load papers: {error}</p>
   }
@@ -28,7 +29,7 @@ export function PaperList({ data, loading, error }: PaperListProps) {
   return (
     <div className={loading ? 'paper-list paper-list-refreshing' : 'paper-list'}>
       {data.items.map((paper) => (
-        <PaperCard key={paper.arxivId} paper={paper} />
+        <PaperCard key={paper.arxivId} paper={paper} canInteract={canInteract} />
       ))}
     </div>
   )

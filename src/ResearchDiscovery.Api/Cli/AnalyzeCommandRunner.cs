@@ -52,7 +52,10 @@ public static class AnalyzeCommandRunner
 
         try
         {
-            var summary = await analysis.AnalyzeAsync(request, cts.Token);
+            // CLI runs have no account: results land unowned (null UserId) and
+            // are only visible after a bootstrap admin claims legacy rows.
+            // Product analysis should be triggered through the API instead.
+            var summary = await analysis.AnalyzeAsync(request, userId: null, cts.Token);
 
             Console.WriteLine(
                 $"Analysis run for {summary.CategoryCode} finished: " +

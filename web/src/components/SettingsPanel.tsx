@@ -28,19 +28,20 @@ export function SettingsPanel({ me, signedOut, onClose, onSettingsChanged }: Set
   const [error, setError] = useState<string | null>(null)
 
   const isAdmin = me?.role === 'Admin'
+  const isActive = me?.isActive === true
 
   async function loadAll() {
     setError(null)
-    if (!isAdmin) {
-      setSettings(null)
-      setProfile(null)
-      return
-    }
     try {
-      const [llm, prof] = await Promise.all([getLlmSettings(), getProfile()])
-      setSettings(llm)
-      setProfile(prof)
-      onSettingsChanged(llm)
+      // Every active user owns a profile; the model registry is admin-only.
+      setProfile(isActive ? await getProfile() : null)
+      if (isAdmin) {
+        const llm = await getLlmSettings()
+        setSettings(llm)
+        onSettingsChanged(llm)
+      } else {
+        setSettings(null)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load settings')
     }
@@ -49,7 +50,7 @@ export function SettingsPanel({ me, signedOut, onClose, onSettingsChanged }: Set
   useEffect(() => {
     void loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin])
+  }, [isAdmin, isActive])
 
   async function handleAssignment(step: string, modelId: string) {
     setError(null)

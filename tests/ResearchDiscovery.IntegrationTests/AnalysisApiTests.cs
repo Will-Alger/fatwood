@@ -76,12 +76,13 @@ public class AnalysisApiTests
         };
         await factory.SeedAsync(TestData.SeedPapersAsync);
 
-        // Analyze both categories so papers 1 and 3 get scores.
+        // Analyze both categories AS the dev user so papers 1 and 3 get scores.
+        var userId = await factory.EnsureDevUserAsync();
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var service = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
-            await service.AnalyzeAsync(new AnalysisRequest("cs.LG", 10, null), CancellationToken.None);
-            await service.AnalyzeAsync(new AnalysisRequest("cs.CR", 10, null), CancellationToken.None);
+            await service.AnalyzeAsync(new AnalysisRequest("cs.LG", 10, null), userId, CancellationToken.None);
+            await service.AnalyzeAsync(new AnalysisRequest("cs.CR", 10, null), userId, CancellationToken.None);
         }
 
         using var client = factory.CreateClient();
@@ -105,10 +106,11 @@ public class AnalysisApiTests
         using var factory = new ApiFactory();
         await factory.SeedAsync(TestData.SeedPapersAsync);
 
+        var userId = await factory.EnsureDevUserAsync();
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var service = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
-            await service.AnalyzeAsync(new AnalysisRequest("cs.CR", 10, null), CancellationToken.None);
+            await service.AnalyzeAsync(new AnalysisRequest("cs.CR", 10, null), userId, CancellationToken.None);
         }
 
         using var client = factory.CreateClient();

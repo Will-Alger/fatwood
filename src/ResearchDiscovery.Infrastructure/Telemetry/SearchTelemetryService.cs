@@ -17,7 +17,8 @@ public class SearchTelemetryService(
     };
 
     public async Task<long> LogSearchAsync(
-        string? queryText, SearchPlan plan, SearchResult result, CancellationToken ct)
+        long? userId, string? queryText, SearchPlan plan, SearchResult result,
+        CancellationToken ct)
     {
         await using var db = await dbFactory.CreateDbContextAsync(ct);
 
@@ -31,6 +32,7 @@ public class SearchTelemetryService(
 
         var searchEvent = new SearchEvent
         {
+            UserId = userId,
             CreatedUtc = DateTimeOffset.UtcNow,
             QueryText = string.IsNullOrWhiteSpace(queryText) ? null : queryText.Trim(),
             PlanJson = JsonSerializer.Serialize(plan, PlanJsonOptions),
@@ -64,7 +66,8 @@ public class SearchTelemetryService(
     }
 
     public async Task LogInteractionAsync(
-        string arxivId, InteractionType type, long? searchEventId, int? rank, CancellationToken ct)
+        long? userId, string arxivId, InteractionType type, long? searchEventId, int? rank,
+        CancellationToken ct)
     {
         await using var db = await dbFactory.CreateDbContextAsync(ct);
 
@@ -91,6 +94,7 @@ public class SearchTelemetryService(
 
         db.InteractionEvents.Add(new InteractionEvent
         {
+            UserId = userId,
             CreatedUtc = DateTimeOffset.UtcNow,
             PaperId = paperId.Value,
             Type = type,

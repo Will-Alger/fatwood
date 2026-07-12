@@ -91,6 +91,8 @@ export interface PaperCardProps {
   searchContext?: SearchContext
   /** When set, shows a "not interested" control; the parent removes the card. */
   onNotInterested?: () => void
+  /** Bookmarks/feedback are per-account writes; false (signed out or gated) hides them. */
+  canInteract?: boolean
 }
 
 /**
@@ -112,6 +114,7 @@ export function PaperCard({
   experienceProximity,
   searchContext,
   onNotInterested,
+  canInteract = false,
 }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
@@ -153,17 +156,19 @@ export function PaperCard({
             {paper.title}
           </a>
         </h3>
-        <button
-          type="button"
-          className={bookmarked ? 'bookmark-button bookmark-on' : 'bookmark-button'}
-          disabled={bookmarkBusy}
-          onClick={() => void toggleBookmark()}
-          title={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
-          aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
-        >
-          {bookmarked ? '★' : '☆'}
-        </button>
-        {onNotInterested && (
+        {canInteract && (
+          <button
+            type="button"
+            className={bookmarked ? 'bookmark-button bookmark-on' : 'bookmark-button'}
+            disabled={bookmarkBusy}
+            onClick={() => void toggleBookmark()}
+            title={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
+            aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
+          >
+            {bookmarked ? '★' : '☆'}
+          </button>
+        )}
+        {canInteract && onNotInterested && (
           <button
             type="button"
             className="bookmark-button"

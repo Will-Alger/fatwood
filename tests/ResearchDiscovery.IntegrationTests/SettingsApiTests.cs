@@ -85,7 +85,7 @@ public class SettingsApiTests
         Assert.Equal(0, second.PapersSelected);
 
         // Saving the profile bumps the version...
-        var saved = await client.PutAsJsonAsync("/api/admin/settings/profile",
+        var saved = await client.PutAsJsonAsync("/api/me/profile",
             new { experienceSummary = "4 years backend", goals = "applied ML engineering", weeklyHours = 8 });
         saved.EnsureSuccessStatusCode();
         var profile = await saved.Content.ReadFromJsonAsync<ProfileView>();
@@ -105,15 +105,17 @@ public class SettingsApiTests
 
         Assert.Equal(HttpStatusCode.Forbidden,
             (await client.GetAsync("/api/admin/settings/llm")).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden,
-            (await client.GetAsync("/api/admin/settings/profile")).StatusCode);
+        // Profiles moved out of admin settings: every signed-in user owns one.
+        Assert.Equal(HttpStatusCode.OK,
+            (await client.GetAsync("/api/me/profile")).StatusCode);
     }
 
     private static async Task<AnalysisSummary> AnalyzeAsync(ApiFactory factory, string category)
     {
+        var userId = await factory.EnsureDevUserAsync();
         await using var scope = factory.Services.CreateAsyncScope();
         var service = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
         return await service.AnalyzeAsync(
-            new AnalysisRequest(category, MaxPapers: 10, Since: null), CancellationToken.None);
+            new AnalysisRequest(category, MaxPapers: 10, Since: null), userId, CancellationToken.None);
     }
 }

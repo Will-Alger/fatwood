@@ -120,7 +120,8 @@ public class AdminAnalysisController(
             foreach (var arxivId in request.ArxivIds)
             {
                 await telemetry.LogInteractionAsync(
-                    arxivId, Domain.Entities.InteractionType.AnalyzedFromSearch,
+                    HttpContext.GetAppUser()?.Id, arxivId,
+                    Domain.Entities.InteractionType.AnalyzedFromSearch,
                     request.SearchEventId, rank: null, ct);
             }
         }
@@ -132,17 +133,22 @@ public class AdminAnalysisController(
         });
     }
 
-    /// <summary>Per-category analyzed/total counts — the run-progress view.</summary>
+    /// <summary>
+    /// Per-category analyzed/total counts for the CALLING admin — analyses
+    /// are per-user, so coverage is too.
+    /// </summary>
     [HttpGet("coverage")]
     public async Task<IActionResult> GetCoverage(CancellationToken ct)
     {
+        var userId = HttpContext.GetAppUser()!.Id;
         var coverage = await db.Categories
             .AsNoTracking()
             .OrderBy(c => c.Code)
             .Select(c => new CategoryCoverageView(
                 c.Code,
                 c.PaperCategories.Count,
-                c.PaperCategories.Count(pc => pc.Paper.AnalysisResult != null)))
+                c.PaperCategories.Count(pc =>
+                    pc.Paper.AnalysisResults.Any(a => a.UserId == userId))))
             .ToListAsync(ct);
 
         return Ok(coverage);

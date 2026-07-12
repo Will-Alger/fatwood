@@ -10,12 +10,18 @@ public class AnalysisResultConfiguration : IEntityTypeConfiguration<AnalysisResu
     {
         builder.HasKey(a => a.Id);
 
-        // 1:1 with papers, enforced at the schema level.
-        builder.HasIndex(a => a.PaperId).IsUnique();
+        // Analyses are personalized: one per (user, paper). NULL UserId =
+        // legacy/system rows, claimed by the bootstrap admin.
+        builder.HasIndex(a => new { a.UserId, a.PaperId }).IsUnique();
 
         builder.HasOne(a => a.Paper)
-            .WithOne(p => p.AnalysisResult)
-            .HasForeignKey<AnalysisResult>(a => a.PaperId)
+            .WithMany(p => p.AnalysisResults)
+            .HasForeignKey(a => a.PaperId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(a => a.User)
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(a => a.Model).HasMaxLength(128).IsRequired();

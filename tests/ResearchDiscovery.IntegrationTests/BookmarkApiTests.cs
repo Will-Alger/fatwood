@@ -75,12 +75,14 @@ public class BookmarkApiTests
         Assert.False(beforeView.Active);
         Assert.Empty(beforeView.Analyzed);
 
-        // Analyze cs.LG (both seeded cs.LG papers) via the stubbed analyzer.
+        // Analyze cs.LG (both seeded cs.LG papers) via the stubbed analyzer,
+        // as the dev user (the same account the HTTP client acts as).
+        var userId = await factory.EnsureDevUserAsync();
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var service = scope.ServiceProvider
                 .GetRequiredService<Application.Abstractions.IAnalysisService>();
-            await service.AnalyzeSelectionAsync(["2501.00001"], CancellationToken.None);
+            await service.AnalyzeSelectionAsync(["2501.00001"], userId, CancellationToken.None);
         }
 
         var after = await client.PostAsJsonAsync("/api/papers/analysis-status",

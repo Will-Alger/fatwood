@@ -238,7 +238,12 @@ export default function App() {
           {categoriesError && (
             <p className="status status-error">Could not load categories: {categoriesError}</p>
           )}
-          <PaperList data={data} loading={loading} error={error} />
+          <PaperList
+            data={data}
+            loading={loading}
+            error={error}
+            canInteract={me?.isActive === true}
+          />
           <Pagination
             page={page}
             totalPages={data?.totalPages ?? 0}

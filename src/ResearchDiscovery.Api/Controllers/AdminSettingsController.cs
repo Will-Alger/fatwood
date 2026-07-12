@@ -14,9 +14,7 @@ namespace ResearchDiscovery.Api.Controllers;
 [ApiController]
 [Route("api/admin/settings")]
 [Authorize(Policy = AuthPolicies.Admin)]
-public class AdminSettingsController(
-    ILlmSettingsService llmSettings,
-    ProfileService profileService) : ControllerBase
+public class AdminSettingsController(ILlmSettingsService llmSettings) : ControllerBase
 {
     /// <summary>Rough per-paper token sizes for client-side analysis cost estimates.</summary>
     private const int EstInputTokensPerPaper = 1400;
@@ -72,42 +70,6 @@ public class AdminSettingsController(
         return NoContent();
     }
 
-    public sealed record ProfileView(
-        string ExperienceSummary, string Goals, int? WeeklyHours, int Version,
-        DateTimeOffset? UpdatedUtc);
-
-    [HttpGet("profile")]
-    public async Task<IActionResult> GetProfile(CancellationToken ct)
-    {
-        var profile = await profileService.GetAsync(ct);
-        return Ok(profile is null
-            ? new ProfileView(string.Empty, string.Empty, null, 0, null)
-            : new ProfileView(
-                profile.ExperienceSummary, profile.Goals, profile.WeeklyHours,
-                profile.Version, profile.UpdatedUtc));
-    }
-
-    public sealed record SaveProfileRequest(
-        string ExperienceSummary, string Goals, int? WeeklyHours);
-
-    [HttpPut("profile")]
-    public async Task<IActionResult> SaveProfile(
-        [FromBody] SaveProfileRequest request, CancellationToken ct)
-    {
-        if (request.WeeklyHours is < 0 or > 100)
-        {
-            return Problem(statusCode: StatusCodes.Status400BadRequest,
-                detail: "weeklyHours must be between 0 and 100.");
-        }
-
-        var profile = await profileService.SaveAsync(
-            request.ExperienceSummary?.Trim() ?? string.Empty,
-            request.Goals?.Trim() ?? string.Empty,
-            request.WeeklyHours,
-            ct);
-
-        return Ok(new ProfileView(
-            profile.ExperienceSummary, profile.Goals, profile.WeeklyHours,
-            profile.Version, profile.UpdatedUtc));
-    }
+    // Profile endpoints moved to MeController: profiles are per-user state,
+    // not admin settings.
 }

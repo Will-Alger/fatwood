@@ -203,7 +203,7 @@ export function setLlmAssignment(step: string, modelId: string): Promise<void> {
 }
 
 export function getProfile(signal?: AbortSignal): Promise<ProfileView> {
-  return getJson('/api/admin/settings/profile', signal)
+  return getJson('/api/me/profile', signal)
 }
 
 export function saveProfile(
@@ -211,7 +211,7 @@ export function saveProfile(
   goals: string,
   weeklyHours: number | null,
 ): Promise<ProfileView> {
-  return sendJson('PUT', '/api/admin/settings/profile', {
+  return sendJson('PUT', '/api/me/profile', {
     experienceSummary,
     goals,
     weeklyHours,

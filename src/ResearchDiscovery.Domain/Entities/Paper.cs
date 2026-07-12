@@ -48,11 +48,12 @@ public class Paper
 
     public ICollection<PaperCategory> PaperCategories { get; set; } = new List<PaperCategory>();
 
-    public AnalysisResult? AnalysisResult { get; set; }
+    // Per-user state: one row per (user, paper) for each.
+    public ICollection<AnalysisResult> AnalysisResults { get; set; } = new List<AnalysisResult>();
+
+    public ICollection<Bookmark> Bookmarks { get; set; } = new List<Bookmark>();
 
     public PaperEmbedding? Embedding { get; set; }
-
-    public Bookmark? Bookmark { get; set; }
 
     public PaperSignal? Signal { get; set; }
 }

@@ -27,8 +27,10 @@ public class AnalysisQueueHostedService(
 
                 var summary = job switch
                 {
-                    AnalysisJob.Category c => await analysis.AnalyzeAsync(c.Request, stoppingToken),
-                    AnalysisJob.Selection s => await analysis.AnalyzeSelectionAsync(s.ArxivIds, stoppingToken),
+                    AnalysisJob.Category c => await analysis.AnalyzeAsync(
+                        c.Request, job.RequestedByUserId, stoppingToken),
+                    AnalysisJob.Selection s => await analysis.AnalyzeSelectionAsync(
+                        s.ArxivIds, job.RequestedByUserId, stoppingToken),
                     _ => throw new InvalidOperationException($"Unknown job type {job.GetType().Name}"),
                 };
 

@@ -130,6 +130,21 @@ public class ApiFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Provisions (or fetches) the local-dev admin account and returns its id
+    /// — needed by tests that call user-scoped services directly instead of
+    /// going through HTTP.
+    /// </summary>
+    public async Task<long> EnsureDevUserAsync()
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var accounts = scope.ServiceProvider.GetRequiredService<IUserAccountService>();
+        var user = await accounts.GetOrCreateAsync(
+            Infrastructure.Accounts.UserAccountService.LocalDevExternalId,
+            "dev@localhost", "Local Dev", CancellationToken.None);
+        return user.Id;
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);

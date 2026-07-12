@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Hosting;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Dtos;
@@ -10,8 +12,10 @@ using ResearchDiscovery.Infrastructure.Profile;
 namespace ResearchDiscovery.Api.Controllers;
 
 /// <summary>
-/// Browse endpoint — the only user-facing surface. Serves entirely from the
-/// database; it cannot reach arXiv and cannot trigger ingestion.
+/// Browse endpoint — the main user-facing surface. Serves entirely from the
+/// database; it cannot reach arXiv and cannot trigger ingestion. Reading is
+/// anonymous; writes (bookmarks, feedback) require an activated account and
+/// are scoped to it.
 /// </summary>
 [ApiController]
 [Route("api/papers")]
@@ -62,18 +66,20 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         var result = await queryService.GetPapersAsync(
             new PaperListQuery(
                 codes, page, Math.Clamp(pageSize, 1, MaxPageSize), sortOrder.Value,
-                analyzedOnly, bookmarkedOnly),
+                analyzedOnly, bookmarkedOnly, HttpContext.GetAppUser()?.Id),
             ct);
 
         return Ok(result);
     }
 
     /// <summary>
-    /// Bookmarks a paper. Idempotent; user state, not corpus data. Optional
-    /// searchEventId/rank tie the action to the search that surfaced the
-    /// paper — an implicit relevance label for the offline quality loop.
+    /// Bookmarks a paper for the signed-in user. Idempotent; user state, not
+    /// corpus data. Optional searchEventId/rank tie the action to the search
+    /// that surfaced the paper — an implicit relevance label for the offline
+    /// quality loop.
     /// </summary>
     [HttpPut("{arxivId}/bookmark")]
+    [Authorize(Policy = AuthPolicies.ActiveUser)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<IActionResult> AddBookmark(
@@ -86,6 +92,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         SetBookmarkAsync(arxivId, true, bookmarks, telemetry, searchEventId, rank, ct);
 
     [HttpDelete("{arxivId}/bookmark")]
+    [Authorize(Policy = AuthPolicies.ActiveUser)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<IActionResult> RemoveBookmark(
@@ -106,7 +113,8 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         int? rank,
         CancellationToken ct)
     {
-        var found = await bookmarks.SetAsync(arxivId, bookmarked, ct);
+        var userId = HttpContext.GetAppUser()!.Id;
+        var found = await bookmarks.SetAsync(userId, arxivId, bookmarked, ct);
         if (!found)
         {
             return Problem(statusCode: StatusCodes.Status404NotFound,
@@ -114,6 +122,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         }
 
         await telemetry.LogInteractionAsync(
+            userId,
             arxivId,
             bookmarked ? Domain.Entities.InteractionType.Bookmarked
                        : Domain.Entities.InteractionType.Unbookmarked,
@@ -129,6 +138,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
     /// labels from only ever saying "more of the same".
     /// </summary>
     [HttpPost("{arxivId}/not-interested")]
+    [Authorize(Policy = AuthPolicies.ActiveUser)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> NotInterested(
         string arxivId,
@@ -138,7 +148,8 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         CancellationToken ct)
     {
         await telemetry.LogInteractionAsync(
-            arxivId, Domain.Entities.InteractionType.NotInterested, searchEventId, rank, ct);
+            HttpContext.GetAppUser()!.Id, arxivId,
+            Domain.Entities.InteractionType.NotInterested, searchEventId, rank, ct);
         return NoContent();
     }
 
@@ -147,13 +158,14 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
     public sealed record AnalysisStatusView(bool Active, IReadOnlyList<string> Analyzed);
 
     /// <summary>
-    /// Which of the given papers already have a current analysis (schema +
-    /// profile version), plus whether an analysis job is running. Read-only,
-    /// DB-only — this is what the UI's progress bar polls after "Analyze
-    /// top N". A paper that never appears in Analyzed while Active is false
-    /// was declined or failed.
+    /// Which of the given papers already have a current analysis FOR THE
+    /// CALLER (schema + their profile version), plus whether an analysis job
+    /// is running. Read-only, DB-only — this is what the UI's progress bar
+    /// polls after "Analyze top N". A paper that never appears in Analyzed
+    /// while Active is false was declined or failed.
     /// </summary>
     [HttpPost("analysis-status")]
+    [Authorize]
     [ProducesResponseType<AnalysisStatusView>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAnalysisStatus(
         [FromBody] AnalysisStatusRequest request,
@@ -168,16 +180,17 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
                 detail: "arxivIds must contain between 1 and 500 entries.");
         }
 
-        var profile = await profileService.GetAsync(ct);
+        var userId = HttpContext.GetAppUser()!.Id;
+        var profile = await profileService.GetAsync(userId, ct);
         var profileVersion = profile?.Version ?? 0;
         var ids = request.ArxivIds.ToList();
 
         var analyzed = await db.Papers
             .AsNoTracking()
             .Where(p => ids.Contains(p.ArxivId)
-                && p.AnalysisResult != null
-                && p.AnalysisResult.SchemaVersion >= AnalysisOptions.CurrentSchemaVersion
-                && p.AnalysisResult.ProfileVersion == profileVersion)
+                && p.AnalysisResults.Any(a => a.UserId == userId
+                    && a.SchemaVersion >= AnalysisOptions.CurrentSchemaVersion
+                    && a.ProfileVersion == profileVersion))
             .Select(p => p.ArxivId)
             .ToListAsync(ct);
 

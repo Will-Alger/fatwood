@@ -38,7 +38,7 @@ public class SearchController(
         }
 
         var categories = await queryService.GetCategoriesAsync(ct);
-        var profile = await profileService.GetAsync(ct);
+        var profile = await profileService.GetAsync(HttpContext.GetAppUser()!.Id, ct);
 
         try
         {
@@ -88,13 +88,14 @@ public class SearchController(
                 detail: "plan.anchorText is required.");
         }
 
-        var result = await searchService.SearchAsync(request.Plan, request.Limit ?? 30, ct);
+        var userId = HttpContext.GetAppUser()?.Id;
+        var result = await searchService.SearchAsync(request.Plan, request.Limit ?? 30, userId, ct);
 
         // Product searches are logged (the eval CLI calls ISearchService
         // directly and never lands here). The event id goes back to the client
         // so bookmark/analyze actions can carry their search context.
         var searchEventId = await telemetry.LogSearchAsync(
-            request.QueryText, request.Plan, result, ct);
+            userId, request.QueryText, request.Plan, result, ct);
 
         return Ok(new
         {

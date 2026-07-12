@@ -25,8 +25,12 @@ public sealed record SearchResult(
 /// </summary>
 public interface ISearchService
 {
+    /// <param name="userId">Whose profile annotates results (experience
+    /// proximity, wildcards) and whose bookmark/analysis state decorates the
+    /// hits. Null (anonymous, eval CLI) skips personalization entirely.</param>
     /// <param name="weights">Optional ranking-blend override, used only by the
     /// offline tuner; null means the configured (default: pure similarity) blend.</param>
     Task<SearchResult> SearchAsync(
-        SearchPlan plan, int limit, CancellationToken ct, RankingWeights? weights = null);
+        SearchPlan plan, int limit, long? userId, CancellationToken ct,
+        RankingWeights? weights = null);
 }
