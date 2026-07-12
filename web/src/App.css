@@ -1133,62 +1133,16 @@ select {
   }
 }
 
-/* The ranking visual: corpus specks drift, the chosen few catch fire and
-   settle into a ranked row. Fades in after a beat so fast searches barely
-   see it. */
-.ember-sift {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: 0 0 14px;
-  overflow: hidden;
-  opacity: 0;
-  animation: ember-sift-in 400ms ease 250ms forwards;
-}
-
-.ember-sift-canvas {
-  display: block;
+/* The fuse: top-of-viewport burn line shown while the app waits on the
+   network. Above everything, never interactive. */
+.fuse-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 150px;
-}
-
-.ember-sift-stage {
-  margin: 0;
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--muted);
-  animation: ember-stage-in 350ms ease;
-}
-
-@keyframes ember-sift-in {
-  to {
-    opacity: 1;
-  }
-}
-
-/* Results landed: the canvas flares (in JS) while the panel fades away. */
-.ember-sift-finishing {
-  animation: ember-sift-out 600ms ease 150ms forwards;
-}
-
-@keyframes ember-sift-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes ember-stage-in {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  height: 8px;
+  z-index: 60;
+  pointer-events: none;
 }
 
 .skeleton-card {

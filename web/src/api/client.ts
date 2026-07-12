@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/auth'
+import { beginWait, endWait } from './activity'
 import type {
   AdminUserView,
   CategoryDto,
@@ -52,12 +53,17 @@ async function parseError(response: Response): Promise<ApiError> {
 }
 
 async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, {
-    signal,
-    headers: await authHeaders(),
-  })
-  if (!response.ok) throw await parseError(response)
-  return (await response.json()) as T
+  beginWait()
+  try {
+    const response = await fetch(url, {
+      signal,
+      headers: await authHeaders(),
+    })
+    if (!response.ok) throw await parseError(response)
+    return (await response.json()) as T
+  } finally {
+    endWait()
+  }
 }
 
 async function sendJson<T>(
@@ -66,18 +72,23 @@ async function sendJson<T>(
   body: unknown,
   options: { signal?: AbortSignal } = {},
 ): Promise<T> {
-  const response = await fetch(url, {
-    method,
-    signal: options.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(await authHeaders()),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
-  if (!response.ok) throw await parseError(response)
-  if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+  beginWait()
+  try {
+    const response = await fetch(url, {
+      method,
+      signal: options.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await authHeaders()),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+    if (!response.ok) throw await parseError(response)
+    if (response.status === 204) return undefined as T
+    return (await response.json()) as T
+  } finally {
+    endWait()
+  }
 }
 
 // --- Browse ---

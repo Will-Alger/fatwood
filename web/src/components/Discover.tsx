@@ -7,9 +7,15 @@ import {
 } from '../api/client'
 import type { LlmSettingsView, MeView, SearchPlan, SearchResult } from '../api/types'
 import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
-import { EmberSift } from './EmberSift'
 import { PaperCard } from './PaperCard'
-import { EmberDots } from './Skeletons'
+import { EmberDots, PaperSkeletons } from './Skeletons'
+
+const SEARCH_STAGES = [
+  'Sifting tens of thousands of papers…',
+  'Matching your exact terms…',
+  'Scoring the survivors by meaning…',
+  'Picking two wildcards from outside your lane…',
+]
 
 const RESULT_LIMIT = 30
 const ANALYZE_TOP_N = 25
@@ -51,22 +57,19 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
 
-  // The ember-sift panel outlives the first search by a beat so it can flare
-  // out over the arriving results instead of vanishing mid-frame.
-  const showSift = busy === 'search' && !result
-  const [siftState, setSiftState] = useState<'hidden' | 'active' | 'finishing'>('hidden')
+  // Funnel-stage copy that steps forward while the first search runs; the
+  // ambient ember field (App-level) provides the visual feedback.
+  const [searchStage, setSearchStage] = useState(0)
+  const searching = busy === 'search'
   useEffect(() => {
-    if (showSift) {
-      setSiftState('active')
-      return
-    }
-    setSiftState((s) => (s === 'active' ? 'finishing' : s))
-  }, [showSift])
-  useEffect(() => {
-    if (siftState !== 'finishing') return
-    const id = window.setTimeout(() => setSiftState('hidden'), 800)
-    return () => window.clearTimeout(id)
-  }, [siftState])
+    if (!searching) return
+    setSearchStage(0)
+    const id = window.setInterval(
+      () => setSearchStage((s) => Math.min(s + 1, SEARCH_STAGES.length - 1)),
+      1700,
+    )
+    return () => window.clearInterval(id)
+  }, [searching])
 
   const placeholder = useTypingPlaceholder(EXAMPLE_QUERIES, query === '')
 
@@ -369,8 +372,16 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
         </div>
       )}
 
-      {/* First search in flight: the corpus sifts, the best embers rise. */}
-      {siftState !== 'hidden' && <EmberSift finishing={siftState === 'finishing'} />}
+      {/* First search in flight: staged funnel copy over skeletons; the
+          background ember field carries the motion. */}
+      {busy === 'search' && !result && (
+        <>
+          <p className="working-line">
+            <EmberDots /> {SEARCH_STAGES[searchStage]}
+          </p>
+          <PaperSkeletons count={4} />
+        </>
+      )}
 
       {!result && busy === null && (
         <div className="discover-intro">
