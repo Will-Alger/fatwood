@@ -365,6 +365,71 @@ public class EvalRunner(
         return expected == 0 ? 1 : 1 - observed / expected;
     }
 
+    /// <summary>
+    /// Re-grades EVERY existing judgment under the judge's current rubric,
+    /// preserving each pair's Source (pooling history survives a rubric bump).
+    /// Writes progressively to a temp file and swaps atomically at the end, so
+    /// an interrupted run never leaves a mixed-rubric artifact.
+    /// </summary>
+    public async Task<int> RegradeAsync(string queriesPath, string judgmentsPath, CancellationToken ct)
+    {
+        var querySet = EvalFileStore.LoadQueries(queriesPath);
+        var old = EvalFileStore.LoadJudgmentsOrEmpty(judgmentsPath, judge.RubricVersion);
+        var queriesById = querySet.Queries
+            .Where(q => q.Plan is not null)
+            .ToDictionary(q => q.Id, StringComparer.Ordinal);
+
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+        var arxivIds = old.Judgments.Select(j => j.ArxivId).Distinct().ToList();
+        var papers = await db.Papers
+            .AsNoTracking()
+            .Where(p => arxivIds.Contains(p.ArxivId))
+            .Select(p => new { p.ArxivId, p.Title, p.Abstract })
+            .ToDictionaryAsync(p => p.ArxivId, StringComparer.Ordinal, ct);
+
+        var tempPath = judgmentsPath + ".regrade.tmp";
+        var regraded = new List<EvalJudgment>();
+        foreach (var group in old.Judgments.GroupBy(j => j.QueryId))
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!queriesById.TryGetValue(group.Key, out var query))
+            {
+                logger.LogWarning(
+                    "Regrade: dropping {Count} judgment(s) for removed query {QueryId}",
+                    group.Count(), group.Key);
+                continue;
+            }
+
+            var sourceById = group.ToDictionary(j => j.ArxivId, j => j.Source, StringComparer.Ordinal);
+            var candidates = group
+                .Where(j => papers.ContainsKey(j.ArxivId))
+                .Select(j => new JudgeCandidate(j.ArxivId, papers[j.ArxivId].Title, papers[j.ArxivId].Abstract))
+                .ToList();
+            if (candidates.Count < group.Count())
+            {
+                logger.LogWarning(
+                    "Regrade: {Missing} paper(s) for {QueryId} no longer in the corpus — dropped",
+                    group.Count() - candidates.Count, group.Key);
+            }
+
+            if (candidates.Count == 0)
+            {
+                continue;
+            }
+
+            var result = await judge.JudgeAsync(query, candidates, ct);
+            regraded.AddRange(result.Verdicts.Select(v => new EvalJudgment(
+                group.Key, v.ArxivId, v.Grade, v.Rationale, result.ModelId, sourceById[v.ArxivId])));
+
+            EvalFileStore.SaveJudgments(tempPath, new EvalJudgmentSet(1, judge.RubricVersion, regraded));
+            logger.LogInformation(
+                "Regrade: {QueryId} done ({Total} pairs so far)", group.Key, regraded.Count);
+        }
+
+        File.Move(tempPath, judgmentsPath, overwrite: true);
+        return regraded.Count;
+    }
+
     public async Task<int> JudgeAsync(
         string queriesPath, string judgmentsPath, int poolSize, int randomSample, CancellationToken ct)
     {

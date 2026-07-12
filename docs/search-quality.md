@@ -20,10 +20,12 @@ config flag):
 | 3 | Cross-encoder rerank, top-100 (`UseReranker`) | off (measured: a wash at L-6, a slight loss at L-12) |
 | — | Wildcard slots (2 least-experience-similar from the high-relevance pool) | contractual, never remove |
 
-**Score**: nDCG@10 = 0.620 on the 40-query eval set (2026-07-12). MRR 0.956.
-Absolute numbers are NOT comparable to the 2026-07-10 campaign below — the
-eval set doubled and judgments grew ~50% in between (bigger recall base
-deflates scores); only same-day, same-file comparisons are meaningful.
+**Score**: nDCG@10 = 0.607 on the 40-query eval set under **rubric v2**
+(2026-07-12, post-regrade rebaseline). MRR 0.932. Absolute numbers are NOT
+comparable across rubric versions or judgment growth (the v1 number for the
+same config was 0.620); only same-rubric, same-file comparisons are
+meaningful. All campaign tables below are rubric v1 — their DELTAS remain
+valid, their absolute values do not.
 
 The 2026-07-10 selection campaign (21-query set, identical ground truth):
 
@@ -94,16 +96,16 @@ and future learning-to-rank features.
 
 ### Known measurement limitations (= improvement backlog for the harness)
 
-- **One LLM judge (haiku), rubric v1 — now CALIBRATED** (2026-07-12):
-  `eval calibrate` re-judged a 200-pair stratified sample with sonnet:
-  quadratic weighted kappa **0.830** (excellent), 67.5% exact, 97.5% within
-  one grade (full report: `eval/calibration.json`). Verdict: haiku ground
-  truth is trustworthy for ranker-vs-ranker deltas. Known systematic miss:
-  haiku sometimes ignores DISQUALIFYING constraints (graded an open-source
-  framework 3 on the wants-no-code reproduction-gap query) — fix in rubric
-  v2 when one happens (bump `RubricVersion`; mismatch is a hard error by
-  design — never mix rubrics silently). Re-run calibration after any judge
-  model or rubric change; a human spot-audit remains worthwhile.
+- **One LLM judge (haiku), rubric v2 — CALIBRATED** (2026-07-12):
+  `eval calibrate` re-judges a 200-pair stratified sample with sonnet.
+  Rubric v1: QWK 0.830, 67.5% exact, 97.5% within one grade. Rubric v2
+  (after the disqualifying-constraints rule + full regrade): QWK **0.807**,
+  62.0% exact, 96.5% within one grade — still excellent; ground truth is
+  trustworthy for ranker-vs-ranker deltas (full report:
+  `eval/calibration.json`). Re-run calibration after any judge model or
+  rubric change (`RubricVersion` mismatch is a hard error by design — never
+  mix rubrics silently; `eval regrade` does the full re-grade). A human
+  spot-audit remains worthwhile.
 - **21 queries** — nDCG differences under ~0.02 are noise at this n. Grow
   the set via `eval adopt` (real usage) and judge. 50+ queries would allow
   per-query significance.
@@ -249,16 +251,23 @@ re-run after judge/rubric changes. Human spot-audit still worthwhile.
 anchor-max hijack mechanism, confirmed by the blend experiment in
 lesson 9; no compiler fix available, cost accepted.)
 
-1. **Rubric v2 candidate**: teach the judge to check DISQUALIFYING
-   constraints first (wants-no-code, date implications) — the one
-   systematic miss calibration surfaced. Bumping RubricVersion forces a
-   full regrade (~$1–2), so batch it with the next big eval-set change.
+~~Rubric v2~~ — SHIPPED 2026-07-12: disqualifying-constraints rule added,
+RubricVersion=2, full regrade via the new `eval regrade` command (4,936
+pairs; Source preserved so pooling history survives). Verified on target:
+reproduction-gap grade-3s fell 47→32 with mass moving to 0/1; 77% of all
+grades unchanged, symmetric churn elsewhere. New baseline 0.607, CI floor
+recalibrated to 0.575.
 3. **Recency-normalized citations** (citations/day) as a blend feature.
 ~~CI regression gate~~ — LIVE 2026-07-12 (see §2).
 
-4. **Interleaving in anger**: HyDE-off vs HyDE-on as first live candidate —
-   the offline delta is +0.02; a click-vote confirmation would be free.
-5. **LTR** once labels cross ~200 (see §4).
+~~Interleaving in anger~~ — LIVE 2026-07-12: production searches now
+team-draft interleave the shipped stack (HyDE on) against the same stack
+with HyDE off (`Ranking:InterleaveCandidate` + `Candidate` in appsettings).
+Real clicks vote; check the scoreboard with `eval bias` against the PROD
+telemetry once >20 votes accumulate. Offline says +0.02 for HyDE — this is
+the free online confirmation. Turn it off (flag false) once decided.
+
+4. **LTR** once labels cross ~200 (see §4).
 6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,
    has-experiments/dataset flags. Big lift, big analysis payoff.
 

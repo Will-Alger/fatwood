@@ -36,6 +36,7 @@ public static class EvalCommandRunner
                 "       eval calibrate [--queries <path>] [--judgments <path>] [--out <path>] [--sample <N>] [--model <id>]\n" +
                 "       eval export-corpus [--judgments <path>] [--corpus <path>]\n" +
                 "       eval seed      [--corpus <path>]   (empty database only)\n" +
+                "       eval regrade   [--queries <path>] [--judgments <path>]   (full re-grade under the current rubric)\n" +
                 "  eval search also accepts --min-ndcg <floor>: exit 1 when mean nDCG@10 falls below it (CI gate).");
             return ExitUsage;
         }
@@ -134,6 +135,13 @@ public static class EvalCommandRunner
                     var seeded = await runner.SeedCorpusAsync(corpusPath, cts.Token);
                     Console.WriteLine($"Seeded {seeded} paper(s) from {corpusPath}. Run `embed` next.");
                     return seeded > 0 ? ExitOk : ExitRunFailed;
+
+                case "regrade":
+                    var regraded = await runner.RegradeAsync(queriesPath, judgmentsPath, cts.Token);
+                    Console.WriteLine(
+                        $"Regraded {regraded} judgment(s) under the current rubric into {judgmentsPath}. " +
+                        "Rescore every config and recalibrate the CI floor.");
+                    return regraded > 0 ? ExitOk : ExitRunFailed;
 
                 default:
                     return ExitUsage;
@@ -297,7 +305,7 @@ public static class EvalCommandRunner
 
         verb = args[1].ToLowerInvariant();
         if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit"
-            or "calibrate" or "export-corpus" or "seed"))
+            or "calibrate" or "export-corpus" or "seed" or "regrade"))
         {
             return false;
         }

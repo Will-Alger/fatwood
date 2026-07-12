@@ -25,7 +25,10 @@ public class AnthropicRelevanceJudge(
     private const int MaxOutputTokens = 4096;
     private const int MaxAbstractChars = 2000;
 
-    public int RubricVersion => 1;
+    // v2 (2026-07-12): added the disqualifying-constraints rule after sonnet
+    // calibration caught v1 grading an already-open-source framework 3 on a
+    // wants-no-code query. Bumping this forces a full `eval regrade`.
+    public int RubricVersion => 2;
 
     private const string SchemaJson = """
     {
@@ -62,6 +65,12 @@ public class AnthropicRelevanceJudge(
         0 = irrelevant to the intent.
 
         Rules:
+        - FIRST check for DISQUALIFYING constraints in the intent and grade them strictly:
+          if the searcher explicitly wants papers WITHOUT public code, a paper whose
+          title/abstract advertises released code or an existing open-source framework is
+          at most grade 1 no matter how on-topic it is. The same applies to any other
+          explicit exclusion or hard requirement the searcher states (hardware limits,
+          data-access needs, recency).
         - Judge against the searcher's INTENT (query + persona), not against their current
           skills: an on-topic paper using unfamiliar languages or frameworks is NOT graded
           down for that — skills are learnable.
