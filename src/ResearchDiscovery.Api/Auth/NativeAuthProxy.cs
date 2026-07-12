@@ -15,6 +15,9 @@ public static class NativeAuthProxy
 {
     public const string HttpClientName = "NativeAuthProxy";
 
+    // Both reset spellings appear in the wild (the API reference says
+    // password_reset, the SDK uses resetpassword), and the reset flow has a
+    // poll_completion leg the docs bury.
     private static readonly HashSet<string> AllowedPaths = new(StringComparer.Ordinal)
     {
         "signup/v1.0/start",
@@ -27,6 +30,13 @@ public static class NativeAuthProxy
         "password_reset/v1.0/start",
         "password_reset/v1.0/challenge",
         "password_reset/v1.0/continue",
+        "password_reset/v1.0/submit",
+        "password_reset/v1.0/poll_completion",
+        "resetpassword/v1.0/start",
+        "resetpassword/v1.0/challenge",
+        "resetpassword/v1.0/continue",
+        "resetpassword/v1.0/submit",
+        "resetpassword/v1.0/poll_completion",
     };
 
     // Telemetry headers the MSAL custom-auth SDK sends; everything else
@@ -58,7 +68,14 @@ public static class NativeAuthProxy
         {
             if (!AllowedPaths.Contains(path))
             {
-                return Results.NotFound();
+                // Always answer JSON: the SDK parses every proxy response as
+                // JSON and an empty 404 body surfaces as a cryptic client
+                // error ("Unexpected end of JSON input").
+                return Results.Json(new
+                {
+                    error = "invalid_request",
+                    error_description = $"Path '{path}' is not a proxied native-auth endpoint.",
+                }, statusCode: StatusCodes.Status404NotFound);
             }
 
             if (baseUrl is null)
