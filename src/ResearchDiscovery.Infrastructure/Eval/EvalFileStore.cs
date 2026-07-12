@@ -45,6 +45,9 @@ public static class EvalFileStore
 
     public static void SaveJudgments(string path, EvalJudgmentSet set) => Save(path, set);
 
+    /// <summary>Calibration reports are point-in-time audits; each save overwrites.</summary>
+    public static void SaveCalibration<T>(string path, T report) => Save(path, report);
+
     private static void Save<T>(string path, T value)
     {
         var directory = Path.GetDirectoryName(Path.GetFullPath(path));

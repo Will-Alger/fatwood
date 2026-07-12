@@ -83,6 +83,162 @@ public class EvalRunner(
         return compiled;
     }
 
+    public sealed record CalibrationPair(
+        string QueryId,
+        string ArxivId,
+        int OriginalGrade,
+        int CalibrationGrade,
+        string OriginalRationale,
+        string CalibrationRationale);
+
+    public sealed record CalibrationReport(
+        string CalibrationModel,
+        string OriginalModels,
+        int RubricVersion,
+        int SampleSize,
+        double ExactAgreement,
+        double WithinOneAgreement,
+        double QuadraticWeightedKappa,
+        int[][] Confusion, // [originalGrade][calibrationGrade]
+        IReadOnlyList<CalibrationPair> Pairs);
+
+    /// <summary>
+    /// Double-judges a stratified, seeded sample of EXISTING judgments with a
+    /// (stronger) override model and reports agreement — the check on whether
+    /// the ground truth itself can be trusted. Writes a separate calibration
+    /// artifact; never touches judgments.json.
+    /// </summary>
+    public async Task<CalibrationReport> CalibrateAsync(
+        string queriesPath,
+        string judgmentsPath,
+        string calibrationPath,
+        int sampleSize,
+        string modelId,
+        CancellationToken ct)
+    {
+        var querySet = EvalFileStore.LoadQueries(queriesPath);
+        var judgmentSet = EvalFileStore.LoadJudgmentsOrEmpty(judgmentsPath, judge.RubricVersion);
+        if (judgmentSet.RubricVersion != judge.RubricVersion)
+        {
+            throw new InvalidOperationException(
+                $"Judgments are rubric v{judgmentSet.RubricVersion}, judge is v{judge.RubricVersion} — " +
+                "calibration across rubrics is meaningless.");
+        }
+
+        var queriesById = querySet.Queries
+            .Where(q => q.Plan is not null)
+            .ToDictionary(q => q.Id, StringComparer.Ordinal);
+
+        // Stratified sample: equal share per grade, deterministic via a fixed
+        // seed over a stable ordering — reruns sample the same pairs.
+        var rng = new Random(20260712);
+        var perGrade = (int)Math.Ceiling(sampleSize / 4.0);
+        var sampled = judgmentSet.Judgments
+            .Where(j => queriesById.ContainsKey(j.QueryId))
+            .GroupBy(j => j.Grade)
+            .OrderBy(g => g.Key)
+            .SelectMany(g => g
+                .OrderBy(j => j.QueryId, StringComparer.Ordinal)
+                .ThenBy(j => j.ArxivId, StringComparer.Ordinal)
+                .OrderBy(_ => rng.Next())
+                .Take(perGrade))
+            .ToList();
+
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+        var arxivIds = sampled.Select(s => s.ArxivId).Distinct().ToList();
+        var papers = await db.Papers
+            .AsNoTracking()
+            .Where(p => arxivIds.Contains(p.ArxivId))
+            .Select(p => new { p.ArxivId, p.Title, p.Abstract })
+            .ToDictionaryAsync(p => p.ArxivId, StringComparer.Ordinal, ct);
+
+        var pairs = new List<CalibrationPair>();
+        foreach (var group in sampled.GroupBy(s => s.QueryId))
+        {
+            ct.ThrowIfCancellationRequested();
+            var query = queriesById[group.Key];
+            var candidates = group
+                .Where(s => papers.ContainsKey(s.ArxivId))
+                .Select(s => new JudgeCandidate(
+                    s.ArxivId, papers[s.ArxivId].Title, papers[s.ArxivId].Abstract))
+                .ToList();
+            if (candidates.Count == 0)
+            {
+                continue; // papers pruned from the corpus since judging
+            }
+
+            var result = await judge.JudgeAsync(query, candidates, ct, modelId);
+            var verdictById = result.Verdicts.ToDictionary(v => v.ArxivId, StringComparer.Ordinal);
+            foreach (var original in group)
+            {
+                if (verdictById.TryGetValue(original.ArxivId, out var v))
+                {
+                    pairs.Add(new CalibrationPair(
+                        original.QueryId, original.ArxivId,
+                        original.Grade, v.Grade, original.Rationale, v.Rationale));
+                }
+            }
+
+            logger.LogInformation(
+                "Calibration: {QueryId} re-judged {Count} pair(s)", query.Id, candidates.Count);
+        }
+
+        var confusion = new int[4][];
+        for (var i = 0; i < 4; i++)
+        {
+            confusion[i] = new int[4];
+        }
+
+        foreach (var p in pairs)
+        {
+            confusion[p.OriginalGrade][p.CalibrationGrade]++;
+        }
+
+        var originalModels = string.Join(
+            ", ",
+            sampled.Select(s => s.JudgeModel).Distinct(StringComparer.Ordinal).OrderBy(m => m));
+
+        var report = new CalibrationReport(
+            modelId,
+            originalModels,
+            judge.RubricVersion,
+            pairs.Count,
+            pairs.Count == 0 ? 0 : pairs.Count(p => p.OriginalGrade == p.CalibrationGrade) / (double)pairs.Count,
+            pairs.Count == 0 ? 0 : pairs.Count(p => Math.Abs(p.OriginalGrade - p.CalibrationGrade) <= 1) / (double)pairs.Count,
+            QuadraticWeightedKappa(confusion, pairs.Count),
+            confusion,
+            pairs);
+
+        EvalFileStore.SaveCalibration(calibrationPath, report);
+        return report;
+    }
+
+    /// <summary>Cohen's kappa with quadratic (squared-distance) weights — the
+    /// standard agreement statistic for ordinal grades; 1 = perfect, 0 = chance.</summary>
+    internal static double QuadraticWeightedKappa(int[][] confusion, int total)
+    {
+        if (total == 0)
+        {
+            return 0;
+        }
+
+        var rowSums = confusion.Select(r => r.Sum()).ToArray();
+        var colSums = Enumerable.Range(0, 4).Select(c => confusion.Sum(r => r[c])).ToArray();
+
+        double observed = 0, expected = 0;
+        for (var i = 0; i < 4; i++)
+        {
+            for (var j = 0; j < 4; j++)
+            {
+                var weight = (i - j) * (i - j) / 9.0; // max distance² = 3² = 9
+                observed += weight * confusion[i][j];
+                expected += weight * rowSums[i] * colSums[j] / (double)total;
+            }
+        }
+
+        return expected == 0 ? 1 : 1 - observed / expected;
+    }
+
     public async Task<int> JudgeAsync(
         string queriesPath, string judgmentsPath, int poolSize, int randomSample, CancellationToken ct)
     {

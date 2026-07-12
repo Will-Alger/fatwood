@@ -70,9 +70,13 @@ public class AnthropicRelevanceJudge(
         """;
 
     public async Task<RelevanceJudgeResult> JudgeAsync(
-        EvalQuery query, IReadOnlyList<JudgeCandidate> candidates, CancellationToken ct)
+        EvalQuery query,
+        IReadOnlyList<JudgeCandidate> candidates,
+        CancellationToken ct,
+        string? modelOverride = null)
     {
-        var model = await settings.GetModelForStepAsync(LlmOptions.StepRelevanceJudge, ct);
+        var modelId = modelOverride
+            ?? (await settings.GetModelForStepAsync(LlmOptions.StepRelevanceJudge, ct)).Id;
         var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(SchemaJson)!;
 
         var batches = candidates
@@ -88,15 +92,15 @@ public class AnthropicRelevanceJudge(
             new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentBatches, CancellationToken = ct },
             async (i, token) =>
             {
-                verdicts[i] = await JudgeBatchAsync(model.Id, schema, query, batches[i], token);
+                verdicts[i] = await JudgeBatchAsync(modelId, schema, query, batches[i], token);
             });
 
         var all = verdicts.SelectMany(v => v).ToList();
         logger.LogInformation(
             "Judged {Count}/{Total} papers for eval query {QueryId} via {Model}",
-            all.Count, candidates.Count, query.Id, model.Id);
+            all.Count, candidates.Count, query.Id, modelId);
 
-        return new RelevanceJudgeResult(model.Id, all);
+        return new RelevanceJudgeResult(modelId, all);
     }
 
     private async Task<List<RelevanceVerdict>> JudgeBatchAsync(

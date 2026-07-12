@@ -76,6 +76,7 @@ and future learning-to-rank features.
 | `eval bias` | none | Telemetry skew report + interleaving scoreboard. |
 | `eval adopt` | none | Promote logged real queries into queries.json. |
 | `eval audit` | none | Missed-gem estimates from random-sample judgments. |
+| `eval calibrate` | ~$0.5 | Double-judge a stratified judgment sample with a stronger model (`--model`, default sonnet); reports agreement/kappa to eval/calibration.json. Never writes judgments.json. |
 
 ### The comparison protocol (follow it exactly)
 
@@ -93,10 +94,16 @@ and future learning-to-rank features.
 
 ### Known measurement limitations (= improvement backlog for the harness)
 
-- **One LLM judge (haiku), rubric v1.** No error bars. Improve by: (a) human
-  spot-audit of ~30 grades to calibrate; (b) double-judge a sample with
-  sonnet and report agreement; (c) bump `RubricVersion` on any prompt change
-  (mismatch is a hard error by design — never mix rubrics silently).
+- **One LLM judge (haiku), rubric v1 — now CALIBRATED** (2026-07-12):
+  `eval calibrate` re-judged a 200-pair stratified sample with sonnet:
+  quadratic weighted kappa **0.830** (excellent), 67.5% exact, 97.5% within
+  one grade (full report: `eval/calibration.json`). Verdict: haiku ground
+  truth is trustworthy for ranker-vs-ranker deltas. Known systematic miss:
+  haiku sometimes ignores DISQUALIFYING constraints (graded an open-source
+  framework 3 on the wants-no-code reproduction-gap query) — fix in rubric
+  v2 when one happens (bump `RubricVersion`; mismatch is a hard error by
+  design — never mix rubrics silently). Re-run calibration after any judge
+  model or rubric change; a human spot-audit remains worthwhile.
 - **21 queries** — nDCG differences under ~0.02 are noise at this n. Grow
   the set via `eval adopt` (real usage) and judge. 50+ queries would allow
   per-query significance.
@@ -231,11 +238,16 @@ with a sentencepiece/BPE tokenizer path for a genuinely different model.
 the `intent` field remains on plans for slicing/telemetry/LTR.
 ~~HyDE blend modes~~ — MEASURED AND REJECTED same day, twice (lesson 9).
 
-1. **Judge calibration**: human spot-audit + sonnet double-judge agreement
-   (makes all numbers trustworthy).
-   (HyDE outlier autopsy: DONE — abstracts were on-target; cause is the
-   anchor-max hijack mechanism, confirmed by the blend experiment in
-   lesson 9; no compiler fix available, cost accepted.)
+~~Judge calibration~~ — DONE 2026-07-12: QWK 0.830 vs sonnet (see §2);
+re-run after judge/rubric changes. Human spot-audit still worthwhile.
+(HyDE outlier autopsy: DONE — abstracts were on-target; cause is the
+anchor-max hijack mechanism, confirmed by the blend experiment in
+lesson 9; no compiler fix available, cost accepted.)
+
+1. **Rubric v2 candidate**: teach the judge to check DISQUALIFYING
+   constraints first (wants-no-code, date implications) — the one
+   systematic miss calibration surfaced. Bumping RubricVersion forces a
+   full regrade (~$1–2), so batch it with the next big eval-set change.
 3. **Recency-normalized citations** (citations/day) as a blend feature.
 4. **Interleaving in anger**: HyDE-off vs HyDE-on as first live candidate —
    the offline delta is +0.02; a click-vote confirmation would be free.

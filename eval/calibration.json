@@ -1,0 +1,1637 @@
+{
+  "calibrationModel": "claude-sonnet-5",
+  "originalModels": "claude-haiku-4-5",
+  "rubricVersion": 1,
+  "sampleSize": 200,
+  "exactAgreement": 0.675,
+  "withinOneAgreement": 0.975,
+  "quadraticWeightedKappa": 0.83,
+  "confusion": [
+    [
+      44,
+      6,
+      0,
+      0
+    ],
+    [
+      9,
+      35,
+      5,
+      1
+    ],
+    [
+      1,
+      13,
+      24,
+      12
+    ],
+    [
+      1,
+      2,
+      15,
+      32
+    ]
+  ],
+  "pairs": [
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.10846",
+      "originalGrade": 0,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses security vulnerabilities in code language models rather than automated testing, fuzzing, or test reliability topics.",
+      "calibrationRationale": "About backdoor security in code language models, not testing/fuzzing/flaky tests."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2604.22576",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Compares automotive middleware frameworks against industry requirements; not relevant to automated testing, fuzzing, or flaky test detection.",
+      "calibrationRationale": "Middleware comparison for automotive systems, unrelated to testing/fuzzing."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2604.26384",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Focuses on constraint validation in Model-Based Systems Engineering using OCL and Asset Administration Shells; not relevant to automated testing, fuzzing, or flaky test detection.",
+      "calibrationRationale": "MBSE OCL validation framework, not related to software testing/fuzzing/flaky tests."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.13804",
+      "originalGrade": 1,
+      "calibrationGrade": 3,
+      "originalRationale": "Empirical study of LLM performance on detecting test smells in manual test cases; tangential to automated fuzzing and flaky test detection, and limited to natural language test smell classification rather than core QA automation research.",
+      "calibrationRationale": "Directly on automated detection of test smells in manual test cases using LLMs, highly relevant and buildable as a project."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.08806",
+      "originalGrade": 1,
+      "calibrationGrade": 2,
+      "originalRationale": "Proposes a governance framework for AI-generated test artifacts; tangential to core fuzzing/flaky test detection research and emphasizes governance/compliance rather than testing technique innovation.",
+      "calibrationRationale": "Governance framework for AI-generated test artifacts in autonomous software testing, relevant to automated testing tooling."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2605.31058",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses code synthesis and LLM training via RLVR with verifiable rewards, which shares automated verification principles but does not directly target testing automation, fuzzing, or flaky test detection.",
+      "calibrationRationale": "Focuses on RL training data synthesis for code generation, tangential to testing/fuzzing intent."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.21926",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Automated repair of accessibility violations with systematic evaluation framework is relevant to QA automation and testing practices, though it focuses on accessibility rather than general testing or flakiness.",
+      "calibrationRationale": "About automated repair of web accessibility issues, related to APR but not testing/fuzzing/flaky tests directly."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2605.26539",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Presents FuzzPilot, a fuzzing controller that optimizes mutation strategies during fuzzing campaigns, relevant to fuzzing research and applicable as a portfolio project, though the evaluation is limited in scope.",
+      "calibrationRationale": "Directly about fuzzing tooling (AFL\u002B\u002B controller) with buildable implementation, matches intent well."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2606.28403",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly addresses automated testing through RL-based fuzzing and test generation with a systematic review of techniques, making it highly relevant for research-informed QA tooling development.",
+      "calibrationRationale": "Systematic review of RL for vulnerability analysis including fuzzing, relevant but more survey-oriented than buildable project."
+    },
+    {
+      "queryId": "testing-research",
+      "arxivId": "2605.14219",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly relevant fuzzing research with clear hybrid input strategy and concrete VQE/QAOA implementations, highly buildable as a portfolio project demonstrating failure-guided testing methodology.",
+      "calibrationRationale": "Failure-guided fuzzing technique for quantum-classical programs, directly on fuzzing research though niche domain."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2605.13383",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Theoretical GNN signal propagation paper; no connection to fraud detection or financial applications.",
+      "calibrationRationale": "Pure GNN signal-propagation theory unrelated to fraud detection."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2607.01179",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Develops quasi-Monte Carlo sampling for language model inference, not applicable to payment fraud detection systems.",
+      "calibrationRationale": "LLM test-time sampling technique, no connection to fraud or payments."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2605.25750",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Graph neural network architecture paper focused on structural expressivity; unrelated to fraud detection or payment systems.",
+      "calibrationRationale": "General MPNN weight-sharing research with no fraud application."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2605.30786",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Graph classification with abstention is tangentially related to fraud risk but lacks fraud-specific context or buildable demo scope.",
+      "calibrationRationale": "Generic graph classification abstention framework, not fraud-specific and not directly buildable as a fraud demo."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2605.09408",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "While link prediction has fraud detection applications, this is a general graph learning method without fraud-specific focus or implementation guidance.",
+      "calibrationRationale": "Link prediction method mentions fraud as a potential application but is evaluated on generic citation datasets, not payment fraud."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2605.08820",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Addresses fraud detection (refund fraud via AI-generated images) with a multimodal ML benchmark and practical evaluation; relevant but narrower in scope than general payment fraud approaches and less directly implementable as a backend system.",
+      "calibrationRationale": "Directly targets fraud detection (AI-generated refund fraud) with a concrete multimodal benchmark that could be built as a demo system."
+    },
+    {
+      "queryId": "fraud-detection",
+      "arxivId": "2604.19514",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses Bitcoin fraud detection with practical ML evaluation; clear methodology and reproducible protocol make it highly suitable for implementing a demo fraud detection system.",
+      "calibrationRationale": "Directly addresses ML-based fraud detection on transaction graphs with reproducible code and evaluation, ideal for a portfolio project."
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2607.00213",
+      "originalGrade": 0,
+      "calibrationGrade": 1,
+      "originalRationale": "Describes a federated transport protocol for privacy in institutional networks; unrelated to DEX mechanics, DeFi protocols, or on-chain data analysis.",
+      "calibrationRationale": "Related to protocol/system design and privacy tech but not DeFi/DEX/on-chain finance analysis."
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2604.16515",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Adversarial robustness of multimodal agents in financial transactions is unrelated to DeFi protocols, DEX mechanics, or on-chain analysis.",
+      "calibrationRationale": "About adversarial attacks on multimodal LLM agents, unrelated to DeFi or blockchain."
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2605.24632",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Security economics and LLM vulnerability discovery are unrelated to blockchain, DEX mechanics, or on-chain data.",
+      "calibrationRationale": "Focuses on LLM-driven vulnerability discovery economics, not blockchain or DeFi."
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2605.13779",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Describes infrastructure for training and serving large language models at scale, not related to DeFi or blockchain protocols.",
+      "calibrationRationale": "About LLM training/serving infrastructure, unrelated to blockchain or DeFi."
+    },
+    {
+      "queryId": "crypto-defi",
+      "arxivId": "2604.15973",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Detailed analysis of MEV sources and CEX-DEX arbitrage with on-chain Ethereum data, AMM mechanics, and quantitative modeling\u2014directly on-target for DEX mechanics and on-chain data analysis with clear buildable insights.",
+      "calibrationRationale": "Directly analyzes MEV and CEX-DEX arbitrage using on-chain Ethereum data, highly relevant and buildable as a data analysis project."
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2604.20981",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Medical imaging and pancreatic tumor segmentation is completely unrelated to financial risk modeling or trading applications.",
+      "calibrationRationale": "Medical image segmentation, unrelated to financial risk modeling."
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.08182",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Develops quantile-based distributional reinforcement learning for gaming/control problems; while using quantile methods, the application domain and risk-sensitive framing are unrelated to financial risk management.",
+      "calibrationRationale": "Risk-sensitive RL with quantile methods, but applied to games/navigation, not financial risk modeling."
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.12762",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Focuses on precipitation extremes via deep learning rather than financial risk, making it tangential despite sharing quantile-regression and tail-modeling techniques.",
+      "calibrationRationale": "Quantile regression for tail events, but domain is precipitation/climate, not finance."
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.28531",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Covers distribution-free probabilistic forecasting with explicit focus on tail stabilization and conditional quantiles, relevant to risk modeling though not exclusively financial.",
+      "calibrationRationale": "General probabilistic time-series forecasting with tail-focused stability, not specifically financial risk or VaR."
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2605.10364",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses tail risk and heavy-tailed uncertainty modeling with a modern deep learning approach to uncertainty quantification in volatile time series\u2014excellent fit for risk modeling portfolio work.",
+      "calibrationRationale": "Directly targets heavy-tailed tail risk modeling in volatile time series, highly relevant and buildable as a risk-modeling project."
+    },
+    {
+      "queryId": "quant-risk",
+      "arxivId": "2604.25378",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly tackles higher-moment portfolio optimization including skewness and kurtosis for tail risk capture, with scalable algorithms for large asset universes\u2014core financial risk modeling for trading applications.",
+      "calibrationRationale": "Portfolio optimization incorporating skewness/kurtosis for tail risk, directly relevant to financial risk modeling and buildable."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.15435",
+      "originalGrade": 0,
+      "calibrationGrade": 1,
+      "originalRationale": "Research on neural network structural plasticity and pruning is deep learning theory with no clear pathway to a buildable weekend portfolio project.",
+      "calibrationRationale": "Deep theoretical research on network growth dynamics, not a practical weekend-scale buildable project."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.08057",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "A survey paper rather than a buildable system; useful for understanding LLM infrastructure but lacks the concrete methodology and scope needed for a portfolio project.",
+      "calibrationRationale": "A survey of KV-cache optimization techniques; useful background but not a concrete buildable artifact."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.17998",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "While it involves anomaly detection and forecasting relevant to monitoring, the paper is heavily focused on advanced causal inference and deep learning theory rather than practical backend implementation or deployment challenges.",
+      "calibrationRationale": "Complex causal-forecasting anomaly detection system requiring causal discovery and probabilistic modeling, too advanced for a novice weekend project."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.07097",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Multi-agent LLM safety evaluation is interesting for ML-adjacent roles but primarily involves prompt engineering and evaluation frameworks rather than building a tangible backend system.",
+      "calibrationRationale": "An LLM safety evaluation study, more of an analysis paper than something with a clear buildable artifact."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.04754",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "Specialized research on approximate multipliers and MoE interactions that is more academic than practically buildable; limited portfolio project scope without domain-specific hardware access.",
+      "calibrationRationale": "Hardware-focused approximate-multiplier study for MoE DNNs, unrelated to backend/ML-adjacent software skills."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2606.00241",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Foundation model for dependency estimation is ML-focused and requires significant machine learning background; not well-suited for a beginner ML learner building a portfolio project in short timeframes.",
+      "calibrationRationale": "Foundation-model-scale MI estimator requiring large-scale pretraining, not feasible as a quick portfolio build."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2607.05095",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "FAST is a systems-level optimization framework for Temporal GNNs; while relevant to backend performance, it\u0027s primarily a distributed systems contribution requiring low-level optimization expertise rather than a typical portfolio project.",
+      "calibrationRationale": "Systems-level GNN training optimization framework, too complex/infrastructure-heavy for a weekend project."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.26211",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Relevant: automated ML algorithm generation framework with accessible Python package is interesting for resume-building, but the novelty lies in LLM-based code generation rather than demonstrating practical backend or production ML skills.",
+      "calibrationRationale": "LLM-driven AutoML code generation is approachable with existing APIs and could inspire a scaled-down but resume-worthy project."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2604.22180",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "ResRank presents a concrete system combining passage compression and LLM-based reranking with clear implementation details; buildable as a portfolio project demonstrating both retrieval and inference optimization skills.",
+      "calibrationRationale": "Retrieval/reranking system using embeddings is a relevant backend/ML-adjacent skill area that could be simplified into a demo project."
+    },
+    {
+      "queryId": "vague-career-pivot",
+      "arxivId": "2605.03686",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly relevant as it demonstrates fine-tuning LLMs for a classification task using accessible tools (PyTorch, LoRA, open datasets), which a backend developer could replicate and extend as a portfolio project in reasonable time.",
+      "calibrationRationale": "LoRA fine-tuning for classification is accessible via HuggingFace tools and makes a plausible ML-adjacent portfolio piece."
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2604.17954",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Develops theoretical connections between normalizing flows and K\u00E4hler-Ricci geometry; highly abstract mathematical work unrelated to practical model compression.",
+      "calibrationRationale": "Purely theoretical math paper on normalizing flows and geometry, unrelated to model compression or on-device deployment."
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2605.02285",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Focuses on LLM compression for circuit analysis tasks using prerequisite graphs, not directly applicable to mobile on-device inference or general neural network compression.",
+      "calibrationRationale": "Focuses on selecting compressed LLM variants for circuit analysis evaluation rather than a buildable compression method or on-device deployment project."
+    },
+    {
+      "queryId": "model-shrinking",
+      "arxivId": "2606.00494",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Excellent match: proposes ProjQ framework combining quantization and LoRA for LLM compression to 3-4 bits with working code, directly addressing the goal of smaller faster models for deployment with clear methodology and proven results.",
+      "calibrationRationale": "Directly addresses LLM quantization combined with LoRA to shrink models while preserving accuracy, relevant to on-device efficiency but complex to fully replicate as a portfolio project."
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.06563",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper is about theoretical neural network initialization and finite-width analysis, not time series forecasting or financial data applications.",
+      "calibrationRationale": "Theoretical analysis of orthogonal neural network initialization, unrelated to time series forecasting or finance."
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.18333",
+      "originalGrade": 0,
+      "calibrationGrade": 1,
+      "originalRationale": "Quantum neural networks for weather forecasting are unrelated to financial time series forecasting or the transformer-vs-classical methods comparison.",
+      "calibrationRationale": "Time series forecasting with quantum spiking neural networks for weather, not financial data and not practically buildable without quantum hardware."
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.29952",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "While this uses graph neural networks for multi-horizon forecasting on geophysical systems, it targets climate/ice modeling rather than financial data, making it tangentially relevant to forecasting methodology but not aligned with financial time series focus.",
+      "calibrationRationale": "Graph neural network forecasting for glacier dynamics, shares time series forecasting theme but no financial or transformer-vs-classical focus."
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2607.00470",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Directly relevant for time-series forecasting with neural networks and includes practical uncertainty quantification, though not specifically focused on financial data or transformer comparisons.",
+      "calibrationRationale": "Neural estimation of AR(p) parameters is a general time series method but not financial-specific nor a transformer comparison."
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.11287",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Addresses core issue of transformers vs simple models in time-series with novel operator attention approach, directly relevant to the comparison intent but not finance-specific.",
+      "calibrationRationale": "Directly addresses transformer vs simpler model performance in time series forecasting, a strong methodological match though not finance-specific."
+    },
+    {
+      "queryId": "timeseries-forecasting",
+      "arxivId": "2605.19278",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly tackles volatility forecasting for financial data comparing classical (HAR, LSTM) against graph neural network approaches on real S\u0026P 500 data with portfolio evaluation, making it an excellent buildable portfolio project.",
+      "calibrationRationale": "Directly compares classical (HAR, LSTM) vs graph neural network forecasts on financial volatility data with portfolio evaluation, ideal buildable finance ML project."
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2604.27033",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "EEG brain-signal decoding using deep learning is entirely outside fintech scope and has no relevance to financial software engineering or trading systems.",
+      "calibrationRationale": "EEG deep learning survey has no relevance to fintech portfolio projects."
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2604.20771",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "IoT vehicle cybersecurity detection; outside fintech domain and unrelated to fintech company portfolio goals.",
+      "calibrationRationale": "Automotive CAN attack detection is unrelated to fintech."
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2605.16327",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Autonomous vehicle control with conformal prediction; robotics/control domain unrelated to fintech portfolio objectives.",
+      "calibrationRationale": "Safety-critical robotics/navigation control has no fintech relevance."
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2605.17329",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "A policy guardrail framework for LLMs addresses AI safety rather than fintech-specific problems like trading, payments, or risk management that would strengthen a fintech candidate.",
+      "calibrationRationale": "LLM safety guardrail framework is a general AI-safety topic, only tangentially useful for fintech compliance projects."
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2606.25811",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Clearly applicable: presents a graph-learning approach for futures trading strategies with empirical results, though calendar spreads are more specialized than general fintech skills.",
+      "calibrationRationale": "Graph learning for commodity futures trading strategies is directly fintech-relevant, though data/scope may be complex for a solo project."
+    },
+    {
+      "queryId": "fintech-nyc-fullstack",
+      "arxivId": "2605.05580",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Excellent fit: comprehensive multi-agent framework covering factor discovery, regime adaptation, and execution\u2014directly buildable as a complete quantitative trading portfolio project with clear architecture.",
+      "calibrationRationale": "Multi-agent quant trading framework is highly on-target for fintech and could be scoped into a buildable portfolio project using LLM agents and public market data."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2606.26121",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses distributed edge AI and frame filtering for biodiversity monitoring; lacks connection to operations/systems telemetry anomaly detection and is domain-specific to insect monitoring.",
+      "calibrationRationale": "About insect monitoring edge AI, unrelated to logs/metrics/system telemetry."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2605.02316",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper is about computer vision for waste detection in satellite/drone imagery\u2014completely unrelated to the searcher\u0027s intent of anomaly detection for system logs, metrics, or operational telemetry.",
+      "calibrationRationale": "UAV imagery waste detection, irrelevant to SRE anomaly detection."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2605.05189",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Theoretical analysis of linear memory capacity and phase transitions; no connection to operational anomaly detection, logs, metrics, or system telemetry.",
+      "calibrationRationale": "Theoretical associative memory capacity paper, unrelated to ops telemetry anomaly detection."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2605.00490",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Focuses on distance metric learning for conditional anomalies in general data, lacking the operational telemetry context (logs, metrics, system data) the searcher needs.",
+      "calibrationRationale": "General conditional anomaly detection method, not grounded in ops/telemetry data or buildable as an SRE project."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2605.18844",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Presents a graph-based real-time monitoring framework for anomaly detection (money laundering) with online learning, directly applicable to operational anomaly detection in complex systems.",
+      "calibrationRationale": "Anomaly detection via graph learning but for AML/finance domain, not system telemetry, tangential to intent."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2604.18066",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Relevant anomaly detection work for network intrusion systems with explainability focus, though IDS is slightly narrower than the broader ops telemetry intent; still a solid portfolio project with clear methods.",
+      "calibrationRationale": "Directly relevant: anomaly-based intrusion detection with explainability using network/process data, buildable ops-focused project."
+    },
+    {
+      "queryId": "anomaly-detection-ops",
+      "arxivId": "2604.17388",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses time series anomaly detection with a buildable, minimal architecture (single depthwise-separable convolutional block), includes public code, and is immediately applicable to operational metrics/telemetry monitoring.",
+      "calibrationRationale": "Directly on-target: minimal denoising network for time series anomaly detection with public benchmarks, clearly buildable portfolio project for telemetry/metrics anomaly detection."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.15673",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Computer vision paper on tree crown segmentation from drone imagery; no connection to recommender systems or e-commerce ranking.",
+      "calibrationRationale": "Tree crown segmentation from UAV imagery is unrelated to recommender systems."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2607.04774",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Computational chemistry/molecular structure elucidation is entirely unrelated to recommender systems or e-commerce applications.",
+      "calibrationRationale": "Mass spectrometry molecular structure elucidation is unrelated to recommender systems."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2606.22519",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper focuses on testing and debugging fully homomorphic encryption frameworks, which is unrelated to recommender systems, cold start problems, or ranking techniques.",
+      "calibrationRationale": "FHE vulnerability testing has no connection to recommender systems."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.01231",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Concerned with time-series forecasting model components and architectural analysis, unrelated to recommender systems, ranking, or cold-start challenges in e-commerce.",
+      "calibrationRationale": "Time-series forecasting model attribution framework is unrelated to recommendation, cold start, or ranking."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2604.14586",
+      "originalGrade": 1,
+      "calibrationGrade": 2,
+      "originalRationale": "Focuses on accuracy-diversity trade-off in game recommendations using GNNs and LLMs, but doesn\u0027t address cold-start or small-scale constraints.",
+      "calibrationRationale": "A GNN\u002BLLM-based game recommender addressing accuracy/diversity trade-offs is directly relevant to recommender system techniques, though scale and complexity may exceed a small portfolio project."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.18769",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Cluster-based collaborative filtering for personalized retrieval is relevant for ranking and addresses efficiency concerns, though primary focus is RAG personalization rather than e-commerce cold-start scenarios.",
+      "calibrationRationale": "Cluster-based collaborative filtering for personalized retrieval touches on recommender techniques relevant to ranking and personalization, applicable at small scale."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2605.18338",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Presents a complete interpretable recommender system handling sparse data and cold-start scenarios with modular ranking components, clearly buildable as a portfolio project.",
+      "calibrationRationale": "An interpretable, sparse-data champion ranking/recommendation system with mastery priors and a lightweight Python/Supabase implementation is an excellent match for small-scale cold-start ranking recommenders."
+    },
+    {
+      "queryId": "recommender-systems",
+      "arxivId": "2604.18420",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Presents bandit algorithms for smooth graph functions in content recommendation with sample efficiency; directly applicable to small-scale cold-start ranking and suitable for individual implementation.",
+      "calibrationRationale": "Spectral bandit approach for content-based recommendation with small-sample learning directly relates to cold start and ranking in small-scale recommender settings."
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2605.13801",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Focuses on LLM evaluation reproducibility and annotator modeling, not relevant to robot manipulation or sim-to-real transfer.",
+      "calibrationRationale": "About annotator/evaluation methodology for LLMs, unrelated to robot manipulation or sim-to-real."
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2604.26435",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Proposes lightweight object detection architecture optimization; unrelated to robot control, manipulation, or sim-to-real transfer.",
+      "calibrationRationale": "Lightweight object detection architecture for drone imagery, not robot manipulation or sim-to-real transfer."
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2604.17787",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Relevant for real-robot manipulation tasks with clear hierarchical architecture for vision-language-action policies, but focuses on policy refinement rather than sim-to-real transfer as the primary contribution.",
+      "calibrationRationale": "Vision-language-action manipulation policy with real-robot experiments relevant to robot manipulation, though not focused on cheap hardware or sim-to-real specifically."
+    },
+    {
+      "queryId": "robot-sim2real",
+      "arxivId": "2605.12236",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Addresses efficient policy finetuning with exploration for real robots in under one hour, relevant to the intent but focuses on pre-training methodology rather than cheap hardware constraints.",
+      "calibrationRationale": "RL fine-tuning framework for robot manipulation policies with real-world experiments, relevant to sim-to-real transfer despite complex diffusion-based method."
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2604.14073",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "About resolving references in program code and decompilation, unrelated to database internals or query optimization.",
+      "calibrationRationale": "About decompilation reference resolution, unrelated to database internals or query optimization."
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2607.03926",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Uses SQL queries to evaluate synthetic tabular data, touching database queries tangentially, but primary focus is synthetic data generation rather than query optimization or cardinality estimation.",
+      "calibrationRationale": "Benchmark for synthetic tabular data query fidelity, tangential to core DB internals like optimization/indexing."
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2607.08197",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses ML over encrypted databases with index-based techniques, touching on database concepts, but focuses on security/encryption rather than the core optimization and performance-tuning intent.",
+      "calibrationRationale": "Focuses on encrypted ML queries in cloud security, not directly on query optimization or cardinality estimation."
+    },
+    {
+      "queryId": "ml-for-databases",
+      "arxivId": "2607.02895",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Proposes learning-based selectivity estimation with online learning framework\u2014directly relevant to cardinality estimation, a key database optimization challenge suitable for a portfolio project.",
+      "calibrationRationale": "Directly addresses ML-based selectivity/cardinality estimation for database queries, a core buildable topic."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.13768",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses quantized matrix multiplication for LLM compression, entirely unrelated to trading, execution, or market microstructure.",
+      "calibrationRationale": "About LLM weight quantization, unrelated to trading."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.07756",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Loss weighting for pretraining is a general deep learning training technique unrelated to trading, market making, or financial applications.",
+      "calibrationRationale": "ML pretraining loss weighting technique, no connection to trading or execution."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.15663",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "Linear bandits and arm identification are optimization methods, but lack any domain connection to trading, market making, or execution strategy.",
+      "calibrationRationale": "Theoretical bandit sample complexity result, unrelated to trading systems."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.00854",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Models bubble formation and crashes through momentum mechanics, interesting for market dynamics but does not address optimal trade execution, market making, or transaction cost analysis.",
+      "calibrationRationale": "Market bubble/crash simulation model is finance-domain but not focused on execution, market making, or TCA."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2606.08228",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses algorithmic trading on DEXs with a specific sampling methodology, but DEX context and rejection-outcome measurement are tangential to traditional trading infrastructure and execution strategy.",
+      "calibrationRationale": "Methodology for evaluating rejected trades in DEX algo trading, tangential to core execution/market making/TCA focus."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.05089",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Addresses collateral and execution control in basis trading with on-chain execution frictions; relevant to execution strategy and cost management, though specific to DeFi spot-perpetual markets.",
+      "calibrationRationale": "DeFi basis-trading strategy with execution-aware cost analysis and rebalancing, relevant to trading infrastructure and execution cost concerns."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2605.01384",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Directly relevant to portfolio optimization and trading constraints, though focused on strategic asset allocation rather than execution mechanics or market-making specifics.",
+      "calibrationRationale": "Portfolio optimization with RL/sentiment fusion touches transaction costs but is not centered on execution or market making."
+    },
+    {
+      "queryId": "hft-execution",
+      "arxivId": "2606.15715",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Examines execution costs, market impact, and liquidity provision via sunshine trading theory using real on-chain data; directly supports understanding of optimal execution and transaction cost analysis.",
+      "calibrationRationale": "Directly studies optimal execution strategies, market impact, and adverse selection on an on-chain order book, squarely matching the intent."
+    },
+    {
+      "queryId": "weekend-cv",
+      "arxivId": "2607.04119",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper focuses on CAD modeling sequence reconstruction using reinforcement learning and Decision Transformers\u2014a specialized research problem requiring substantial training data, complex model architectures, and parametric CAD software integration, far beyond a two-weekend webcam project scope.",
+      "calibrationRationale": "CAD sequence reconstruction from images is unrelated to a simple webcam-based CV project buildable in two weekends."
+    },
+    {
+      "queryId": "portfolio-optimization",
+      "arxivId": "2604.21753",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Applies neural surrogates to crystal growth simulation; entirely unrelated to portfolio optimization or finance.",
+      "calibrationRationale": "Crystal growth simulation via neural surrogates has no relation to portfolio optimization."
+    },
+    {
+      "queryId": "portfolio-optimization",
+      "arxivId": "2604.26964",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Proposes a cybersecurity education framework using reinforcement learning, entirely unrelated to portfolio optimization or finance.",
+      "calibrationRationale": "Cybersecurity education recommender system is unrelated to portfolio optimization."
+    },
+    {
+      "queryId": "portfolio-optimization",
+      "arxivId": "2605.21409",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses portfolio selection in institutional crossing markets via preference elicitation, theoretically interesting but focused on market microstructure and mechanism design rather than optimization methods or portfolio construction.",
+      "calibrationRationale": "Discusses portfolio trading and market mechanisms but focuses on preference elicitation/liquidity discovery, not portfolio optimization methods beyond mean-variance."
+    },
+    {
+      "queryId": "portfolio-optimization",
+      "arxivId": "2605.08202",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses offline reinforcement learning with diffusion models for OOD detection; uses optimization techniques but in a control context, not portfolio management.",
+      "calibrationRationale": "Offline reinforcement learning OOD detection paper unrelated to portfolio optimization methods."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2607.03441",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses test-time training for LLM agents in multi-turn episodes; unrelated to credit scoring, loan defaults, or interpretable financial models.",
+      "calibrationRationale": "LLM agent test-time training has no connection to interpretable credit scoring or loan default prediction."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2606.03792",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Multi-concept LoRA composition for image generation has no relevance to credit risk assessment or financial model interpretability.",
+      "calibrationRationale": "Multi-concept LoRA composition for image generation is unrelated to credit scoring or model interpretability for regulators."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2605.06891",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses fairness and bias in image segmentation, a domain disconnected from credit scoring and loan default prediction.",
+      "calibrationRationale": "Addresses fairness/bias detection but in image segmentation, a different domain from credit scoring or tabular finance interpretability."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2605.31304",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Focuses on neural network interpretability through polysemanticity reduction, which is relevant to explainability but targets vision models rather than credit/loan prediction and doesn\u0027t address the regulatory fairness concerns specific to banking.",
+      "calibrationRationale": "General interpretability method for vision DNNs, not tailored to tabular credit risk models or regulatory audit use cases."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2606.31208",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Memorization in tabular in-context learning has tangential relevance to regulatory auditing concerns, but does not address interpretability or credit-specific modeling.",
+      "calibrationRationale": "Studies memorization in tabular in-context learning models, tangential to interpretability for credit scoring."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2605.15295",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Addresses fairness and explanation stability in high-stakes decisions including loan approvals, but emphasis on fairness metrics over pure explainability for audit.",
+      "calibrationRationale": "Proposes an explanation-based fairness metric explicitly applied to loan approvals, directly matching interpretable/auditable credit scoring intent."
+    },
+    {
+      "queryId": "credit-risk-explainable",
+      "arxivId": "2605.23955",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Surveys reproducibility and auditability challenges in regulated financial AI including credit scoring, with determinism metrics and audit-readiness framework; relevant to regularity concerns though methodologically focused on system-level reproducibility rather than model interpretability per se.",
+      "calibrationRationale": "Survey on reproducibility and auditability of financial ML including credit scoring explanation stability, highly relevant to regulator-auditable models though not a single buildable project."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.28024",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Federated multi-label learning in distributed settings has no connection to LLM agents or financial document processing.",
+      "calibrationRationale": "Federated multi-label learning has no connection to financial document analysis or agentic LLM systems."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.19436",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses reasoning token credit assignment in RLVR for mathematical reasoning tasks; touches LLM reasoning but not document analysis or fintech applications.",
+      "calibrationRationale": "RL training technique for math reasoning benchmarks, unrelated to financial document analysis or fintech demos."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.13318",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Web agent skill learning framework is relevant to agentic systems but targets browser automation rather than financial document analysis.",
+      "calibrationRationale": "General web agent skill-learning framework, not finance-specific and only loosely related to the intent."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.17819",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "While the paper addresses LLM agents and evaluation methodologies, it focuses on framework design and benchmarking rather than practical financial document analysis, making it tangential to building a concrete fintech demo project.",
+      "calibrationRationale": "Generic agent-skill evaluation methodology without finance focus, only tangentially useful."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.17159",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Relevant: describes MADP, a multi-agent document processing pipeline with production deployment on real invoices, but focused on general enterprise invoicing rather than financial services, making it slightly less aligned with fintech goals.",
+      "calibrationRationale": "A multi-agent LLM pipeline for automating enterprise document processing (invoices) with human-in-the-loop is directly buildable and demoable for fintech."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2606.00946",
+      "originalGrade": 2,
+      "calibrationGrade": 0,
+      "originalRationale": "LLM inference routing and optimization is relevant to backend fintech infrastructure; while not directly about document analysis, it represents a deployable agentic system that could complement financial applications.",
+      "calibrationRationale": "LLM inference routing infrastructure paper, unrelated to financial document analysis."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2604.21006",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly addresses evaluating AI agents conducting financial research with clear benchmarking of report quality\u2014perfectly aligned with the searcher\u0027s goal of building agentic LLM systems for financial document analysis as a fintech portfolio project.",
+      "calibrationRationale": "Benchmark for AI agents conducting financial investment research is highly relevant domain knowledge, though it\u0027s an evaluation framework rather than a buildable agent itself."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.13110",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly targets agentic LLM systems for financial document analysis with a fully automated multi-agent framework for VC due diligence, including real-world data extraction and hallucination mitigation\u2014exactly what the searcher wants to demo to fintech employers.",
+      "calibrationRationale": "A concrete multi-agent LLM orchestration system for financial due diligence with real data extraction is directly aligned and buildable as a fintech demo."
+    },
+    {
+      "queryId": "adopted-agentic-llm-systems-for-automating-financial",
+      "arxivId": "2605.30907",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Benchmark for LLM agents on financial spreadsheets with real-world fintech tasks; directly targets the searcher\u0027s fintech domain and provides concrete evaluation framework perfect for a portfolio project demonstrating financial automation capabilities.",
+      "calibrationRationale": "Benchmark and agentic framework for LLM agents on financial spreadsheets is directly relevant to financial document analysis and could inspire a buildable fintech demo."
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2604.20577",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Link prediction and classification on assurance case graphs are unrelated to fraud detection or money laundering; no relevance to the searcher\u0027s domain.",
+      "calibrationRationale": "About assurance case graphs and LLM provenance detection, unrelated to fraud rings or money laundering."
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2606.00304",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Spatio-temporal graph anomaly detection method with spectral approaches applicable to detecting anomalies in networked systems including potential fraud patterns.",
+      "calibrationRationale": "General graph anomaly detection method, not specifically about fraud rings/money laundering networks."
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2604.21093",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "TravelFraudBench directly evaluates GNNs for fraud ring detection across three distinct ring topologies in heterogeneous graphs, provides an open-source benchmark with configurable fraud patterns, and is a buildable portfolio project combining GNN evaluation with domain-specific fraud simulation.",
+      "calibrationRationale": "Directly provides a GNN benchmark and buildable dataset specifically for fraud ring detection with concrete methods to implement."
+    },
+    {
+      "queryId": "graph-fraud-rings",
+      "arxivId": "2604.17420",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses money laundering detection with realistic graph benchmarks, providing publicly available dataset and code suitable for building a portfolio project.",
+      "calibrationRationale": "Realistic AML transaction graph benchmark directly usable for building a GNN-based money laundering detection project."
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2605.21211",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "RL control applied to chemical processes, not financial trading; while technically sound, it does not address the searcher\u0027s stated domain of algorithmic trading.",
+      "calibrationRationale": "RL for chemical process control, unrelated to trading."
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2604.18838",
+      "originalGrade": 0,
+      "calibrationGrade": 1,
+      "originalRationale": "Focuses on quantum neural networks for stock prediction rather than reinforcement learning trading strategies, and quantum computing is not practical for individual portfolio projects.",
+      "calibrationRationale": "Financial forecasting with quantum-inspired neural nets, not RL-based trading strategy."
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2604.16499",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Focuses on adversarial attacks against vision-language models; entirely unrelated to trading, reinforcement learning for markets, or portfolio projects in finance.",
+      "calibrationRationale": "Adversarial attacks on vision-language models, unrelated to trading or RL."
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2605.29689",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "While it addresses risk assessment in tokenized assets using quantitative metrics, it is primarily an empirical risk analysis framework rather than a reinforcement learning approach to trading strategy development.",
+      "calibrationRationale": "Risk scoring for tokenized real-world assets, not RL trading strategy."
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2607.06935",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Comprehensive mathematical survey of RL theory and algorithms; foundational but lacks trading application or buildable project focus.",
+      "calibrationRationale": "General mathematical survey of RL theory, not trading-specific or a buildable project."
+    },
+    {
+      "queryId": "rl-trading",
+      "arxivId": "2605.15412",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly relevant to RL-based alpha factor discovery for trading with reinforcement learning; however, heavy reliance on LLMs and complex evaluation infrastructure may present reproducibility challenges with free data.",
+      "calibrationRationale": "RL-based alpha factor discovery for quantitative trading, relevant but likely too complex (LLM training, backtest infra) for a small reproducible project."
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.11922",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Mathematical theory paper on free probability and information inequalities with no connection to audio, acoustic analysis, or practical signal processing applications.",
+      "calibrationRationale": "Pure mathematical theory on free probability and information inequalities, unrelated to audio classification."
+    },
+    {
+      "queryId": "audio-events",
+      "arxivId": "2604.12483",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Biomedical sound classification (heart sounds) is relevant non-speech audio classification with clear DL methods and reasonable buildability, though domain-specific and less generalizable.",
+      "calibrationRationale": "Uses time-frequency/Gabor DSP features and deep learning to classify heart sound events, closely aligned with non-speech audio event classification and buildable as a project."
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2604.22032",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Focuses on ML kernel specification and correctness verification, not LLM agents for software engineering tasks like code review or bug fixing.",
+      "calibrationRationale": "About formal specification of ML kernel correctness across hardware, unrelated to LLM agents for software engineering tasks."
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.28409",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses offline RL post-training for code-generating LLMs rather than agentic systems for software engineering tasks like review, repair, or test generation.",
+      "calibrationRationale": "Focuses on offline RL post-training for code generation models, tangential to agentic workflows like code review or bug fixing."
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2605.26563",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Highly relevant framework for diagnosing failures in coding agents on repository-level tasks, providing practical insights for improving agentic systems though focused on debugging rather than agent construction.",
+      "calibrationRationale": "Directly targets automated failure diagnosis for agentic coding systems in bug fixing, with a clear method and benchmark, buildable as a project."
+    },
+    {
+      "queryId": "llm-agents-swe",
+      "arxivId": "2604.13120",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly on-target: multi-agent LLM framework (AgentForge) for autonomous software engineering with execution-grounded verification, concrete implementation, and strong performance on SWE-BENCH.",
+      "calibrationRationale": "Presents a multi-agent LLM framework for autonomous software engineering with execution-grounded verification, highly aligned and buildable."
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2605.20312",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper addresses autonomous agent verification and auditing in regulated environments\u2014entirely outside the searcher\u0027s stated focus on limit order book modeling and market microstructure.",
+      "calibrationRationale": "Unrelated to market microstructure or order books; concerns AI agent claim verification protocols."
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2604.27041",
+      "originalGrade": 1,
+      "calibrationGrade": 2,
+      "originalRationale": "Focuses on prediction market price moves and signal credibility; tangential to order-book modeling and traditional equity market microstructure.",
+      "calibrationRationale": "Microstructure-grounded diagnostic for prediction markets, relevant to market microstructure research though not order-book level."
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2605.22792",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses option density extraction from bid-ask constraints, relevant to market data but not order-book modeling or microstructure dynamics.",
+      "calibrationRationale": "Focuses on options density extraction from bid-ask quotes, tangential to limit order book modeling rather than directly on it."
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2606.25986",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses limit order book prediction with concrete models and datasets; highly buildable as a portfolio project with clear architecture choices and reproducible benchmarks.",
+      "calibrationRationale": "Directly targets limit order book prediction with concrete benchmark data and architecture, ideal for a buildable portfolio project."
+    },
+    {
+      "queryId": "market-microstructure",
+      "arxivId": "2606.09454",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Axiomatizes bid-ask quoting rules with explicit spread decomposition and inventory cost\u2014directly addresses order-book market maker behavior with clear theoretical framework.",
+      "calibrationRationale": "Theoretical axiomatization of market-making quoting rules tied to limit order book microstructure, relevant but less directly implementable."
+    },
+    {
+      "queryId": "privacy-preserving-ml",
+      "arxivId": "2605.07127",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Investigates LLM position-tracking capabilities and a separate concern from federated learning and differential privacy.",
+      "calibrationRationale": "Purely about LLM positional retrieval limitations, unrelated to federated learning or differential privacy."
+    },
+    {
+      "queryId": "privacy-preserving-ml",
+      "arxivId": "2605.26872",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Focuses on selecting teacher-generated answers for LLM distillation; unrelated to federated learning or differential privacy techniques.",
+      "calibrationRationale": "About teacher-student LLM distillation strategy, no relation to privacy or federated learning."
+    },
+    {
+      "queryId": "privacy-preserving-ml",
+      "arxivId": "2606.18312",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses gradient inversion attacks and differential privacy in federated settings, but is primarily a security analysis paper (attack demonstration) rather than a practical implementation guide for privacy protection.",
+      "calibrationRationale": "Relates to federated learning and DP but focuses on attacking/breaking privacy defenses rather than building practical privacy techniques."
+    },
+    {
+      "queryId": "privacy-preserving-ml",
+      "arxivId": "2606.04384",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Excellent match: proposes DPSR-CG algorithm improving DPSGD with rigorous privacy analysis and extensive experiments on standard datasets (MNIST, CIFAR-10, IMDB), making it directly buildable as a portfolio project.",
+      "calibrationRationale": "Directly proposes an improved DPSGD algorithm with rigorous privacy accounting and empirical validation on standard datasets, buildable as a solo DP project."
+    },
+    {
+      "queryId": "ai-text-detection",
+      "arxivId": "2605.19291",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper on stochastic gradient descent optimization is unrelated to detecting AI-generated text.",
+      "calibrationRationale": "Pure optimization theory for SGD, unrelated to AI text detection."
+    },
+    {
+      "queryId": "ai-text-detection",
+      "arxivId": "2604.26965",
+      "originalGrade": 1,
+      "calibrationGrade": 2,
+      "originalRationale": "Studies prevalence and societal impact of AI-generated text on the internet rather than methods for detecting it in student work.",
+      "calibrationRationale": "Studies prevalence and impact of AI-generated text using detectors, relevant to understanding AI text detection but is an empirical study not a buildable detection tool."
+    },
+    {
+      "queryId": "ai-text-detection",
+      "arxivId": "2606.28331",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Analyzes policy discourse around AI content tracking and watermarking rather than practical detection techniques for educators.",
+      "calibrationRationale": "Focuses on policy analysis of watermarking regulation rather than a technical detection method to build."
+    },
+    {
+      "queryId": "ai-text-detection",
+      "arxivId": "2606.00613",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Presents LUNA, a linguistically-aware watermarking method for detection with published code, relevant but focuses on watermark embedding rather than standalone detection of unmarked AI text.",
+      "calibrationRationale": "Presents a concrete watermarking/detection technique for AI-generated text, directly related to telling if text is AI-written though scope is complex to fully replicate."
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2607.05017",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "This paper on hyperparameter transfer in GNNs is highly theoretical and requires advanced ML knowledge; not a practical entry point for someone with no ML background seeking buildable projects.",
+      "calibrationRationale": "Deep theoretical hyperparameter scaling research for GNNs, not buildable or accessible for a beginner with no ML background."
+    },
+    {
+      "queryId": "vague-ai-transition",
+      "arxivId": "2605.10279",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Neurosymbolic AI framework with open code is relevant to learning AI, but requires deep PyTorch expertise and focuses on advanced research abstractions rather than a beginner-friendly entry point.",
+      "calibrationRationale": "A niche neurosymbolic AI framework requiring advanced ML/logic knowledge, too specialized as a starting portfolio project for an ML beginner."
+    },
+    {
+      "queryId": "hallucination-plain",
+      "arxivId": "2605.08156",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses zero-shot visual-text alignment for image classification; unrelated to chatbot hallucination or confabulation detection.",
+      "calibrationRationale": "Zero-shot image classification alignment, unrelated to chatbot hallucination detection."
+    },
+    {
+      "queryId": "hallucination-plain",
+      "arxivId": "2604.22822",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Focuses on object-level hallucination in vision-language models with a diagnostic benchmark, tangentially related to hallucinations but specialized to vision and evaluation rather than detection or prevention.",
+      "calibrationRationale": "Focuses on object hallucination benchmark for vision-language models, not text chatbot confabulation, tangential."
+    },
+    {
+      "queryId": "hallucination-plain",
+      "arxivId": "2604.15741",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Highly relevant: proposes SIVR for hallucination detection using token-wise features, emphasizes generalization and practical deployment, includes public code repository making it ideal for portfolio work.",
+      "calibrationRationale": "Directly proposes an LLM hallucination detection method with practical deployment potential, matching the intent well."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2605.04336",
+      "originalGrade": 0,
+      "calibrationGrade": 1,
+      "originalRationale": "Presents game-theoretic economic modeling of cybersecurity investment rather than practical attacks or defenses on machine learning models.",
+      "calibrationRationale": "A game-theoretic/economic model of cyber arms races, not a concrete ML attack or defense method to build."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2605.27674",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Investigates backdoor attacks specifically in cyber-physical systems; relevant to backdoor attacks and poisoning but narrowly scoped to CPS domain rather than general ML model attacks.",
+      "calibrationRationale": "Concrete backdoor poisoning attack on ML-based fault detection, directly matches intent and is buildable."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2606.03647",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Develops standardized jailbreak attacks for LLMs, relevant to ML security but highly specialized to language models rather than general adversarial robustness.",
+      "calibrationRationale": "Novel black-box adversarial attack (jailbreak) method against LLMs with concrete evaluation, buildable project."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2606.11804",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Addresses adversarial attacks on data summarization pipelines with defense mechanisms, but focuses on upstream data processing rather than core model attacks/defenses.",
+      "calibrationRationale": "Adversarial attacks and defenses on an ML pipeline component (data summarization), relevant though more theoretical/niche."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2604.12757",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly addresses certified adversarial robustness evaluation and defense assessment, though focuses on fairness aspects rather than attack techniques or defenses themselves.",
+      "calibrationRationale": "Certified robustness evaluation framework with fairness metrics, relevant to adversarial robustness auditing."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2607.00012",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly tackles poisoning attacks on RAG systems with theoretical robustness guarantees and a practical defense mechanism, highly relevant to ML security.",
+      "calibrationRationale": "Defense against poisoning attacks on RAG retrieval with theoretical guarantees, directly on-target and buildable."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2605.24958",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Focuses on transferable adversarial attacks on text models using a systematic paradigm with clear methodology and experimental validation on real-world APIs\u2014highly relevant for understanding attack transferability and directly buildable as a portfolio project.",
+      "calibrationRationale": "Transferable textual adversarial attack method, core adversarial ML topic, clearly buildable."
+    },
+    {
+      "queryId": "adversarial-ml-security",
+      "arxivId": "2605.01098",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Proposes a novel, efficient method for crafting adversarial examples using image filters; the simplicity and transferability aspects make it an excellent buildable portfolio project.",
+      "calibrationRationale": "Simple, novel technique for crafting transferable adversarial examples via image filters, highly buildable."
+    },
+    {
+      "queryId": "laptop-llm",
+      "arxivId": "2605.03622",
+      "originalGrade": 0,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses Bayesian network polytree learning algorithms, which has no relevance to language model pretraining or fine-tuning.",
+      "calibrationRationale": "This paper is about Bayesian network structure learning algorithms, unrelated to LLM pretraining or fine-tuning."
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2605.28893",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Examines LLM-in-the-loop vulnerabilities and repair capabilities, but focuses on vulnerabilities caused by LLMs rather than using ML to detect vulnerabilities in source code.",
+      "calibrationRationale": "Focuses on LLM-in-the-loop vulnerabilities in software systems, not ML-based source code vulnerability detection per se."
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2604.21310",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "Addresses adversarial evasion of malware classifiers, not detection of vulnerabilities in source code itself.",
+      "calibrationRationale": "Concerns adversarial malware evasion against drift detection, not source code vulnerability detection."
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2604.27001",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Evaluates security of LLM-generated cryptographic code using static analysis tools, but does not propose ML methods for vulnerability detection.",
+      "calibrationRationale": "Evaluates security of LLM-generated crypto code using static analysis tools rather than proposing an ML vulnerability detection method to build."
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2605.29901",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Analyzes how LLMs detect vulnerabilities using mechanistic interpretability, which is relevant to understanding ML-based detection but focuses on model internals rather than building a detection system.",
+      "calibrationRationale": "Directly explores LLM-based vulnerability detection internals, relevant to the intent though more interpretability research than a buildable detection tool."
+    },
+    {
+      "queryId": "vuln-detection",
+      "arxivId": "2604.19031",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Proposes SAGE framework for LLM-based vulnerability detection with clear technical approach, strong evaluation results, and directly buildable as a portfolio project.",
+      "calibrationRationale": "Proposes a concrete LLM-based vulnerability detection framework with clear method and benchmarks, highly buildable as a portfolio project."
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2605.03279",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "Concerns prompt-based adaptation of wireless foundation models for RF classification, tangentially related to foundation model evaluation but not agent evaluation or benchmarking.",
+      "calibrationRationale": "Unrelated to LLM agent evaluation; focuses on RF modulation classification with wireless foundation models."
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2604.11655",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Presents RPA-Check, a reproducible four-stage automated evaluation framework for LLM agents with clear methodology, validation on local models, and explicit focus on standardized metrics perfect for a solo portfolio project.",
+      "calibrationRationale": "A concrete evaluation framework for LLM role-playing agents with a defined pipeline, reproducible and buildable by a single engineer."
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2605.27922",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Harness-Bench directly addresses reproducible agent evaluation with 106 concrete tasks, clear methodology, and available traces; ideal for one engineer to reproduce and build upon.",
+      "calibrationRationale": "Directly introduces a reproducible benchmark/harness for evaluating LLM agents across execution configurations, well aligned with the intent."
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2605.29893",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Introduces RedundancyBench, a concrete benchmark for evaluating agent trajectory efficiency with annotated datasets and evaluation methods, perfectly aligned with building a reproducible agent evaluation project.",
+      "calibrationRationale": "A benchmark specifically for evaluating LLM agent trajectories, relevant to agent evaluation though narrower in scope (redundancy detection)."
+    },
+    {
+      "queryId": "agent-eval-solo",
+      "arxivId": "2605.06334",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly addresses LLM agent evaluation with a reproducible benchmark framework (MANTRA) that one engineer can apply; combines automated synthesis with formal validation for compliance benchmarking.",
+      "calibrationRationale": "Presents a benchmark-generation framework for evaluating tool-using LLM agents\u0027 compliance, relevant though more complex (SMT-based) for solo reproduction."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2604.20824",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses batch effects in biomedical imaging via unsupervised domain adaptation, but focuses on a specialized task (MoA classification) with access to large labeled control samples rather than the minimal-label scenario the searcher needs.",
+      "calibrationRationale": "Addresses batch-effect adaptation in a niche biomedical drug-discovery dataset, not a general low-label training method easily buildable as a portfolio project."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2604.24952",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Addresses learning from noisy/minimal annotations using semi-supervised techniques with practical diffusion model application, but requires some preference data and is more specialized to image generation tasks.",
+      "calibrationRationale": "Focuses on noisy preference labels for diffusion DPO alignment, tangential to the core intent of training with scarce labeled data."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2607.02423",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Active few-shot learning for LLMs reduces annotation costs by smart sample selection; well-suited to the searcher\u0027s constraint of minimal labeling budget and provides a buildable approach for selecting high-value samples to label.",
+      "calibrationRationale": "Directly targets reducing annotation costs via active few-shot selection for LLMs, relevant and reasonably buildable with open-source models."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2606.00512",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Proposes semi-supervised regression with theoretical guarantees in low-label regimes using pretrained representations, relevant to the intent but more theoretical; buildability depends on available pretrained representations.",
+      "calibrationRationale": "Theoretical semi-supervised regression method explicitly designed for scarce labeled data, implementable though more abstract."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2607.03068",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Semi-supervised segmentation with clean-positive contrastive learning reduces reliance on noisy pseudo-labels; relevant to working with unlabeled data, though requires foundation models and is domain-specific to segmentation.",
+      "calibrationRationale": "Semi-supervised segmentation method using foundation models and pseudo-labels on standard public benchmarks, highly buildable and directly on-target."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2605.13194",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses low-label learning for ECG classification using self-supervised pretraining, achieving 88.1% accuracy with only 1% labeled data\u2014exactly the zero-labeling-budget scenario with clear methodology and open-source code.",
+      "calibrationRationale": "Self-supervised ECG classification achieving strong results with only 1% labels, clear method and public datasets make it a great buildable project."
+    },
+    {
+      "queryId": "learn-from-few",
+      "arxivId": "2605.07557",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Proposes semi-supervised learning for scarce labeled data with arbitrary unlabeled distributions, explicitly avoiding reliance on label estimation or pseudo-labeling assumptions; directly addresses the searcher\u0027s core intent.",
+      "calibrationRationale": "Proposes a semi-supervised learning framework explicitly for scarce-label scenarios, tested on standard benchmarks, well-suited for a portfolio project."
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2605.26819",
+      "originalGrade": 1,
+      "calibrationGrade": 2,
+      "originalRationale": "Applies RAG to academic course recommendation with knowledge graphs; domain-specific application lacking general retrieval improvement techniques or embedding-focused contributions.",
+      "calibrationRationale": "Retrieval-augmented recommender system with concrete graph-aware retrieval methods relevant to embedding-based search quality."
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2605.30589",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Develops a domain-grounded QA dataset and fine-tuned retrieval model for immigration law, relevant to source-grounded retrieval but specialized to a narrow legal domain.",
+      "calibrationRationale": "Domain-specific legal QA fine-tuning dataset, tangential to general RAG/embedding search quality improvements."
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2605.18769",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Excellent match: proposes a concrete, implementable collaborative filtering approach to improve personalized RAG retrieval quality with clear methodology and evaluation on accessible benchmarks.",
+      "calibrationRationale": "Directly proposes a RAG retrieval improvement method with dense retrievers/rankers, relevant and buildable technique."
+    },
+    {
+      "queryId": "rag-retrieval",
+      "arxivId": "2604.14222",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Excellent match: presents practical, implementable adaptive retrieval frameworks comparing multiple architectures with clear benchmarks and publicly available code for improving RAG retrieval strategies.",
+      "calibrationRationale": "Directly compares and proposes hybrid RAG retrieval architectures with concrete benchmarks, highly relevant and implementable as a portfolio project."
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.09461",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "LLM-based vulnerability detection is tangentially related (uses LLMs for security) but addresses code vulnerabilities, not prompt injection or jailbreak attacks on LLMs themselves.",
+      "calibrationRationale": "Focuses on LLM-based source code vulnerability detection, unrelated to prompt injection or jailbreak attacks."
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.10176",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Excellent: multi-layered defense framework specifically for SQL injection via LLM prompts with prompt sanitization and threat detection\u2014directly demoable with clear security domain focus.",
+      "calibrationRationale": "Addresses prompt injection leading to SQL injection in LLM apps with a multi-layer defense framework, buildable as a demo though scope is narrower (SQLi) than general jailbreak defenses."
+    },
+    {
+      "queryId": "llm-security",
+      "arxivId": "2605.10582",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Proposes a practical, theoretically-grounded defense (DR-Smoothing) against jailbreaks with clear methodology; excellent match for building a demoable defensive portfolio project.",
+      "calibrationRationale": "Directly targets jailbreak defense for LLMs with a concrete smoothing-based method that could be demoed, though it\u0027s theory-heavy for a beginner ML engineer."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.14164",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "A dataset and analysis of AI benchmarking practices is tangential to open science code reproduction; building a dataset explorer is not reproducing a scientific result.",
+      "calibrationRationale": "Primarily an analysis/dataset paper about benchmarking practices, not a method with a concrete implementation to reproduce."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.24110",
+      "originalGrade": 1,
+      "calibrationGrade": 1,
+      "originalRationale": "This introduces a multi-turn benchmark for evaluating coding agents but does not propose a novel reproducible method; it measures existing agents rather than providing a reference implementation.",
+      "calibrationRationale": "Benchmark paper that already releases its evaluation infrastructure (Harbor), so there\u0027s little code gap to fill."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.11154",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Uses LLMs and information theory to quantify method reconstructability; relevant to reproducibility but the case study is narrowly scoped to TNO spectral reconstruction rather than presenting a generalizable method lacking implementation.",
+      "calibrationRationale": "An information-theoretic diagnostic pilot study rather than a concrete algorithm suited to a standalone reference implementation."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.21822",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Relevant hierarchical RL approach for safety alignment with clear methodology, but relies on access to crowd preference datasets and may require significant integration work with existing RLHF pipelines.",
+      "calibrationRationale": "Proposes a hierarchical safe-RL framework with no mentioned code, offering a plausible but moderately complex reproduction target."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2607.07196",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Proposes a validation framework for world models in robotics with clear methodology; a reference implementation would be valuable, though requires domain expertise and simulation environments.",
+      "calibrationRationale": "Defines a conceptual admissibility framework/ladder rather than a concrete algorithm to implement."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.17236",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Excellent fit: systematic optimization of Vision Transformers on publicly available medical imaging dataset with clear implementation details, reproducible hyperparameters, and interpretability methods that would make a strong standalone portfolio project.",
+      "calibrationRationale": "Clear ViT-based classification pipeline on a public dataset (Herlev) with no code mentioned, making it a strong buildable reproduction project."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.31167",
+      "originalGrade": 3,
+      "calibrationGrade": 0,
+      "originalRationale": "Excellent match: the paper introduces an open-source LLM evaluation framework with explicit architecture, plugin system, and 18 metric implementations, making it highly suitable for building a reference implementation or extending the codebase as a portfolio contribution.",
+      "calibrationRationale": "Already an open-source framework, so there\u0027s no code gap for a reproduction contribution."
+    },
+    {
+      "queryId": "reproduction-gap",
+      "arxivId": "2605.22036",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly on-target: proposes a complete, reproducible vision-language navigation system (GA-BEV representation) with clear architectural components, standard benchmarks, and reasonable scope for individual implementation as a portfolio project.",
+      "calibrationRationale": "Introduces a novel geometry-aware BEV representation for VLN with a clear method and no indicated public code, well-suited for a reference implementation."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.22257",
+      "originalGrade": 1,
+      "calibrationGrade": 0,
+      "originalRationale": "While it addresses LLM inference efficiency via test-time computation aggregation, it focuses on formal theorem proving rather than general LLM serving, and the symmetry-based approach is not a standard inference speedup technique like speculative decoding.",
+      "calibrationRationale": "About symmetries in formal theorem proving, unrelated to inference speed."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.08151",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Presents a speculative decoding framework with multi-tenant optimizations and achieves measurable speedups, but assumes multi-model cloud infrastructure rather than single-GPU portfolio project scope.",
+      "calibrationRationale": "Speculative decoding serving framework with measured speedups, relevant but requires multi-model/multi-tenant setup beyond a single GPU benchmark."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2606.00516",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Addresses LLM inference scheduling optimization with batching strategies achieving 41.9% throughput gains, relevant to latency improvements but focuses on scheduling rather than speculative decoding techniques.",
+      "calibrationRationale": "Batching strategy analysis for LLM inference latency, directly relevant to single-GPU inference speedups and benchmarking."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.23057",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Covers multiple inference optimization modes including speculative decoding on single GPU with measurable speedups, but emphasizes mode selection routing rather than speedup methodology.",
+      "calibrationRationale": "Explicitly single-GPU inference controller combining quantization and speculative decoding, highly buildable and benchmarkable."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.24144",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Presents a vector quantization architecture for LLM decoding with significant speedup claims, but requires specialized hardware implementation beyond typical GPU portfolio projects.",
+      "calibrationRationale": "Hardware-software co-designed accelerator architecture requiring custom hardware, not easily reproducible on a single commodity GPU."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.15051",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Develops interpretable latency models for speculative decoding in serving systems, useful for understanding performance trade-offs, but focuses on analytical framework rather than a concrete technique to implement on a single GPU.",
+      "calibrationRationale": "Analytical latency model for speculative decoding validated with vLLM, directly useful for benchmarking speculative decoding on a single GPU."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2604.14885",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "RACER directly addresses speculative decoding speedups with a training-free method achieving 2x\u002B speedup, includes public code, and is benchmarkable on single GPU hardware.",
+      "calibrationRationale": "Training-free speculative decoding method with open-source code, easily buildable and benchmarkable as a portfolio project."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.09329",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Proposes Test-Time Speculation for improving speculative decoding on long sequences with up to 72% better acceptance lengths, directly addressing LLM inference speedup with clear benchmarking potential.",
+      "calibrationRationale": "Novel test-time adaptation for speculative decoding acceptance length, relevant and implementable though more complex."
+    },
+    {
+      "queryId": "speculative-decoding",
+      "arxivId": "2605.29727",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Presents BASTION, a practical speculative decoding framework achieving 6.61x speedup with dynamic tree construction and hardware-aware optimization, highly suitable for GPU-based benchmarking.",
+      "calibrationRationale": "Advanced speculative decoding framework with tree drafting, relevant to inference speedups though complex to fully reproduce."
+    },
+    {
+      "queryId": "dpo-alignment",
+      "arxivId": "2607.03248",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Extends DPO and RLHF with noise robustness techniques; relevant to preference-based alignment but focuses on noise handling rather than DPO-vs-RLHF comparison.",
+      "calibrationRationale": "Proposes a practical DPO variant with code for noisy preference alignment, directly relevant and buildable though more theoretical than a DPO-vs-RLHF comparison."
+    },
+    {
+      "queryId": "dpo-alignment",
+      "arxivId": "2604.27733",
+      "originalGrade": 2,
+      "calibrationGrade": 1,
+      "originalRationale": "Theoretical refinement of DPO (SA-DPO) directly relevant to preference optimization; provides justification for DPO improvements but lacks buildability details.",
+      "calibrationRationale": "Highly theoretical consistency-bound analysis of DPO surrogates that doesn\u0027t translate into a concrete buildable alignment project."
+    },
+    {
+      "queryId": "dpo-alignment",
+      "arxivId": "2605.12288",
+      "originalGrade": 3,
+      "calibrationGrade": 1,
+      "originalRationale": "Token-level DPO variant (TBPO) directly addresses preference optimization fundamentals with clear implementable method; highly relevant for understanding DPO mechanics and runnable on consumer GPUs.",
+      "calibrationRationale": "A niche token-level DPO reformulation with heavy theory and no clear reproducible setup for a home GPU project."
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2606.00732",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Directly addresses long-range temporal pattern learning without transformers using a sleep-inspired replay mechanism, but the hierarchical memory approach differs from the state-space model direction the searcher is exploring.",
+      "calibrationRationale": "Proposes a novel post-transformer sequence architecture for long-range temporal patterns, directly relevant to exploring alternatives to attention though not SSM-based specifically."
+    },
+    {
+      "queryId": "mamba-timeseries",
+      "arxivId": "2604.21100",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Deeply explores preconditioned variants of linear recurrent operators (Mamba-2, DeltaNet, etc.) with theoretical framework; directly investigates alternatives to softmax attention for sequence modeling.",
+      "calibrationRationale": "Directly extends state-space/linear-recurrence models like Mamba-2 and DeltaNet as attention alternatives, highly relevant and buildable with clear algorithmic contributions."
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2604.27833",
+      "originalGrade": 2,
+      "calibrationGrade": 2,
+      "originalRationale": "Addresses privacy-preserving personalized federated learning with differential privacy guarantees, relevant to analytics constraints though not specifically tailored to financial transaction data.",
+      "calibrationRationale": "A concrete privacy-preserving (differential privacy) federated learning method that could be adapted as a portfolio project, though not finance-specific."
+    },
+    {
+      "queryId": "privacy-finance",
+      "arxivId": "2604.26188",
+      "originalGrade": 3,
+      "calibrationGrade": 1,
+      "originalRationale": "Counterfactually fair transformers for high-stakes regulated domains (finance/insurance) with interpretability and fairness constraints; directly targets privacy-compliant analytics over sensitive financial data with clear regulatory alignment and buildable framework.",
+      "calibrationRationale": "Focuses on counterfactual fairness in regulated domains like finance, not on privacy-preserving analytics or ML over transaction data."
+    },
+    {
+      "queryId": "vague-standout-backend",
+      "arxivId": "2606.03364",
+      "originalGrade": 2,
+      "calibrationGrade": 3,
+      "originalRationale": "Practical stream-processing optimization (batched shuffling via object storage) solves a real distributed systems cost problem with implementable techniques; good portfolio project but more engineering optimization than hard algorithmic innovation.",
+      "calibrationRationale": "A concrete, buildable distributed systems project (stream shuffling via object storage) with clear architecture and measurable performance goals, appealing to a distributed systems engineer."
+    },
+    {
+      "queryId": "vague-standout-backend",
+      "arxivId": "2605.22781",
+      "originalGrade": 3,
+      "calibrationGrade": 2,
+      "originalRationale": "Excellent systems problem: millisecond-level checkpoint/rollback via OS-level abstractions (DeltaFS, DeltaCR) for AI agent sandboxes, novel, buildable, and directly addresses state exploration bottlenecks.",
+      "calibrationRationale": "An interesting OS-level systems problem (checkpoint/rollback for sandboxes) though framed around AI agents, it\u0027s still a hard systems challenge that could be adapted as a project."
+    },
+    {
+      "queryId": "kv-cache-serving",
+      "arxivId": "2606.06302",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Tangram addresses non-uniform KV compression for multi-turn serving with concrete system optimizations and public implementation\u2014directly buildable as a portfolio project for gateway infrastructure.",
+      "calibrationRationale": "Directly addresses non-uniform KV cache compression with a serving framework built on vLLM, highly relevant and buildable for gateway optimization."
+    },
+    {
+      "queryId": "kv-cache-serving",
+      "arxivId": "2605.09649",
+      "originalGrade": 3,
+      "calibrationGrade": 3,
+      "originalRationale": "Directly addresses KV cache compression through learned eviction techniques with clear methodology and demonstrates practical improvements on long-context tasks\u2014highly relevant for a platform engineer optimizing LLM gateway performance.",
+      "calibrationRationale": "Proposes a learnable KV cache eviction method for long-context inference, directly matching the intent and implementable as a project."
+    }
+  ]
+}

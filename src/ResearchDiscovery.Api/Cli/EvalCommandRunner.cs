@@ -22,16 +22,17 @@ public static class EvalCommandRunner
     public static async Task<int> RunAsync(string[] args)
     {
         if (!TryParseArguments(args, out var verb, out var queriesPath, out var judgmentsPath,
-                out var pool, out var randomSample))
+                out var pool, out var randomSample, out var calibrationPath, out var sample, out var model))
         {
             Console.Error.WriteLine(
-                "Usage: eval compile [--queries <path>]\n" +
-                "       eval judge   [--queries <path>] [--judgments <path>] [--pool <N>] [--random <N>]\n" +
-                "       eval search  [--queries <path>] [--judgments <path>]\n" +
+                "Usage: eval compile   [--queries <path>]\n" +
+                "       eval judge     [--queries <path>] [--judgments <path>] [--pool <N>] [--random <N>]\n" +
+                "       eval search    [--queries <path>] [--judgments <path>]\n" +
                 "       eval bias\n" +
-                "       eval adopt   [--queries <path>]\n" +
-                "       eval tune    [--queries <path>] [--judgments <path>]\n" +
-                "       eval audit   [--queries <path>] [--judgments <path>]");
+                "       eval adopt     [--queries <path>]\n" +
+                "       eval tune      [--queries <path>] [--judgments <path>]\n" +
+                "       eval audit     [--queries <path>] [--judgments <path>]\n" +
+                "       eval calibrate [--queries <path>] [--judgments <path>] [--out <path>] [--sample <N>] [--model <id>]");
             return ExitUsage;
         }
 
@@ -94,6 +95,12 @@ public static class EvalCommandRunner
                     var audit = await runner.AuditAsync(queriesPath, judgmentsPath, cts.Token);
                     PrintAudit(audit);
                     return audit.Count > 0 ? ExitOk : ExitRunFailed;
+
+                case "calibrate":
+                    var calibration = await runner.CalibrateAsync(
+                        queriesPath, judgmentsPath, calibrationPath, sample, model, cts.Token);
+                    PrintCalibration(calibration, calibrationPath);
+                    return calibration.SampleSize > 0 ? ExitOk : ExitRunFailed;
 
                 default:
                     return ExitUsage;
@@ -183,6 +190,47 @@ public static class EvalCommandRunner
         Console.WriteLine("Small samples → wide error bars: track the TREND across ranker versions, not the count.");
     }
 
+    private static void PrintCalibration(EvalRunner.CalibrationReport report, string path)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"Judge calibration: {report.SampleSize} pair(s) re-judged by {report.CalibrationModel}");
+        Console.WriteLine($"(original judge(s): {report.OriginalModels}, rubric v{report.RubricVersion})");
+        Console.WriteLine();
+        Console.WriteLine($"  Exact agreement:      {report.ExactAgreement:P1}");
+        Console.WriteLine($"  Within one grade:     {report.WithinOneAgreement:P1}");
+        Console.WriteLine($"  Weighted kappa (QWK): {report.QuadraticWeightedKappa:0.000}   " +
+                          "(>0.8 excellent, 0.6-0.8 substantial, <0.4 the numbers are noise)");
+        Console.WriteLine();
+        Console.WriteLine("  Confusion (rows = original grade, cols = calibration grade):");
+        Console.WriteLine("        cal:0   cal:1   cal:2   cal:3");
+        for (var i = 0; i < 4; i++)
+        {
+            Console.WriteLine(
+                $"  org:{i} {report.Confusion[i][0],6} {report.Confusion[i][1],7} " +
+                $"{report.Confusion[i][2],7} {report.Confusion[i][3],7}");
+        }
+
+        var worst = report.Pairs
+            .Where(p => Math.Abs(p.OriginalGrade - p.CalibrationGrade) >= 2)
+            .OrderByDescending(p => Math.Abs(p.OriginalGrade - p.CalibrationGrade))
+            .Take(8)
+            .ToList();
+        if (worst.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"  Largest disagreements ({worst.Count} shown; full list in {path}):");
+            foreach (var p in worst)
+            {
+                Console.WriteLine($"  - {p.QueryId} / {p.ArxivId}: {p.OriginalGrade} -> {p.CalibrationGrade}");
+                Console.WriteLine($"      original:    {p.OriginalRationale}");
+                Console.WriteLine($"      calibration: {p.CalibrationRationale}");
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"Full report written to {path}. Nothing in judgments.json was modified.");
+    }
+
     private static string Fmt(double? value) => value?.ToString("0.000") ?? "n/a";
 
     private static bool TryParseArguments(
@@ -191,13 +239,19 @@ public static class EvalCommandRunner
         out string queriesPath,
         out string judgmentsPath,
         out int pool,
-        out int randomSample)
+        out int randomSample,
+        out string calibrationPath,
+        out int sample,
+        out string model)
     {
         verb = string.Empty;
         queriesPath = DefaultQueriesPath;
         judgmentsPath = DefaultJudgmentsPath;
         pool = 30;
         randomSample = 10;
+        calibrationPath = "eval/calibration.json";
+        sample = 200;
+        model = "claude-sonnet-5";
 
         if (args.Length < 2)
         {
@@ -205,7 +259,7 @@ public static class EvalCommandRunner
         }
 
         verb = args[1].ToLowerInvariant();
-        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit"))
+        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit" or "calibrate"))
         {
             return false;
         }
@@ -220,12 +274,22 @@ public static class EvalCommandRunner
                 case "--judgments" when i + 1 < args.Length:
                     judgmentsPath = args[++i];
                     break;
+                case "--out" when i + 1 < args.Length:
+                    calibrationPath = args[++i];
+                    break;
+                case "--model" when i + 1 < args.Length:
+                    model = args[++i];
+                    break;
                 case "--pool" when i + 1 < args.Length && int.TryParse(args[i + 1], out var p) && p > 0:
                     pool = p;
                     i++;
                     break;
                 case "--random" when i + 1 < args.Length && int.TryParse(args[i + 1], out var r) && r >= 0:
                     randomSample = r;
+                    i++;
+                    break;
+                case "--sample" when i + 1 < args.Length && int.TryParse(args[i + 1], out var s) && s > 0:
+                    sample = s;
                     i++;
                     break;
                 default:

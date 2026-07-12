@@ -20,6 +20,11 @@ public interface IRelevanceJudge
     /// <summary>Rubric version stamped into judgment artifacts; bump when the grading prompt changes materially.</summary>
     int RubricVersion { get; }
 
+    /// <param name="modelOverride">Explicit judge model (calibration runs);
+    /// null = the configured RelevanceJudge step model.</param>
     Task<RelevanceJudgeResult> JudgeAsync(
-        EvalQuery query, IReadOnlyList<JudgeCandidate> candidates, CancellationToken ct);
+        EvalQuery query,
+        IReadOnlyList<JudgeCandidate> candidates,
+        CancellationToken ct,
+        string? modelOverride = null);
 }
