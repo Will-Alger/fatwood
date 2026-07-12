@@ -54,3 +54,65 @@ jobs:
       # Compiles + lints the template without touching Azure.
       - name: Bicep build (lint)
         run: az bicep build --file infra/main.bicep --stdout > /dev/null
+
+  # Search-quality regression gate: seeds the checked-in mini-corpus (every
+  # judged paper, eval/corpus.json.gz), re-embeds it deterministically with
+  # the production embedding model, runs the frozen eval queries through the
+  # real ranker, and FAILS if mean nDCG@10 drops below the floor. The floor
+  # is the fixture-corpus baseline minus a small noise margin — recalibrate
+  # it (locally: seed a scratch DB, embed, `eval search`) whenever the eval
+  # set, judgments, embedder, or ranker deliberately change. No LLM calls,
+  # no secrets. See docs/search-quality.md.
+  eval-gate:
+    runs-on: ubuntu-latest
+    env:
+      EVAL_NDCG_FLOOR: "0.590"
+      ConnectionStrings__Default: Host=localhost;Port=5432;Database=researchdb;Username=research;Password=ci
+      Database__MigrateOnStartup: "true"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: researchdb
+          POSTGRES_USER: research
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U research"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The ONNX embedding model downloads on first use (~130 MB); cache it
+      # keyed on the configured model version so a model swap re-downloads.
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: src/ResearchDiscovery.Api/models
+          key: onnx-models-${{ hashFiles('src/ResearchDiscovery.Api/appsettings.json') }}
+
+      - name: Build
+        run: dotnet build src/ResearchDiscovery.Api -c Release --nologo
+
+      - name: Seed mini-corpus
+        run: >
+          dotnet run --project src/ResearchDiscovery.Api -c Release --no-build --
+          eval seed --corpus "$GITHUB_WORKSPACE/eval/corpus.json.gz"
+
+      - name: Embed corpus (deterministic per model version)
+        run: dotnet run --project src/ResearchDiscovery.Api -c Release --no-build -- embed
+
+      - name: Score ranker against frozen judgments (gate)
+        run: >
+          dotnet run --project src/ResearchDiscovery.Api -c Release --no-build --
+          eval search
+          --queries "$GITHUB_WORKSPACE/eval/queries.json"
+          --judgments "$GITHUB_WORKSPACE/eval/judgments.json"
+          --min-ndcg "$EVAL_NDCG_FLOOR"

@@ -113,10 +113,15 @@ and future learning-to-rank features.
   leans on.
 - **Corpus drift**: scores shift as ingestion grows the corpus. Compare
   rankers on the same DB snapshot, same judgment file, same day.
-- **No CI gate yet**: the natural next step is a GitHub Action that restores
-  a fixed corpus snapshot + runs `eval search` and fails a PR if nDCG drops.
-  Blocker: needs a checked-in mini-corpus (a few hundred papers + vectors)
-  since CI can't carry 21k embeddings.
+- **CI gate: LIVE** (2026-07-12, `eval-gate` job in ci.yml). Every PR seeds
+  the checked-in mini-corpus (`eval/corpus.json.gz` — all 4,069 judged
+  papers, no vectors; CI re-embeds deterministically), scores the frozen
+  queries, and fails below `EVAL_NDCG_FLOOR` (0.590 = fixture baseline
+  0.618 − noise margin). Recalibrate the floor whenever the eval set,
+  judgments, embedder, or ranker deliberately change: `eval export-corpus`,
+  seed a scratch DB, `embed`, `eval search`, set floor ≈ mean − 0.03. The
+  fixture-corpus baseline matches the full corpus almost exactly (0.618 vs
+  0.619) because judged papers dominate scoring.
 
 ## 3. Measured lessons — do NOT relearn these the hard way
 
@@ -249,11 +254,12 @@ lesson 9; no compiler fix available, cost accepted.)
    systematic miss calibration surfaced. Bumping RubricVersion forces a
    full regrade (~$1–2), so batch it with the next big eval-set change.
 3. **Recency-normalized citations** (citations/day) as a blend feature.
+~~CI regression gate~~ — LIVE 2026-07-12 (see §2).
+
 4. **Interleaving in anger**: HyDE-off vs HyDE-on as first live candidate —
    the offline delta is +0.02; a click-vote confirmation would be free.
-5. **CI regression gate** on a checked-in mini-corpus.
-6. **LTR** once labels cross ~200 (see §4).
-7. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,
+5. **LTR** once labels cross ~200 (see §4).
+6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,
    has-experiments/dataset flags. Big lift, big analysis payoff.
 
 ## 6. Gotchas that will waste your time if forgotten

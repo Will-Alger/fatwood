@@ -22,7 +22,8 @@ public static class EvalCommandRunner
     public static async Task<int> RunAsync(string[] args)
     {
         if (!TryParseArguments(args, out var verb, out var queriesPath, out var judgmentsPath,
-                out var pool, out var randomSample, out var calibrationPath, out var sample, out var model))
+                out var pool, out var randomSample, out var calibrationPath, out var sample, out var model,
+                out var corpusPath, out var minNdcg))
         {
             Console.Error.WriteLine(
                 "Usage: eval compile   [--queries <path>]\n" +
@@ -32,7 +33,10 @@ public static class EvalCommandRunner
                 "       eval adopt     [--queries <path>]\n" +
                 "       eval tune      [--queries <path>] [--judgments <path>]\n" +
                 "       eval audit     [--queries <path>] [--judgments <path>]\n" +
-                "       eval calibrate [--queries <path>] [--judgments <path>] [--out <path>] [--sample <N>] [--model <id>]");
+                "       eval calibrate [--queries <path>] [--judgments <path>] [--out <path>] [--sample <N>] [--model <id>]\n" +
+                "       eval export-corpus [--judgments <path>] [--corpus <path>]\n" +
+                "       eval seed      [--corpus <path>]   (empty database only)\n" +
+                "  eval search also accepts --min-ndcg <floor>: exit 1 when mean nDCG@10 falls below it (CI gate).");
             return ExitUsage;
         }
 
@@ -70,7 +74,26 @@ public static class EvalCommandRunner
                 case "search":
                     var report = await runner.ScoreAsync(queriesPath, judgmentsPath, cts.Token);
                     PrintReport(report);
-                    return report.Queries.Count > 0 ? ExitOk : ExitRunFailed;
+                    if (report.Queries.Count == 0)
+                    {
+                        return ExitRunFailed;
+                    }
+
+                    if (minNdcg is { } floor)
+                    {
+                        var mean = report.MeanNdcg10 ?? 0;
+                        if (mean < floor)
+                        {
+                            Console.Error.WriteLine(
+                                $"EVAL GATE FAILED: mean nDCG@10 {mean:0.000} is below the floor {floor:0.000}. " +
+                                "A ranking regression reached this branch — see docs/search-quality.md.");
+                            return ExitRunFailed;
+                        }
+
+                        Console.WriteLine($"Eval gate passed: mean nDCG@10 {mean:0.000} >= floor {floor:0.000}.");
+                    }
+
+                    return ExitOk;
 
                 case "bias":
                     var analyzer = scope.ServiceProvider.GetRequiredService<TelemetryAnalyzer>();
@@ -101,6 +124,16 @@ public static class EvalCommandRunner
                         queriesPath, judgmentsPath, calibrationPath, sample, model, cts.Token);
                     PrintCalibration(calibration, calibrationPath);
                     return calibration.SampleSize > 0 ? ExitOk : ExitRunFailed;
+
+                case "export-corpus":
+                    var exported = await runner.ExportCorpusAsync(judgmentsPath, corpusPath, cts.Token);
+                    Console.WriteLine($"Exported {exported} judged paper(s) to {corpusPath}.");
+                    return exported > 0 ? ExitOk : ExitRunFailed;
+
+                case "seed":
+                    var seeded = await runner.SeedCorpusAsync(corpusPath, cts.Token);
+                    Console.WriteLine($"Seeded {seeded} paper(s) from {corpusPath}. Run `embed` next.");
+                    return seeded > 0 ? ExitOk : ExitRunFailed;
 
                 default:
                     return ExitUsage;
@@ -242,7 +275,9 @@ public static class EvalCommandRunner
         out int randomSample,
         out string calibrationPath,
         out int sample,
-        out string model)
+        out string model,
+        out string corpusPath,
+        out double? minNdcg)
     {
         verb = string.Empty;
         queriesPath = DefaultQueriesPath;
@@ -252,6 +287,8 @@ public static class EvalCommandRunner
         calibrationPath = "eval/calibration.json";
         sample = 200;
         model = "claude-sonnet-5";
+        corpusPath = "eval/corpus.json.gz";
+        minNdcg = null;
 
         if (args.Length < 2)
         {
@@ -259,7 +296,8 @@ public static class EvalCommandRunner
         }
 
         verb = args[1].ToLowerInvariant();
-        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit" or "calibrate"))
+        if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit"
+            or "calibrate" or "export-corpus" or "seed"))
         {
             return false;
         }
@@ -290,6 +328,15 @@ public static class EvalCommandRunner
                     break;
                 case "--sample" when i + 1 < args.Length && int.TryParse(args[i + 1], out var s) && s > 0:
                     sample = s;
+                    i++;
+                    break;
+                case "--corpus" when i + 1 < args.Length:
+                    corpusPath = args[++i];
+                    break;
+                case "--min-ndcg" when i + 1 < args.Length
+                    && double.TryParse(args[i + 1], System.Globalization.CultureInfo.InvariantCulture, out var floor)
+                    && floor is > 0 and < 1:
+                    minNdcg = floor;
                     i++;
                     break;
                 default:

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Eval;
 using ResearchDiscovery.Application.Options;
+using ResearchDiscovery.Domain.Entities;
 using ResearchDiscovery.Infrastructure.Persistence;
 using ResearchDiscovery.Infrastructure.Search;
 
@@ -81,6 +82,131 @@ public class EvalRunner(
         }
 
         return compiled;
+    }
+
+    public sealed record CorpusFixturePaper(
+        string ArxivId,
+        int LatestVersion,
+        string Title,
+        string Abstract,
+        string Authors,
+        string PrimaryCategory,
+        IReadOnlyList<string> Categories,
+        DateTimeOffset PublishedUtc,
+        DateTimeOffset UpdatedUtc,
+        string AbsUrl,
+        string PdfUrl,
+        string? Doi,
+        string? CodeUrl);
+
+    public sealed record CorpusFixture(int Version, IReadOnlyList<CorpusFixturePaper> Papers);
+
+    /// <summary>
+    /// Exports every judged paper as a corpus fixture — the checked-in
+    /// mini-corpus the CI regression gate scores against. Embeddings are NOT
+    /// exported: they're deterministic per model version, so CI re-embeds
+    /// (`embed` command) and the fixture stays small and diffable.
+    /// </summary>
+    public async Task<int> ExportCorpusAsync(string judgmentsPath, string outPath, CancellationToken ct)
+    {
+        var judgmentSet = EvalFileStore.LoadJudgmentsOrEmpty(judgmentsPath, judge.RubricVersion);
+        var ids = judgmentSet.Judgments.Select(j => j.ArxivId).Distinct().ToList();
+
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+        var papers = await db.Papers
+            .AsNoTracking()
+            .Include(p => p.PrimaryCategory)
+            .Include(p => p.PaperCategories).ThenInclude(pc => pc.Category)
+            .Where(p => ids.Contains(p.ArxivId))
+            .ToListAsync(ct);
+
+        var fixture = new CorpusFixture(
+            1,
+            papers
+                .Select(p => new CorpusFixturePaper(
+                    p.ArxivId,
+                    p.LatestVersion,
+                    p.Title,
+                    p.Abstract,
+                    p.Authors,
+                    p.PrimaryCategory.Code,
+                    p.PaperCategories.Select(pc => pc.Category.Code).OrderBy(c => c, StringComparer.Ordinal).ToList(),
+                    p.PublishedUtc,
+                    p.UpdatedUtc,
+                    p.AbsUrl,
+                    p.PdfUrl,
+                    p.Doi,
+                    p.CodeUrl))
+                .OrderBy(p => p.ArxivId, StringComparer.Ordinal)
+                .ToList());
+
+        EvalFileStore.SaveCorpus(outPath, fixture);
+        logger.LogInformation(
+            "Exported {Count} judged papers ({Missing} judged ids not in this corpus) to {Path}",
+            fixture.Papers.Count, ids.Count - fixture.Papers.Count, outPath);
+        return fixture.Papers.Count;
+    }
+
+    /// <summary>
+    /// Loads a corpus fixture into an EMPTY database (refuses otherwise — this
+    /// is a CI/scratch operation, never something to aim at a real corpus).
+    /// </summary>
+    public async Task<int> SeedCorpusAsync(string corpusPath, CancellationToken ct)
+    {
+        var fixture = EvalFileStore.LoadCorpus(corpusPath);
+
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+        if (await db.Papers.AnyAsync(ct))
+        {
+            throw new InvalidOperationException(
+                "Refusing to seed: the corpus is not empty. `eval seed` targets fresh CI/scratch databases only.");
+        }
+
+        var categories = new Dictionary<string, Category>(StringComparer.OrdinalIgnoreCase);
+        Category GetCategory(string code)
+        {
+            if (!categories.TryGetValue(code, out var category))
+            {
+                category = new Category { Code = code, Name = code };
+                categories[code] = category;
+                db.Categories.Add(category);
+            }
+
+            return category;
+        }
+
+        foreach (var p in fixture.Papers)
+        {
+            var paper = new Paper
+            {
+                ArxivId = p.ArxivId,
+                LatestVersion = p.LatestVersion,
+                Title = p.Title,
+                Abstract = p.Abstract,
+                Authors = p.Authors,
+                PrimaryCategory = GetCategory(p.PrimaryCategory),
+                PublishedUtc = p.PublishedUtc,
+                UpdatedUtc = p.UpdatedUtc,
+                AbsUrl = p.AbsUrl,
+                PdfUrl = p.PdfUrl,
+                Doi = p.Doi,
+                CodeUrl = p.CodeUrl,
+                // Deterministic bookkeeping: the fixture must produce the same
+                // DB bytes on every CI run.
+                FirstIngestedUtc = p.UpdatedUtc,
+                LastSeenUtc = p.UpdatedUtc,
+            };
+            foreach (var code in p.Categories)
+            {
+                paper.PaperCategories.Add(new PaperCategory { Paper = paper, Category = GetCategory(code) });
+            }
+
+            db.Papers.Add(paper);
+        }
+
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Count} papers from {Path}", fixture.Papers.Count, corpusPath);
+        return fixture.Papers.Count;
     }
 
     public sealed record CalibrationPair(
