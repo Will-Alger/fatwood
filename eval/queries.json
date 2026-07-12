@@ -366,6 +366,320 @@
         "dateWindowDays": 90,
         "requireNoCode": null
       }
+    },
+    {
+      "id": "mamba-timeseries",
+      "persona": "ML engineer, 2 years, comfortable with PyTorch. Wants to get ahead of post-transformer architectures before they\u0027re mainstream.",
+      "query": "state space models like Mamba or S4 for long time series - is attention actually needed?",
+      "plan": {
+        "interpretation": "You\u0027re looking for research on state space models (Mamba, S4, and related architectures) as alternatives to attention-based transformers for sequence modeling, with focus on long-range dependencies and time series applications.",
+        "anchorText": "state space models, Mamba, S4, selective state space, long sequence modeling, attention alternatives, sequence-to-sequence learning, long-range dependencies, time series forecasting, recurrent neural networks, linear complexity sequences, efficient transformers, structured state spaces, autoregressive modeling, temporal pattern recognition",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "stat.ML"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "dpo-alignment",
+      "persona": "Backend developer self-studying LLM fine-tuning on a single 24GB GPU at home.",
+      "query": "direct preference optimization vs RLHF for aligning small open models, something I can run myself",
+      "plan": {
+        "interpretation": "You want papers comparing direct preference optimization (DPO) with reinforcement learning from human feedback (RLHF) for aligning small language models, with focus on methods feasible to implement and run on consumer hardware.",
+        "anchorText": "direct preference optimization, DPO, RLHF, reinforcement learning human feedback, preference learning, language model alignment, model alignment training, fine-tuning methods, small language models, open-source models, reward modeling, policy optimization, inference efficiency, parameter-efficient fine-tuning",
+        "categories": [
+          "cs.CL",
+          "cs.LG",
+          "cs.AI"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "speculative-decoding",
+      "persona": "Infrastructure engineer at a startup that serves LLM endpoints; latency is the pain point.",
+      "query": "speculative decoding or other LLM inference speedups I could benchmark on one GPU",
+      "plan": {
+        "interpretation": "You want to find papers on techniques to accelerate LLM inference\u2014such as speculative decoding, distillation, quantization, or other methods\u2014that you could benchmark and potentially implement on a single GPU.",
+        "anchorText": "speculative decoding, LLM inference acceleration, language model speedup, token generation latency, distillation, quantization, pruning, batching optimization, autoregressive sampling, early exit, knowledge distillation, model compression, inference efficiency, throughput optimization, GPU memory optimization",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.CL"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "kv-cache-serving",
+      "persona": "Platform engineer optimizing an internal LLM gateway with long-context workloads.",
+      "query": "KV cache compression and quantization techniques for serving long context models",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on key-value cache compression and quantization methods that enable efficient serving of long-context language models in production systems.",
+        "anchorText": "KV cache compression, quantization, long-context language models, token attention, key-value compression techniques, serving inference, memory-efficient transformers, attention mechanism optimization, model quantization, inference latency reduction, long sequence processing, attention cache optimization",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.CL",
+          "cs.AR"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "hallucination-plain",
+      "persona": "Former product manager turned junior developer; explains AI features to non-technical stakeholders.",
+      "query": "chatbots confidently making things up - research on detecting or preventing that",
+      "plan": {
+        "interpretation": "Research on detecting, measuring, and preventing hallucinations or confabulations in language models and chatbot systems.",
+        "anchorText": "hallucination detection, language model faithfulness, factual consistency, confabulation prevention, fact verification, retrieval-augmented generation, grounding mechanisms, uncertainty quantification in neural networks, knowledge-enhanced language models, output validation, adversarial robustness, semantic consistency, knowledge tracing, truthfulness evaluation, model calibration",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "model-shrinking",
+      "persona": "Mobile developer who wants to run models on-device instead of calling APIs.",
+      "query": "making big neural networks smaller and faster without losing much accuracy",
+      "plan": {
+        "interpretation": "You are looking for research on model compression and efficiency techniques that reduce neural network size and latency while maintaining performance.",
+        "anchorText": "model compression, quantization, pruning, knowledge distillation, neural architecture search, efficient neural networks, mobile inference, on-device deployment, model acceleration, lightweight models, parameter reduction, low-rank approximation, neural network optimization, inference efficiency, edge computing",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.NE",
+          "eess.IV"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "ai-text-detection",
+      "persona": "High-school CS teacher who builds tools on the side; students keep submitting suspicious essays.",
+      "query": "how do people tell if a piece of text was written by an AI",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on detecting AI-generated text and distinguishing it from human writing.",
+        "anchorText": "AI text detection, language model detection, GPT detection, machine-generated text identification, natural language authenticity verification, neural text generation detection, deepfake text, watermarking language models, statistical signatures of neural language models, stylometry for detection, transformer output classification, text classification for synthetic detection",
+        "categories": [
+          "cs.CL",
+          "cs.CV",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "learn-from-few",
+      "persona": "Data scientist at a 20-person company; labeling budget is basically zero.",
+      "query": "training decent models when you barely have any labeled data",
+      "plan": {
+        "interpretation": "Finding techniques and methods for training effective machine learning models with minimal labeled data, including semi-supervised, self-supervised, and low-data learning approaches.",
+        "anchorText": "semi-supervised learning, self-supervised learning, few-shot learning, transfer learning, weak supervision, data augmentation, active learning, label-efficient training, pseudo-labeling, contrastive learning, unsupervised pretraining, domain adaptation, zero-shot learning, unlabeled data utilization, meta-learning",
+        "categories": [
+          "cs.LG",
+          "stat.ML",
+          "cs.AI"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "llm-security",
+      "persona": "Application security engineer, 5 years, new to ML but strong on threat modeling.",
+      "query": "prompt injection and jailbreak attacks on LLM applications, plus defenses I could actually demo",
+      "plan": {
+        "interpretation": "You want papers on prompt injection and jailbreak attack techniques against language models, along with practical defense mechanisms you could implement and demonstrate.",
+        "anchorText": "prompt injection, jailbreak attacks, adversarial prompts, LLM security, language model robustness, input validation defenses, prompt filtering, instruction-following vulnerabilities, adversarial examples, model alignment, safety mechanisms, red teaming, defense evaluation, attack mitigation",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.CR",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "ml-for-databases",
+      "persona": "Backend developer, 6 years of Postgres-heavy work; wants ML skills without leaving databases.",
+      "query": "machine learning applied to database internals - query optimization, index tuning, cardinality estimation",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on machine learning techniques applied to database systems optimization, including query planning, index selection, and cardinality estimation.",
+        "anchorText": "machine learning database optimization, learned index structures, cardinality estimation neural networks, query planning optimization, adaptive indexing, learned cost models, database query optimization, automatic index tuning, machine learning database systems, query performance prediction, learned statistics, database tuning",
+        "categories": [
+          "cs.DB",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "privacy-finance",
+      "persona": "Payments engineer working under PCI and GDPR constraints; compliance keeps killing analytics ideas.",
+      "query": "privacy preserving analytics or machine learning over financial transaction data",
+      "plan": {
+        "interpretation": "Find papers on privacy-preserving techniques for analyzing financial transaction data and machine learning under strict data protection constraints like GDPR and PCI-DSS.",
+        "anchorText": "privacy-preserving machine learning, differential privacy, federated learning, secure multi-party computation, homomorphic encryption, financial data analysis, transaction data, GDPR compliance, PCI-DSS, data anonymization, privacy-preserving analytics, encrypted inference, secure aggregation, financial anomaly detection",
+        "categories": [
+          "cs.CR",
+          "cs.LG",
+          "stat.ML",
+          "q-fin.CP",
+          "econ.EM"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "graph-fraud-rings",
+      "persona": "Fraud analyst who learned Python last year; thinks in networks of accounts, not single transactions.",
+      "query": "graph neural networks for spotting fraud rings or money laundering networks",
+      "plan": {
+        "interpretation": "Looking for papers on using graph neural networks to detect fraud rings and money laundering through network analysis of financial transactions and account relationships.",
+        "anchorText": "graph neural networks, fraud detection, money laundering detection, financial crime networks, account networks, transaction graphs, anomaly detection graphs, network analysis, anti-money laundering, AML, node classification, link prediction, graph convolutional networks, temporal graphs, suspicious transaction detection",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.SI",
+          "q-fin.ST"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "laptop-llm",
+      "persona": "Hobbyist with an M-series MacBook and no cloud budget; wants to understand LLMs by building one.",
+      "query": "pretraining or fine-tuning a tiny language model entirely on a laptop",
+      "plan": {
+        "interpretation": "Building and training a small language model from scratch on local hardware without cloud resources.",
+        "anchorText": "language model pretraining, fine-tuning, transformer architecture, tokenization, token prediction, next-token generation, training optimization, parameter efficiency, model compression, knowledge distillation, small models, inference efficiency, gradient descent, backpropagation, attention mechanism, embedding layers, sequence modeling, text generation, loss functions, learning rate scheduling",
+        "categories": [
+          "cs.CL",
+          "cs.LG"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "weekend-cv",
+      "persona": "Junior fullstack developer attempting a first ML project; has a webcam and two free weekends.",
+      "query": "a computer vision project finishable in two weekends with just a webcam",
+      "plan": {
+        "interpretation": "You want a hands-on computer vision project that is feasible to complete in two weekends using only a webcam as hardware.",
+        "anchorText": "real-time object detection, pose estimation, hand tracking, gesture recognition, facial analysis, webcam-based computer vision, lightweight neural networks, edge deployment, convolutional neural networks, image classification, video processing, live inference",
+        "categories": [
+          "cs.CV",
+          "cs.LG"
+        ],
+        "dateWindowDays": 90,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "agent-eval-solo",
+      "persona": "QA engineer pivoting into AI evaluation; excellent at breaking things methodically.",
+      "query": "evaluating LLM agents - benchmarks or harnesses reproducible by one person",
+      "plan": {
+        "interpretation": "You want reproducible benchmarking frameworks and evaluation harnesses for large language model agents that one person can implement and run independently.",
+        "anchorText": "LLM agent evaluation, benchmarking frameworks, autonomous agents, task execution metrics, reproducibility, evaluation harnesses, agent reasoning, tool use assessment, multi-step planning, agent architectures, standardized benchmarks, evaluation infrastructure",
+        "categories": [
+          "cs.AI",
+          "cs.LG",
+          "cs.CL"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "vague-ai-transition",
+      "persona": "IT support, 8 years, solid PowerShell scripting, no ML background at all.",
+      "query": "I want to get into AI somehow but don\u0027t know where to start - what could I actually build?",
+      "plan": {
+        "interpretation": "You\u0027re looking for entry-level AI projects and practical implementations that someone with strong programming fundamentals but no machine learning background could actually build and deploy.",
+        "anchorText": "machine learning tutorials, neural networks, deep learning frameworks, convolutional networks, natural language processing, computer vision applications, classification tasks, regression models, training datasets, model deployment, PyTorch, TensorFlow, supervised learning, feature engineering, gradient descent, transfer learning, image recognition, text processing, practical AI projects, getting started machine learning",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.CV",
+          "cs.CL",
+          "cs.NE"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "vague-standout-backend",
+      "persona": "Senior backend engineer, strong distributed systems, bored of CRUD and skeptical of hype.",
+      "query": "something unusual to build that isn\u0027t another chatbot wrapper - I like hard systems problems",
+      "plan": {
+        "interpretation": "You\u0027re looking for papers on challenging distributed systems, infrastructure, and systems architecture problems that would make substantive engineering portfolio projects, excluding mainstream LLM applications.",
+        "anchorText": "distributed systems, consensus algorithms, fault tolerance, replication, Byzantine resilience, state machine replication, coordination protocols, data consistency, concurrency control, transaction processing, database systems, streaming systems, resource scheduling, network protocols, load balancing, cloud infrastructure, storage systems, cache coherence, performance optimization, system design, reliability engineering",
+        "categories": [
+          "cs.DC",
+          "cs.DB",
+          "cs.DS",
+          "cs.NI",
+          "cs.OS",
+          "cs.PF"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "robot-sim2real",
+      "persona": "Embedded engineer with a hobby robot arm on the desk and simulation experience from games.",
+      "query": "sim to real transfer for robot manipulation on cheap hardware",
+      "plan": {
+        "interpretation": "You want papers on techniques for transferring robot manipulation skills learned in simulation to real robots using low-cost hardware.",
+        "anchorText": "sim-to-real transfer, domain randomization, robot manipulation, reinforcement learning, simulation, real-world deployment, low-cost robotics, hardware, policy transfer, gripper, object grasping, control, vision, tactile sensing, robotic arm",
+        "categories": [
+          "cs.RO",
+          "cs.LG",
+          "cs.CV"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
+    },
+    {
+      "id": "audio-events",
+      "persona": "Web developer and audio hobbyist, DSP-curious, tired of every tutorial being speech recognition.",
+      "query": "audio event detection beyond speech - classifying environmental sounds",
+      "plan": {
+        "interpretation": "You\u0027re looking for research on audio event detection and environmental sound classification that goes beyond speech recognition\u2014methods for identifying and categorizing diverse acoustic events in real-world settings.",
+        "anchorText": "environmental sound classification, audio event detection, acoustic scene analysis, sound tagging, urban audio, non-speech audio processing, multi-class sound recognition, audio features spectrograms, convolutional neural networks audio, acoustic event detection, sound source localization, weakly supervised audio classification",
+        "categories": [
+          "cs.SD",
+          "cs.CV",
+          "cs.LG",
+          "eess.AS"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null
+      }
     }
   ]
 }
