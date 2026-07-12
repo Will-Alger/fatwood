@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import {
-  getAdminKey,
   getLlmSettings,
   getProfile,
   saveProfile,
-  setAdminKey,
   setLlmAssignment,
 } from '../api/client'
-import type { LlmSettingsView, ProfileView } from '../api/types'
+import type { LlmSettingsView, MeView, ProfileView } from '../api/types'
+import { signOut } from '../auth/auth'
+import { formatBudget } from '../hooks/useMe'
 
 const STEP_LABELS: Record<string, string> = {
   QueryCompiler: 'Query compiler (runs once per search)',
@@ -15,20 +15,23 @@ const STEP_LABELS: Record<string, string> = {
 }
 
 interface SettingsPanelProps {
+  me: MeView | null
+  signedOut: boolean
   onClose: () => void
   onSettingsChanged: (settings: LlmSettingsView | null) => void
 }
 
-export function SettingsPanel({ onClose, onSettingsChanged }: SettingsPanelProps) {
-  const [adminKey, setAdminKeyState] = useState(getAdminKey())
+export function SettingsPanel({ me, signedOut, onClose, onSettingsChanged }: SettingsPanelProps) {
   const [settings, setSettings] = useState<LlmSettingsView | null>(null)
   const [profile, setProfile] = useState<ProfileView | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const isAdmin = me?.role === 'Admin'
+
   async function loadAll() {
     setError(null)
-    if (getAdminKey() === '') {
+    if (!isAdmin) {
       setSettings(null)
       setProfile(null)
       return
@@ -46,13 +49,7 @@ export function SettingsPanel({ onClose, onSettingsChanged }: SettingsPanelProps
   useEffect(() => {
     void loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function handleKeySave() {
-    setAdminKey(adminKey.trim())
-    setStatus('Admin key saved locally.')
-    void loadAll()
-  }
+  }, [isAdmin])
 
   async function handleAssignment(step: string, modelId: string) {
     setError(null)
@@ -97,22 +94,31 @@ export function SettingsPanel({ onClose, onSettingsChanged }: SettingsPanelProps
         {status && <p className="status status-notice">{status}</p>}
 
         <section>
-          <h3>Admin API key</h3>
-          <p className="settings-hint">
-            Required for smart search, analysis, profile, and model settings. Stored only in this
-            browser.
-          </p>
-          <div className="settings-row">
-            <input
-              type="password"
-              value={adminKey}
-              onChange={(e) => setAdminKeyState(e.target.value)}
-              placeholder="X-Admin-Api-Key value"
-            />
-            <button type="button" onClick={handleKeySave}>
-              Save
-            </button>
-          </div>
+          <h3>Account</h3>
+          {me ? (
+            <>
+              <p className="settings-hint">
+                {me.displayName} · {me.email} · {me.role}
+              </p>
+              <p className="settings-hint">
+                Search &amp; analysis budget: <strong>{formatBudget(me)}</strong>
+                {!me.budget.unlimited && (
+                  <>
+                    {' '}
+                    (used ${(me.budget.spentMicros / 1_000_000).toFixed(2)} of $
+                    {(me.budget.grantedMicros / 1_000_000).toFixed(2)})
+                  </>
+                )}
+              </p>
+              <button type="button" onClick={() => void signOut()}>
+                Sign out
+              </button>
+            </>
+          ) : signedOut ? (
+            <p className="settings-hint">Not signed in.</p>
+          ) : (
+            <p className="settings-hint">Loading account…</p>
+          )}
         </section>
 
         {profile && (

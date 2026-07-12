@@ -27,10 +27,12 @@ services:
       # Passed through from the host shell; empty when unset (analysis then
       # fails with an auth error on first use — browse/ingestion unaffected).
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      # Dev-only admin key enabling the admin surface (settings, profile,
-      # smart-search compile, analysis triggers). Paste the same value into
-      # the UI's Settings panel. Use a real secret outside local dev.
-      Admin__ApiKey: ${ADMIN_API_KEY:-local-dev-admin}
+      # Local personal stack: no Entra tenant, every request runs as the
+      # local-dev admin. The flag is the deliberate opt-out of the
+      # fail-closed production guard — never set it in cloud config. To
+      # rehearse the real sign-in flow locally, set Auth__Authority and
+      # Auth__Audience (values in infra/main.bicep) instead of the flag.
+      Auth__DangerouslyAllowAnonymous: "true"
     ports:
       - "8080:8080"
 

@@ -123,7 +123,82 @@ body {
 
 .app-header-actions {
   display: flex;
+  align-items: center;
   gap: 0.4rem;
+}
+
+/* Remaining budget in the header: quiet mono chip, matte like everything else. */
+.budget-chip {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: default;
+}
+
+.signin-button {
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.signin-button:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.invite-banner {
+  margin: 0.75rem auto 0;
+  max-width: 900px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.invite-banner-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.invite-banner-form input {
+  font: inherit;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.invite-banner-form button {
+  font: inherit;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+.invite-banner-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .icon-button {

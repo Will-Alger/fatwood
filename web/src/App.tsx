@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getAdminKey, getLlmSettings } from './api/client'
+import { getLlmSettings, redeemInvite, setThemePreference } from './api/client'
 import type { LlmSettingsView, SortOrder } from './api/types'
+import { signIn } from './auth/auth'
 import { CategoryFilter } from './components/CategoryFilter'
 import { Discover } from './components/Discover'
 import { Logo } from './components/Logo'
@@ -8,6 +9,7 @@ import { Pagination } from './components/Pagination'
 import { PaperList } from './components/PaperList'
 import { SettingsPanel } from './components/SettingsPanel'
 import { useCategories } from './hooks/useCategories'
+import { formatBudget, useMe } from './hooks/useMe'
 import { usePapers } from './hooks/usePapers'
 import './App.css'
 
@@ -25,6 +27,8 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [llmSettings, setLlmSettings] = useState<LlmSettingsView | null>(null)
   const [theme, setTheme] = useState<Theme>(currentTheme)
+  const [inviteCode, setInviteCode] = useState('')
+  const [inviteError, setInviteError] = useState<string | null>(null)
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [page, setPage] = useState(1)
@@ -32,6 +36,7 @@ export default function App() {
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false)
 
+  const { me, ready, signedOut, refresh } = useMe()
   const { categories, error: categoriesError } = useCategories()
   const { data, loading, error } = usePapers(
     selectedCategories,
@@ -43,18 +48,43 @@ export default function App() {
   )
 
   useEffect(() => {
-    if (getAdminKey() !== '') {
+    if (me?.role === 'Admin') {
       getLlmSettings()
         .then(setLlmSettings)
         .catch(() => setLlmSettings(null))
     }
-  }, [])
+  }, [me?.role])
+
+  // The account's saved theme wins over the local default once known.
+  useEffect(() => {
+    if (me?.theme && me.theme !== currentTheme()) {
+      document.documentElement.dataset.theme = me.theme
+      localStorage.setItem('fatwood.theme', me.theme)
+      setTheme(me.theme)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me?.id])
 
   function toggleTheme() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
     document.documentElement.dataset.theme = next
     localStorage.setItem('fatwood.theme', next)
     setTheme(next)
+    if (me) {
+      // Fire-and-forget; localStorage already has the fallback.
+      setThemePreference(next).catch(() => undefined)
+    }
+  }
+
+  async function handleInviteRedeem() {
+    setInviteError(null)
+    try {
+      await redeemInvite(inviteCode)
+      setInviteCode('')
+      refresh()
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : 'Could not redeem the code')
+    }
   }
 
   function handleCategoriesChange(next: string[]) {
@@ -84,6 +114,23 @@ export default function App() {
             </div>
           </div>
           <div className="app-header-actions">
+            {me && (
+              <span
+                className="budget-chip"
+                title={
+                  me.budget.unlimited
+                    ? `${me.email} — unlimited (admin)`
+                    : `${me.email} — remaining search & analysis budget`
+                }
+              >
+                {formatBudget(me)}
+              </span>
+            )}
+            {ready && signedOut && (
+              <button type="button" className="signin-button" onClick={() => void signIn()}>
+                Sign in
+              </button>
+            )}
             <button
               type="button"
               className="icon-button"
@@ -122,10 +169,35 @@ export default function App() {
         </nav>
       </header>
 
+      {me && !me.isActive && (
+        <div className="invite-banner">
+          <span>
+            Fatwood is invite-only right now. Enter an invite code to unlock search and
+            analysis — browsing works without one.
+          </span>
+          <div className="invite-banner-form">
+            <input
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              placeholder="Invite code"
+              aria-label="Invite code"
+            />
+            <button
+              type="button"
+              disabled={inviteCode.trim() === ''}
+              onClick={() => void handleInviteRedeem()}
+            >
+              Unlock
+            </button>
+          </div>
+          {inviteError && <p className="status status-error">{inviteError}</p>}
+        </div>
+      )}
+
       {/* Both panes stay mounted so switching tabs never loses state
           (search results, filters, scroll positions). */}
       <div style={{ display: tab === 'discover' ? undefined : 'none' }}>
-        <Discover llmSettings={llmSettings} />
+        <Discover llmSettings={llmSettings} me={me} signedOut={signedOut} />
       </div>
       <div className="app-body" style={{ display: tab === 'browse' ? undefined : 'none' }}>
         <CategoryFilter
@@ -177,7 +249,12 @@ export default function App() {
       </div>
 
       {settingsOpen && (
-        <SettingsPanel onClose={() => setSettingsOpen(false)} onSettingsChanged={setLlmSettings} />
+        <SettingsPanel
+          me={me}
+          signedOut={signedOut}
+          onClose={() => setSettingsOpen(false)}
+          onSettingsChanged={setLlmSettings}
+        />
       )}
     </div>
   )

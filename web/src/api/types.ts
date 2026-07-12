@@ -122,3 +122,20 @@ export interface ProfileView {
   version: number
   updatedUtc: string | null
 }
+
+export interface BudgetView {
+  grantedMicros: number
+  spentMicros: number
+  remainingMicros: number
+  unlimited: boolean
+}
+
+export interface MeView {
+  id: number
+  email: string
+  displayName: string
+  role: 'Member' | 'Admin'
+  isActive: boolean
+  theme: 'dark' | 'light' | null
+  budget: BudgetView
+}

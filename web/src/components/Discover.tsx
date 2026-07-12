@@ -2,11 +2,11 @@ import { useMemo, useRef, useState } from 'react'
 import {
   analyzeSelection,
   compileSearch,
-  getAdminKey,
   getAnalysisStatus,
   runSearch,
 } from '../api/client'
-import type { LlmSettingsView, SearchPlan, SearchResult } from '../api/types'
+import type { LlmSettingsView, MeView, SearchPlan, SearchResult } from '../api/types'
+import { signIn } from '../auth/auth'
 import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
 import { PaperCard } from './PaperCard'
 import { EmberDots, PaperSkeletons } from './Skeletons'
@@ -33,9 +33,11 @@ interface AnalyzingState {
 
 interface DiscoverProps {
   llmSettings: LlmSettingsView | null
+  me: MeView | null
+  signedOut: boolean
 }
 
-export function Discover({ llmSettings }: DiscoverProps) {
+export function Discover({ llmSettings, me, signedOut }: DiscoverProps) {
   const [query, setQuery] = useState('')
   const [lastCompiledQuery, setLastCompiledQuery] = useState<string | null>(null)
   const [plan, setPlanState] = useState<SearchPlan | null>(null)
@@ -63,7 +65,9 @@ export function Discover({ llmSettings }: DiscoverProps) {
   // every search so telemetry can trace results back to the original intent.
   const queryTextRef = useRef<string | null>(null)
 
-  const hasAdminKey = getAdminKey() !== ''
+  // Compile + analysis spend tokens: they need a signed-in, activated account
+  // (locally the server runs as the dev admin, so this is always true there).
+  const canSpend = me?.isActive === true
 
   const analysisEstimate = useMemo(() => {
     if (!llmSettings) return null
@@ -245,7 +249,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
         <button
           type="button"
           className="primary-button"
-          disabled={busy !== null || !query.trim() || !hasAdminKey}
+          disabled={busy !== null || !query.trim() || !canSpend}
           onClick={() => void handleSearch()}
         >
           {busy === 'compile'
@@ -256,10 +260,13 @@ export function Discover({ llmSettings }: DiscoverProps) {
         </button>
       </div>
 
-      {!hasAdminKey && (
+      {signedOut && (
         <p className="status">
-          Smart search compiles your query with an LLM, which needs the admin API key — set it in
-          Settings. (Executing an already-compiled plan is free and key-less.)
+          <button type="button" className="link-button" onClick={() => void signIn()}>
+            Sign in
+          </button>{' '}
+          to search — every account gets a free search &amp; analysis budget. Browsing papers
+          works without an account.
         </p>
       )}
 
@@ -382,7 +389,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
                 key={example}
                 type="button"
                 className="example-chip"
-                disabled={!hasAdminKey || busy !== null}
+                disabled={!canSpend || busy !== null}
                 onClick={() => tryExample(example)}
               >
                 {example.length > 64 ? `${example.slice(0, 64)}…` : example}
@@ -417,7 +424,7 @@ export function Discover({ llmSettings }: DiscoverProps) {
                 />{' '}
                 Analyzed only
               </label>
-              {hasAdminKey && analyzeCount > 0 && (
+              {canSpend && analyzeCount > 0 && (
                 <button
                   type="button"
                   className="primary-button"

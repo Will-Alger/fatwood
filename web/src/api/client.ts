@@ -1,6 +1,8 @@
+import { getAccessToken } from '../auth/auth'
 import type {
   CategoryDto,
   LlmSettingsView,
+  MeView,
   PagedResult,
   PaperDto,
   ProfileView,
@@ -10,26 +12,29 @@ import type {
   SortOrder,
 } from './types'
 
-const ADMIN_KEY_STORAGE = 'researchDiscovery.adminKey'
+/** Thrown for HTTP errors so callers can branch on status (401/402/403). */
+export class ApiError extends Error {
+  readonly status: number
 
-export function getAdminKey(): string {
-  return localStorage.getItem(ADMIN_KEY_STORAGE) ?? ''
-}
-
-export function setAdminKey(key: string) {
-  if (key) {
-    localStorage.setItem(ADMIN_KEY_STORAGE, key)
-  } else {
-    localStorage.removeItem(ADMIN_KEY_STORAGE)
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
   }
 }
 
-function adminHeaders(): Record<string, string> {
-  const key = getAdminKey()
-  return key ? { 'X-Admin-Api-Key': key } : {}
+// When signed in, every call carries the bearer token (harmless on anonymous
+// endpoints). Locally with no tenant the server authenticates everything as
+// the dev admin, so a missing token is fine there too.
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const token = await getAccessToken()
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  } catch {
+    return {}
+  }
 }
 
-async function parseError(response: Response): Promise<Error> {
+async function parseError(response: Response): Promise<ApiError> {
   let detail = `${response.status} ${response.statusText}`
   try {
     const body = await response.json()
@@ -37,38 +42,35 @@ async function parseError(response: Response): Promise<Error> {
   } catch {
     // Non-JSON error body — keep the status text.
   }
-  if (response.status === 404 && getAdminKey() === '') {
-    detail = 'Admin features are disabled. Set the admin API key in Settings.'
-  }
   if (response.status === 401) {
-    detail = 'Admin API key is incorrect. Update it in Settings.'
+    detail = 'Sign in to use this feature.'
   }
-  return new Error(detail)
+  return new ApiError(detail, response.status)
 }
 
-async function getJson<T>(url: string, signal?: AbortSignal, admin = false): Promise<T> {
+async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(url, {
     signal,
-    headers: admin ? adminHeaders() : undefined,
+    headers: await authHeaders(),
   })
   if (!response.ok) throw await parseError(response)
   return (await response.json()) as T
 }
 
 async function sendJson<T>(
-  method: 'POST' | 'PUT',
+  method: 'POST' | 'PUT' | 'DELETE',
   url: string,
   body: unknown,
-  options: { admin?: boolean; signal?: AbortSignal } = {},
+  options: { signal?: AbortSignal } = {},
 ): Promise<T> {
   const response = await fetch(url, {
     method,
     signal: options.signal,
     headers: {
       'Content-Type': 'application/json',
-      ...(options.admin ? adminHeaders() : {}),
+      ...(await authHeaders()),
     },
-    body: JSON.stringify(body),
+    body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (!response.ok) throw await parseError(response)
   if (response.status === 204) return undefined as T
@@ -115,11 +117,11 @@ export async function setBookmark(
   const query = context
     ? `?searchEventId=${context.searchEventId}&rank=${context.rank}`
     : ''
-  const response = await fetch(
+  await sendJson(
+    bookmarked ? 'PUT' : 'DELETE',
     `/api/papers/${encodeURIComponent(arxivId)}/bookmark${query}`,
-    { method: bookmarked ? 'PUT' : 'DELETE' },
+    undefined,
   )
-  if (!response.ok) throw await parseError(response)
 }
 
 export async function markNotInterested(
@@ -129,11 +131,11 @@ export async function markNotInterested(
   const query = context
     ? `?searchEventId=${context.searchEventId}&rank=${context.rank}`
     : ''
-  const response = await fetch(
+  await sendJson(
+    'POST',
     `/api/papers/${encodeURIComponent(arxivId)}/not-interested${query}`,
-    { method: 'POST' },
+    undefined,
   )
-  if (!response.ok) throw await parseError(response)
 }
 
 export function getCategories(signal?: AbortSignal): Promise<CategoryDto[]> {
@@ -143,7 +145,7 @@ export function getCategories(signal?: AbortSignal): Promise<CategoryDto[]> {
 // --- Smart search ---
 
 export function compileSearch(query: string, signal?: AbortSignal): Promise<SearchPlan> {
-  return sendJson('POST', '/api/search/compile', { query }, { admin: true, signal })
+  return sendJson('POST', '/api/search/compile', { query }, { signal })
 }
 
 export function runSearch(
@@ -161,12 +163,7 @@ export function analyzeSelection(
   arxivIds: string[],
   searchEventId?: number,
 ): Promise<{ message: string }> {
-  return sendJson(
-    'POST',
-    '/api/admin/analysis/selection',
-    { arxivIds, searchEventId },
-    { admin: true },
-  )
+  return sendJson('POST', '/api/admin/analysis/selection', { arxivIds, searchEventId })
 }
 
 export interface AnalysisStatus {
@@ -181,18 +178,32 @@ export function getAnalysisStatus(
   return sendJson('POST', '/api/papers/analysis-status', { arxivIds }, { signal })
 }
 
+// --- Account ---
+
+export function getMe(signal?: AbortSignal): Promise<MeView> {
+  return getJson('/api/me', signal)
+}
+
+export function setThemePreference(theme: 'dark' | 'light'): Promise<void> {
+  return sendJson('PUT', '/api/me/theme', { theme })
+}
+
+export function redeemInvite(code: string): Promise<void> {
+  return sendJson('POST', '/api/me/invite', { code })
+}
+
 // --- Settings ---
 
 export function getLlmSettings(signal?: AbortSignal): Promise<LlmSettingsView> {
-  return getJson('/api/admin/settings/llm', signal, true)
+  return getJson('/api/admin/settings/llm', signal)
 }
 
 export function setLlmAssignment(step: string, modelId: string): Promise<void> {
-  return sendJson('PUT', '/api/admin/settings/llm', { step, modelId }, { admin: true })
+  return sendJson('PUT', '/api/admin/settings/llm', { step, modelId })
 }
 
 export function getProfile(signal?: AbortSignal): Promise<ProfileView> {
-  return getJson('/api/admin/settings/profile', signal, true)
+  return getJson('/api/admin/settings/profile', signal)
 }
 
 export function saveProfile(
@@ -200,10 +211,9 @@ export function saveProfile(
   goals: string,
   weeklyHours: number | null,
 ): Promise<ProfileView> {
-  return sendJson(
-    'PUT',
-    '/api/admin/settings/profile',
-    { experienceSummary, goals, weeklyHours },
-    { admin: true },
-  )
+  return sendJson('PUT', '/api/admin/settings/profile', {
+    experienceSummary,
+    goals,
+    weeklyHours,
+  })
 }
