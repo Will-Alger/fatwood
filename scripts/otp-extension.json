@@ -1,4 +1,4 @@
-{
+﻿{
   "@odata.type": "#microsoft.graph.onOtpSendCustomExtension",
   "displayName": "Fatwood OTP email provider",
   "description": "Sends Fatwood-branded verification-code emails via the app's own endpoint + Azure Communication Services",
@@ -8,7 +8,7 @@
   },
   "endpointConfiguration": {
     "@odata.type": "#microsoft.graph.httpRequestEndpoint",
-    "targetUrl": "https://www.fatwood.io/api/auth-events/otp-send"
+    "targetUrl": "https://rdisc-api.gentleflower-aa2882c7.centralus.azurecontainerapps.io/api/auth-events/otp-send"
   },
   "clientConfiguration": {
     "timeoutInMilliseconds": 2000,
