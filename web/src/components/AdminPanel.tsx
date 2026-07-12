@@ -140,17 +140,19 @@ export function AdminPanel({ me }: AdminPanelProps) {
                   </td>
                   <td>{when(u.lastSeenUtc)}</td>
                   <td className="admin-actions">
-                    <button type="button" disabled={busy} onClick={() => handleGrant(u)}>
-                      + Budget
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy || u.id === me.id}
-                      title={u.id === me.id ? 'You cannot change your own role' : undefined}
-                      onClick={() => handleRole(u)}
-                    >
-                      {u.role === 'Admin' ? 'Make member' : 'Make admin'}
-                    </button>
+                    <div className="admin-actions-group">
+                      <button type="button" disabled={busy} onClick={() => handleGrant(u)}>
+                        + Budget
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy || u.id === me.id}
+                        title={u.id === me.id ? 'You cannot change your own role' : undefined}
+                        onClick={() => handleRole(u)}
+                      >
+                        {u.role === 'Admin' ? 'Make member' : 'Make admin'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

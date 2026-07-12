@@ -229,7 +229,7 @@ export function AuthPanel({ onClose, onSignedIn }: AuthPanelProps) {
   }
 
   return (
-    <div className="settings-overlay" onClick={onClose}>
+    <div className="settings-overlay auth-overlay" onClick={onClose}>
       <div className="auth-panel" onClick={(e) => e.stopPropagation()}>
         <div className="auth-brand">
           <Logo size={40} />
