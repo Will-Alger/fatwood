@@ -14,6 +14,7 @@ import { formatBudget } from '../hooks/useMe'
 const STEP_LABELS: Record<string, string> = {
   QueryCompiler: 'Query compiler (runs once per search)',
   PaperAnalysis: 'Paper analysis (runs once per paper)',
+  RelevanceJudge: 'Relevance judge (offline evaluation only)',
 }
 
 interface SettingsPanelProps {
@@ -39,15 +40,15 @@ export function SettingsPanel({
   const [keyInput, setKeyInput] = useState('')
   const [keyBusy, setKeyBusy] = useState(false)
 
-  const isAdmin = me?.role === 'Admin'
+  const isOwner = me?.role === 'Owner'
   const isActive = me?.isActive === true
 
   async function loadAll() {
     setError(null)
     try {
-      // Every active user owns a profile; the model registry is admin-only.
+      // Every active user owns a profile; the model registry is owner-only.
       setProfile(isActive ? await getProfile() : null)
-      if (isAdmin) {
+      if (isOwner) {
         const llm = await getLlmSettings()
         setSettings(llm)
         onSettingsChanged(llm)
@@ -62,7 +63,7 @@ export function SettingsPanel({
   useEffect(() => {
     void loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, isActive])
+  }, [isOwner, isActive])
 
   async function handleAssignment(step: string, modelId: string) {
     setError(null)
@@ -145,12 +146,12 @@ export function SettingsPanel({
           <section>
             <h3>Your Anthropic API key</h3>
             <p className="settings-hint">
-              Optional. Add your own key and searches/analyses bill your Anthropic account
-              instead of your free budget here — it also unlocks premium models like Opus.
-              The key is stored encrypted and can never be viewed again through the app
-              (only replaced or removed). Plain talk: the server does decrypt it to call
-              Anthropic for you, so only add a key if you trust the operator — and set a
-              spend limit on it in the Anthropic console.
+              Optional. With your own key, searches and analyses bill your Anthropic
+              account instead of your free budget here, and premium models like Opus
+              unlock. The key is stored encrypted and can only ever be replaced or
+              removed — never viewed. The server does use it to call Anthropic on your
+              behalf, so we recommend setting a spend limit on the key in the Anthropic
+              console.
             </p>
             {me.byoKeyLast4 ? (
               <div className="settings-row">

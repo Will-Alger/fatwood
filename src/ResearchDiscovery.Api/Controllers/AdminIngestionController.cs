@@ -12,7 +12,7 @@ namespace ResearchDiscovery.Api.Controllers;
 /// <summary>Ops-only ingestion triggers, admin-role gated.</summary>
 [ApiController]
 [Route("api/admin/ingestion")]
-[Authorize(Policy = AuthPolicies.Admin)]
+[Authorize(Policy = AuthPolicies.Owner)]
 public class AdminIngestionController(IngestionJobQueue queue, AppDbContext db) : ControllerBase
 {
     public sealed record BackfillRequest(int? WindowDays, int? MaxPapersPerCategory);

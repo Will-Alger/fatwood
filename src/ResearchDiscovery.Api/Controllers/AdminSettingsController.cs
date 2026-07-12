@@ -13,7 +13,7 @@ namespace ResearchDiscovery.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/admin/settings")]
-[Authorize(Policy = AuthPolicies.Admin)]
+[Authorize(Policy = AuthPolicies.Owner)]
 public class AdminSettingsController(ILlmSettingsService llmSettings) : ControllerBase
 {
     /// <summary>Rough per-paper token sizes for client-side analysis cost estimates.</summary>

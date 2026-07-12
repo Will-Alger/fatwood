@@ -130,11 +130,13 @@ export interface BudgetView {
   unlimited: boolean
 }
 
+export type Role = 'Member' | 'Admin' | 'Owner'
+
 export interface MeView {
   id: number
   email: string
   displayName: string
-  role: 'Member' | 'Admin'
+  role: Role
   isActive: boolean
   theme: 'dark' | 'light' | null
   budget: BudgetView
@@ -145,7 +147,7 @@ export interface AdminUserView {
   id: number
   email: string
   displayName: string
-  role: 'Member' | 'Admin'
+  role: Role
   isActive: boolean
   createdUtc: string
   lastSeenUtc: string

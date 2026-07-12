@@ -20,7 +20,7 @@ public class AccountApiTests
 
         var me = await client.GetFromJsonAsync<JsonElement>("/api/me");
 
-        Assert.Equal("Admin", me.GetProperty("role").GetString());
+        Assert.Equal("Owner", me.GetProperty("role").GetString());
         Assert.True(me.GetProperty("isActive").GetBoolean());
         Assert.True(me.GetProperty("budget").GetProperty("unlimited").GetBoolean());
     }

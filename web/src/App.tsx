@@ -50,7 +50,7 @@ export default function App() {
   )
 
   useEffect(() => {
-    if (me?.role === 'Admin') {
+    if (me?.role === 'Owner') {
       getLlmSettings()
         .then(setLlmSettings)
         .catch(() => setLlmSettings(null))
@@ -121,10 +121,11 @@ export default function App() {
                 className="budget-chip"
                 title={
                   me.budget.unlimited
-                    ? `${me.email} — unlimited (admin)`
+                    ? `${me.email} — unlimited (${me.role.toLowerCase()})`
                     : `${me.email} — remaining search & analysis budget`
                 }
               >
+                <span className="budget-chip-label">budget</span>
                 {formatBudget(me)}
               </span>
             )}
@@ -168,7 +169,7 @@ export default function App() {
           >
             Browse
           </button>
-          {me?.role === 'Admin' && (
+          {me && me.role !== 'Member' && (
             <button
               type="button"
               className={tab === 'admin' ? 'tab tab-active' : 'tab'}
@@ -215,7 +216,7 @@ export default function App() {
           onSignIn={() => setAuthOpen(true)}
         />
       </div>
-      {tab === 'admin' && me?.role === 'Admin' && (
+      {tab === 'admin' && me && me.role !== 'Member' && (
         <div className="app-body app-body-single">
           <AdminPanel me={me} />
         </div>

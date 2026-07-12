@@ -78,6 +78,16 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.25rem 3rem;
+  /* Sticky footer: fill the viewport and push the footer to the bottom on
+     short pages instead of letting it float mid-screen. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app > .app-footer {
+  margin-top: auto;
+  width: 100%;
 }
 
 :focus-visible {
@@ -135,8 +145,19 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
-  color: var(--muted);
+  color: var(--text);
   cursor: default;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.budget-chip-label {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
 .signin-button {
@@ -329,6 +350,117 @@ body {
 .admin-panel h2 {
   font-size: 1.15rem;
   color: var(--text);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-search {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-search input {
+  flex: 1;
+  max-width: 420px;
+  font: inherit;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.admin-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  width: min(420px, calc(100vw - 2rem));
+  margin: 18vh auto 0;
+  padding: 1.5rem 1.5rem 1.25rem;
+}
+
+.admin-dialog h3 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-serif);
+  color: var(--text);
+}
+
+.admin-dialog label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.admin-dialog input {
+  font: inherit;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.admin-dialog input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.admin-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1.1rem;
+}
+
+.admin-role-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.admin-role-options button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+  font: inherit;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-role-options button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.admin-role-options button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-role-options button span {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .admin-table-wrap {
@@ -1406,10 +1538,19 @@ select {
   flex: 1;
 }
 
+/* Stacked consistently: label above a full-width select. The old side-by-side
+   flex wrapped unpredictably per label length, so rows looked mismatched. */
 .settings-model-row {
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
   font-size: 0.88rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.settings-model-row span {
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .settings-panel label {
@@ -1435,7 +1576,7 @@ select {
 }
 
 .settings-model-row select {
-  width: auto;
+  width: 100%;
   margin-top: 0;
 }
 

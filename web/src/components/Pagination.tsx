@@ -3,9 +3,16 @@ interface PaginationProps {
   totalPages: number
   totalItems: number
   onPageChange: (page: number) => void
+  itemsLabel?: string
 }
 
-export function Pagination({ page, totalPages, totalItems, onPageChange }: PaginationProps) {
+export function Pagination({
+  page,
+  totalPages,
+  totalItems,
+  onPageChange,
+  itemsLabel = 'papers',
+}: PaginationProps) {
   if (totalItems === 0) {
     return null
   }
@@ -16,7 +23,7 @@ export function Pagination({ page, totalPages, totalItems, onPageChange }: Pagin
         ← Previous
       </button>
       <span>
-        Page {page} of {totalPages} ({totalItems.toLocaleString()} papers)
+        Page {page} of {totalPages} ({totalItems.toLocaleString()} {itemsLabel})
       </span>
       <button
         type="button"

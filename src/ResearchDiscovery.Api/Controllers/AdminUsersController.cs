@@ -30,8 +30,15 @@ public class AdminUsersController(AppDbContext db) : ControllerBase
         long SpentMicros);
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? query, CancellationToken ct)
+    public async Task<IActionResult> List(
+        [FromQuery] string? query,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
     {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
         var users = db.AppUsers.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(query))
         {
@@ -40,9 +47,12 @@ public class AdminUsersController(AppDbContext db) : ControllerBase
                 EF.Functions.Like(u.Email, term) || EF.Functions.Like(u.DisplayName, term));
         }
 
-        var views = await users
+        var totalItems = await users.CountAsync(ct);
+
+        var items = await users
             .OrderByDescending(u => u.LastSeenUtc)
-            .Take(100)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(u => new UserView(
                 u.Id, u.Email, u.DisplayName, u.Role.ToString(), u.IsActive,
                 u.CreatedUtc, u.LastSeenUtc,
@@ -52,7 +62,8 @@ public class AdminUsersController(AppDbContext db) : ControllerBase
                     .Sum(e => (long?)e.CostMicros) ?? 0))
             .ToListAsync(ct);
 
-        return Ok(views);
+        var totalPages = totalItems == 0 ? 0 : (int)Math.Ceiling(totalItems / (double)pageSize);
+        return Ok(new { items, page, pageSize, totalItems, totalPages });
     }
 
     public sealed record GrantRequest(long AmountMicros, string? Note);
@@ -98,22 +109,25 @@ public class AdminUsersController(AppDbContext db) : ControllerBase
 
     public sealed record RoleRequest(string Role);
 
+    /// <summary>Role changes are Owner-only — an Admin managing people must
+    /// not be able to mint other Admins (or promote themselves to Owner).</summary>
     [HttpPut("{id:long}/role")]
+    [Authorize(Policy = AuthPolicies.Owner)]
     public async Task<IActionResult> SetRole(
         long id, [FromBody] RoleRequest request, CancellationToken ct)
     {
         if (!Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var role))
         {
             return Problem(statusCode: StatusCodes.Status400BadRequest,
-                detail: "role must be Member or Admin.");
+                detail: "role must be Member, Admin, or Owner.");
         }
 
         var actor = HttpContext.GetAppUser()!;
-        if (actor.Id == id && role != UserRole.Admin)
+        if (actor.Id == id)
         {
-            // Self-demotion is how you lock yourself out of the admin surface.
+            // Changing your own role is either pointless or a lockout.
             return Problem(statusCode: StatusCodes.Status400BadRequest,
-                detail: "You cannot remove your own admin role.");
+                detail: "You cannot change your own role.");
         }
 
         var user = await db.AppUsers.FirstOrDefaultAsync(u => u.Id == id, ct);
@@ -124,9 +138,9 @@ public class AdminUsersController(AppDbContext db) : ControllerBase
 
         var previous = user.Role;
         user.Role = role;
-        // Promotion implies activation: an admin stuck behind the invite gate
-        // makes no sense.
-        if (role == UserRole.Admin)
+        // Promotion implies activation: a staff account stuck behind the
+        // invite gate makes no sense.
+        if (role != UserRole.Member)
         {
             user.IsActive = true;
         }

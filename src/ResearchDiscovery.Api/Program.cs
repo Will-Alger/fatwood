@@ -102,7 +102,13 @@ else
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(AuthPolicies.Admin, p => p.RequireRole(nameof(ResearchDiscovery.Domain.Entities.UserRole.Admin)));
+    // Admin = people ops (accounts/grants/invites); Owner = system ops
+    // (roles, model settings, ingestion, bulk analysis). Owners are admins.
+    options.AddPolicy(AuthPolicies.Admin, p => p.RequireRole(
+        nameof(ResearchDiscovery.Domain.Entities.UserRole.Admin),
+        nameof(ResearchDiscovery.Domain.Entities.UserRole.Owner)));
+    options.AddPolicy(AuthPolicies.Owner, p => p.RequireRole(
+        nameof(ResearchDiscovery.Domain.Entities.UserRole.Owner)));
     options.AddPolicy(AuthPolicies.ActiveUser, p => p
         .RequireAuthenticatedUser()
         .RequireClaim(AuthPolicies.ActiveClaim, "true"));

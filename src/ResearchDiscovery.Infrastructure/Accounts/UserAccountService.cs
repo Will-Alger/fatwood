@@ -43,7 +43,8 @@ public class UserAccountService(
             ExternalId = externalId,
             Email = email,
             DisplayName = displayName,
-            Role = isBootstrapAdmin ? UserRole.Admin : UserRole.Member,
+            // Bootstrap identities are the operator: full Owner tier.
+            Role = isBootstrapAdmin ? UserRole.Owner : UserRole.Member,
             // The invite gate holds accounts inactive until a code is redeemed;
             // admins and open-signup mode activate immediately.
             IsActive = isBootstrapAdmin || !options.RequireInviteCode,

@@ -31,7 +31,7 @@ public class BudgetService(
             .SumAsync(e => (long?)e.CostMicros, ct) ?? 0;
 
         return new BudgetStatus(
-            granted, spent, Math.Max(0, granted - spent), Unlimited: role == UserRole.Admin);
+            granted, spent, Math.Max(0, granted - spent), Unlimited: role != UserRole.Member);
     }
 
     public async Task EnsureCanSpendAsync(long userId, CancellationToken ct)

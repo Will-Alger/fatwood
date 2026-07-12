@@ -3,6 +3,7 @@ import type {
   AdminUserView,
   CategoryDto,
   InviteView,
+  Role,
   LlmSettingsView,
   MeView,
   PagedResult,
@@ -204,16 +205,21 @@ export function removeAnthropicKey(): Promise<void> {
 
 // --- Admin: accounts ---
 
-export function getAdminUsers(query?: string, signal?: AbortSignal): Promise<AdminUserView[]> {
-  const qs = query ? `?query=${encodeURIComponent(query)}` : ''
-  return getJson(`/api/admin/users${qs}`, signal)
+export function getAdminUsers(
+  query: string | undefined,
+  page: number,
+  signal?: AbortSignal,
+): Promise<PagedResult<AdminUserView>> {
+  const params = new URLSearchParams({ page: String(page), pageSize: '20' })
+  if (query) params.set('query', query)
+  return getJson(`/api/admin/users?${params.toString()}`, signal)
 }
 
 export function grantBudget(userId: number, amountMicros: number, note?: string): Promise<void> {
   return sendJson('POST', `/api/admin/users/${userId}/grants`, { amountMicros, note })
 }
 
-export function setUserRole(userId: number, role: 'Member' | 'Admin'): Promise<void> {
+export function setUserRole(userId: number, role: Role): Promise<void> {
   return sendJson('PUT', `/api/admin/users/${userId}/role`, { role })
 }
 

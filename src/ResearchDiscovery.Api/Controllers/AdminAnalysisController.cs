@@ -17,7 +17,7 @@ namespace ResearchDiscovery.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/admin/analysis")]
-[Authorize(Policy = AuthPolicies.Admin)]
+[Authorize(Policy = AuthPolicies.Owner)]
 public class AdminAnalysisController(
     AnalysisJobQueue queue,
     AppDbContext db,

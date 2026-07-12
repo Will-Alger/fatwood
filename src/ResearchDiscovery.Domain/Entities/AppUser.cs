@@ -48,5 +48,12 @@ public class AppUser
 public enum UserRole
 {
     Member = 0,
+
+    /// <summary>People operations: view accounts, grant budgets, mint invite
+    /// codes; unlimited personal budget. Cannot touch system settings.</summary>
     Admin = 1,
+
+    /// <summary>Everything: role changes, global LLM model assignments,
+    /// ingestion and bulk-analysis ops. The operator.</summary>
+    Owner = 2,
 }

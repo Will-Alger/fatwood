@@ -7,19 +7,19 @@ const GAP_MS = 500
 
 /**
  * Cycles through example texts with a typewriter effect, for use as an input
- * placeholder. Pauses while the user has typed anything (`active = false`)
- * and honors prefers-reduced-motion by returning a static example.
+ * placeholder. Pauses while the user has typed anything (`active = false`).
+ *
+ * Deliberately does NOT honor prefers-reduced-motion: Windows commonly
+ * reports it (the "show animations" toggle), which silently killed the effect
+ * on desktop Chrome, and gently-changing placeholder text in an idle input is
+ * not the vestibular-trigger class of motion the preference exists for.
  */
 export function useTypingPlaceholder(examples: string[], active: boolean): string {
   const [text, setText] = useState('')
   const state = useRef({ example: 0, char: 0, deleting: false })
 
-  const reducedMotion =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
   useEffect(() => {
-    if (reducedMotion || !active || examples.length === 0) {
+    if (!active || examples.length === 0) {
       return
     }
 
@@ -53,9 +53,9 @@ export function useTypingPlaceholder(examples: string[], active: boolean): strin
 
     timer = window.setTimeout(tick, GAP_MS)
     return () => window.clearTimeout(timer)
-  }, [examples, active, reducedMotion])
+  }, [examples, active])
 
-  if (reducedMotion || !active) {
+  if (!active) {
     return examples[0] ?? ''
   }
 
