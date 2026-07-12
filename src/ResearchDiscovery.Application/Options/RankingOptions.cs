@@ -23,6 +23,11 @@ public class RankingProfile
     /// query and abstract together.</summary>
     public bool UseReranker { get; set; }
 
+    /// <summary>HyDE: embed the plan's hypothetical ideal-paper abstract (without
+    /// the query prefix — it's document-shaped text) as an extra retrieval anchor.
+    /// No-op when the plan predates the field.</summary>
+    public bool UseHyde { get; set; }
+
     [Range(0.01, 10)]
     public float SimilarityWeight { get; set; } = 1f;
 

@@ -67,6 +67,8 @@ export interface SearchPlan {
   categories: string[]
   dateWindowDays: number | null
   requireNoCode: boolean | null
+  /** HyDE anchor (not user-edited); optional so old plans round-trip. */
+  hypotheticalAbstract?: string | null
 }
 
 export interface SearchHit {

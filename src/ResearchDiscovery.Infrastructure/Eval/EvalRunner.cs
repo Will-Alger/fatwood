@@ -45,19 +45,35 @@ public class EvalRunner(
         var queries = set.Queries.ToList();
         for (var i = 0; i < queries.Count; i++)
         {
-            if (queries[i].Plan is not null)
+            if (queries[i].Plan is { HypotheticalAbstract: not null })
             {
                 continue;
             }
 
             var q = queries[i];
-            var plan = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
-            queries[i] = q with { Plan = plan };
+            if (q.Plan is null)
+            {
+                var plan = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
+                queries[i] = q with { Plan = plan };
+                logger.LogInformation(
+                    "Compiled eval query {Id}: {Interpretation}", q.Id, plan.Interpretation);
+            }
+            else
+            {
+                // Plan predates HyDE: recompile but graft ONLY the hypothetical
+                // abstract onto the frozen plan. Anchors/categories must stay
+                // bit-identical or every baseline comparison is contaminated.
+                var fresh = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
+                queries[i] = q with
+                {
+                    Plan = q.Plan with { HypotheticalAbstract = fresh.HypotheticalAbstract },
+                };
+                logger.LogInformation("Backfilled HyDE abstract for eval query {Id}", q.Id);
+            }
             compiled++;
 
             // Save after each compile so an interrupted run keeps its progress.
             EvalFileStore.SaveQueries(queriesPath, set with { Queries = queries });
-            logger.LogInformation("Compiled eval query {Id}: {Interpretation}", q.Id, plan.Interpretation);
         }
 
         return compiled;

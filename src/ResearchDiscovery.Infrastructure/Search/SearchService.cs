@@ -160,6 +160,14 @@ public class SearchService(
             }
         }
 
+        // HyDE: the hypothetical ideal-paper abstract joins the anchor set.
+        // Embedded WITHOUT the query prefix — it's document-shaped text, and
+        // the point is matching it against document-side embeddings.
+        if (profile.UseHyde && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract))
+        {
+            topicVectors.Add(await embedder.EmbedAsync(plan.HypotheticalAbstract, ct));
+        }
+
         var pool = (await index.TopMultiAsync(
             primaryVector, topicVectors, poolSize, candidateIds, ct)).ToList();
         var anchorVectors = new List<float[]> { primaryVector };

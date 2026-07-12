@@ -5,7 +5,7 @@ ranked search without re-deriving context. Read this before touching anything
 in `Search/`, `Eval/`, or `Telemetry/`. The prime directive is at the end;
 the short version: **no ranking change ships without a measured delta.**
 
-## 1. Current state (2026-07-10)
+## 1. Current state (2026-07-12)
 
 **Ranker** (`SearchService.cs`, staged pipeline; every stage a `Ranking`
 config flag):
@@ -14,26 +14,39 @@ config flag):
 |---|---|---|
 | 0 | SQL filters (categories, date window, has-code) | always on |
 | 1 | Dense retrieval: bge-small-en-v1.5 vectors, 50/50 blend of whole-intent similarity + best-single-topic similarity (`UseMultiAnchor`) | **on** |
+| 1a | HyDE: the compiler's hypothetical ideal-paper abstract embedded (no query prefix) as an extra anchor in the best-topic max (`UseHyde`) | **on** |
 | 1b | In-memory BM25 (k1=1.2, b=0.75) fused via Reciprocal Rank Fusion, k=60 (`UseHybrid`) | **on** |
 | 2 | Signal blend: recency decay, has-code bonus, log-citations (`RecencyWeight` etc.) | all weights 0 (measured: they hurt) |
-| 3 | Cross-encoder rerank, ms-marco-MiniLM-L-6-v2, top-100 (`UseReranker`) | off (measured: a wash) |
+| 3 | Cross-encoder rerank, top-100 (`UseReranker`) | off (measured: a wash at L-6, a slight loss at L-12) |
 | — | Wildcard slots (2 least-experience-similar from the high-relevance pool) | contractual, never remove |
 
-**Score**: nDCG@10 ≈ 0.62 on the frozen eval set (was 0.523 for the original
-single-anchor cosine ranker on the same ground truth). MRR ≈ 0.94–1.0.
+**Score**: nDCG@10 = 0.620 on the 40-query eval set (2026-07-12). MRR 0.956.
+Absolute numbers are NOT comparable to the 2026-07-10 campaign below — the
+eval set doubled and judgments grew ~50% in between (bigger recall base
+deflates scores); only same-day, same-file comparisons are meaningful.
 
-The 2026-07 selection campaign, all configs scored on identical ground truth:
+The 2026-07-10 selection campaign (21-query set, identical ground truth):
 
 | config | nDCG@10 | Recall@50 | MRR |
 |---|---|---|---|
 | single-anchor cosine (original) | 0.523 | 0.530 | 0.897 |
 | multi-anchor only | 0.520 | 0.564 | 0.790 |
 | hybrid BM25 only | 0.594 | 0.590 | 1.000 |
-| **multi-anchor + hybrid (shipped)** | **0.614** | **0.606** | **1.000** |
-| + cross-encoder rerank | 0.612 | 0.599 | 0.929 |
+| multi-anchor + hybrid | **0.614** | **0.606** | **1.000** |
+| + cross-encoder rerank (ms-marco L-6) | 0.612 | 0.599 | 0.929 |
 
-**Ground truth**: `eval/queries.json` (21 queries: 20 authored + 1 adopted
-real query) and `eval/judgments.json` (~3,300 LLM-judged (query, paper)
+The 2026-07-12 campaign (40-query set, all heads judged, identical ground truth):
+
+| config | nDCG@10 | Recall@50 | MRR |
+|---|---|---|---|
+| multi-anchor + hybrid (prior ship) | 0.600 | 0.645 | 0.930 |
+| + cross-encoder rerank (ms-marco L-12) | 0.593 | 0.626 | 0.883 |
+| **+ HyDE anchor (shipped)** | **0.620** | **0.673** | **0.956** |
+
+**Ground truth**: `eval/queries.json` (40 queries: 20 original authored + 1
+adopted real query + 19 authored 2026-07-12 targeting terminology mismatch,
+exact-term/acronym, cross-domain, constraint-heavy, vague-career, and corpus
+edge categories) and `eval/judgments.json` (~4,900 LLM-judged (query, paper)
 grades 0–3, append-only, rubric v1). Both are versioned repo artifacts —
 every change is reviewable in a diff.
 
@@ -126,6 +139,28 @@ and future learning-to-rank features.
    swap re-embeds the whole corpus (~45 min local CPU) and **breaks search
    until re-embed completes** (vectors keyed by `ModelVersion`, one row per
    paper — no side-by-side).
+7. **MS MARCO rerankers lost a third time** (2026-07-12): L-12 (2× depth of
+   L-6) scored 0.593 vs 0.600 control on the 40-query set, MRR down to
+   0.883. More capacity made it worse, strengthening the domain-mismatch
+   explanation. Don't retry this family. A true domain-appropriate retry
+   (bge-reranker-base) is NOT the config-only swap the old backlog claimed:
+   it's XLM-RoBERTa — sentencepiece tokenizer, no vocab.txt — so it needs a
+   tokenizer path beyond `BertTokenizer` in `OnnxCrossEncoder`. jina-reranker
+   v1-turbo-en is BPE (vocab.json + merges) — same problem.
+8. **HyDE won and shipped** (2026-07-12): +0.020 nDCG@10 / +0.028 Recall@50
+   / +0.026 MRR over control on the 40-query set, all heads judged. 26
+   queries improved, 6 flat, 8 worse. Gains concentrate exactly where
+   predicted — terminology-mismatch (ai-text-detection +0.09) and
+   vague-career (+0.10). The losses concentrate on exact-term queries whose
+   topic anchors were already ideal (speculative-decoding −0.21,
+   llm-agents-swe −0.17): the abstract can hijack the best-topic max with
+   plausible-but-off content. That loss pattern is the strongest evidence
+   yet for per-intent ranking profiles (backlog #10) — e.g. skip HyDE when
+   the query is acronym-dense. Implementation notes: the abstract embeds
+   WITHOUT the query prefix (document-shaped text matching document-side
+   vectors); eval plans got abstracts grafted onto frozen anchors so the
+   baseline stayed bit-identical (`eval compile` backfills this
+   automatically for plans that predate the field).
 
 ## 4. Using the data as it accumulates
 
@@ -169,24 +204,25 @@ to show) eats the exploration guarantee first.
 
 ## 5. Improvement backlog, in rough expected-value order
 
-1. **Grow + diversify the eval set** via `eval adopt` and authored hard
-   queries (cheap, improves every future decision).
+~~Grow + diversify the eval set~~ — DONE 2026-07-12 (21 → 40; keep going
+via `eval adopt` as real usage accumulates).
+~~HyDE~~ — SHIPPED 2026-07-12 (+0.020 nDCG; see lesson 8).
+~~Reranker retry~~ — CLOSED for the MS MARCO family (lesson 7); reopen only
+with a sentencepiece/BPE tokenizer path for a genuinely different model.
+
+1. **Per-intent ranking profiles** — promoted by HyDE's loss pattern
+   (lesson 8): exact-term/acronym queries want HyDE off and BM25 heavy;
+   vague-career queries want the opposite. A cheap intent signal from the
+   compiler (one enum field) could gate stages per query.
 2. **Judge calibration**: human spot-audit + sonnet double-judge agreement
    (makes all numbers trustworthy).
-3. **Domain-appropriate reranker retry**: bge-reranker-base (ONNX) instead
-   of ms-marco; only the model URL/config changes, the stage exists.
-4. **HyDE**: compiler writes a hypothetical ideal-paper abstract as an extra
-   anchor (abstracts match abstracts better than topic lists do). Requires a
-   SearchPlan field + recompiling eval plans, which invalidates head
-   coverage → re-judge after. Measure against the 0.62 baseline.
-5. **Recency-normalized citations** (citations/day) as a blend feature.
-6. **Interleaving in anger**: cross-encoder or HyDE as first candidate.
-7. **CI regression gate** on a checked-in mini-corpus.
-8. **LTR** once labels cross ~200 (see §4).
-9. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,
+3. **Recency-normalized citations** (citations/day) as a blend feature.
+4. **Interleaving in anger**: HyDE-off vs HyDE-on as first live candidate —
+   the offline delta is +0.02; a click-vote confirmation would be free.
+5. **CI regression gate** on a checked-in mini-corpus.
+6. **LTR** once labels cross ~200 (see §4).
+7. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,
    has-experiments/dataset flags. Big lift, big analysis payoff.
-10. **Per-intent ranking profiles** (career-vague vs technical-narrow
-    queries have measurably different behavior — see per-query eval output).
 
 ## 6. Gotchas that will waste your time if forgotten
 

@@ -25,7 +25,7 @@ public class AnthropicSearchPlanCompiler(
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["interpretation", "anchor_text", "categories", "date_window_days", "require_no_code"],
+      "required": ["interpretation", "anchor_text", "categories", "date_window_days", "require_no_code", "hypothetical_abstract"],
       "properties": {
         "interpretation": {
           "type": "string",
@@ -47,6 +47,10 @@ public class AnthropicSearchPlanCompiler(
         "require_no_code": {
           "type": ["boolean", "null"],
           "description": "true only when the user explicitly wants papers WITHOUT existing public code (reproduction-gap hunting). Otherwise null."
+        },
+        "hypothetical_abstract": {
+          "type": "string",
+          "description": "The abstract of the hypothetical IDEAL paper for this search, 4-6 sentences, written exactly like a real arXiv abstract: the problem, the proposed method, key results. Dense and technical, no meta-commentary, no mention of the user. This is embedded and matched against real abstracts (abstracts match abstracts far better than topic lists do)."
         }
       }
     }
@@ -141,6 +145,11 @@ public class AnthropicSearchPlanCompiler(
             throw new InvalidOperationException("Compiled plan has an empty anchor_text.");
         }
 
+        var hyde = root.TryGetProperty("hypothetical_abstract", out var hydeProp)
+            && hydeProp.ValueKind == JsonValueKind.String
+                ? hydeProp.GetString()
+                : null;
+
         return new SearchPlan(
             root.GetProperty("interpretation").GetString() ?? string.Empty,
             anchor,
@@ -150,6 +159,7 @@ public class AnthropicSearchPlanCompiler(
                 : null,
             root.GetProperty("require_no_code").ValueKind == JsonValueKind.True
                 ? true
-                : null);
+                : null,
+            string.IsNullOrWhiteSpace(hyde) ? null : hyde);
     }
 }

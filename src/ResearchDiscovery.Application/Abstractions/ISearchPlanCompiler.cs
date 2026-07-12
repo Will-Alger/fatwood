@@ -5,13 +5,16 @@ namespace ResearchDiscovery.Application.Abstractions;
 /// search; executing it never touches an LLM. The plan is returned to the UI
 /// as editable chips, and an edited plan is re-submitted directly — so the
 /// search endpoint accepts plans, not natural language.
+/// HypotheticalAbstract (HyDE) is nullable: plans logged before the field
+/// existed deserialize with null and retrieval simply skips the extra anchor.
 /// </summary>
 public sealed record SearchPlan(
     string Interpretation,
     string AnchorText,
     IReadOnlyList<string> Categories,
     int? DateWindowDays,
-    bool? RequireNoCode);
+    bool? RequireNoCode,
+    string? HypotheticalAbstract = null);
 
 /// <summary>
 /// LLM call site #1: natural-language intent → SearchPlan. The key job is

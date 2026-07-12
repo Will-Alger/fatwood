@@ -34,9 +34,9 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 
 - **Search quality must be measurable — or none of this means anything.**
   An evaluation harness turns "are the results good?" into a number (nDCG
-  over ~3,300 graded relevance judgments). No ranking change ships unless
-  the number goes up; several "obviously good" ideas died in measurement,
-  and that's the system working.
+  over ~4,900 graded relevance judgments across 40 frozen queries). No
+  ranking change ships unless the number goes up; several "obviously good"
+  ideas died in measurement, and that's the system working.
 - **Exploration is protected, structurally.** A great project must never be
   missed over a skill you could learn in a weekend. Experience similarity
   annotates results but never ranks or gates them; wildcard slots are a
@@ -69,7 +69,9 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 3. **Meaning does the ranking**: every abstract is a point in a
    384-dimensional space (local embeddings — bge-small via ONNX, no API);
    relevance is geometric closeness to your intent *and* your best-matching
-   topic.
+   topic — including a HyDE anchor, the abstract of the hypothetical ideal
+   paper the compiler writes for your search (measured +0.02 nDCG, biggest
+   wins on queries phrased nothing like paper language).
 4. **Exact words get a vote**: a BM25 text index runs in parallel and the
    rankings fuse — this hybrid measured **+17% nDCG** over embeddings alone.
 5. **Wildcard slots** inject high-relevance papers least similar to your
