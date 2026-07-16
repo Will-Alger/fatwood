@@ -50,8 +50,12 @@ export default function App() {
     analyzedOnly,
     bookmarkedOnly,
   )
-  // Analyzing a browsed paper refreshes the page in place so its card updates.
-  const { analyzingIds, analyzeOne } = useAnalyze(refetch)
+  // Analyzing a browsed paper refreshes the page in place so its card updates,
+  // and the account so the budget chip reflects the spend.
+  const { analyzingIds, analyzeOne } = useAnalyze(() => {
+    refetch()
+    refresh()
+  })
   const [browseAnalyzeError, setBrowseAnalyzeError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -220,6 +224,7 @@ export default function App() {
           me={me}
           signedOut={signedOut}
           onSignIn={() => setAuthOpen(true)}
+          refreshMe={refresh}
         />
       </div>
       {tab === 'admin' && me && me.role !== 'Member' && (

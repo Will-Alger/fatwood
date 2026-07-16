@@ -47,9 +47,11 @@ interface DiscoverProps {
   me: MeView | null
   signedOut: boolean
   onSignIn: () => void
+  /** Re-fetches the account so the budget chip reflects a just-spent query. */
+  refreshMe: () => void
 }
 
-export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps) {
+export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: DiscoverProps) {
   const [query, setQuery] = useState('')
   const [lastCompiledQuery, setLastCompiledQuery] = useState<string | null>(null)
   const [plan, setPlanState] = useState<SearchPlan | null>(null)
@@ -114,9 +116,11 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
   }, [refreshRecent])
 
   // Analyzing a paper refreshes the current results in place so its card
-  // picks up the new analysis (no LLM, deterministic re-execution).
-  const { analyzingIds, analyzeOne } = useAnalyze(() => {
-    if (planRef.current) return executePlan(planRef.current)
+  // picks up the new analysis (no LLM, deterministic re-execution), and
+  // refreshes the account so the budget chip reflects the spend.
+  const { analyzingIds, analyzeOne } = useAnalyze(async () => {
+    refreshMe()
+    if (planRef.current) await executePlan(planRef.current)
   })
 
   async function handleAnalyzeOne(arxivId: string) {
@@ -192,6 +196,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
     setNotice(null)
     try {
       const compiled = await compileSearch(trimmed)
+      refreshMe() // compilation spent tokens — update the budget chip
       setLastCompiledQuery(trimmed)
       queryTextRef.current = trimmed
       setPlan(compiled)
@@ -236,6 +241,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
     )
 
     setAnalyzing(null)
+    refreshMe() // analysis spent tokens — update the budget chip
     setNotice(
       finalDone >= ids.length
         ? `All ${ids.length} papers analyzed.`
