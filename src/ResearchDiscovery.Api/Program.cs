@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.StaticFiles;
 using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Cli;
 using ResearchDiscovery.Api.Hosting;
@@ -215,8 +216,21 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// SPA caching: Vite emits content-hashed asset filenames, so /assets/* is
+// immutable and cacheable forever, while index.html must always be revalidated
+// — otherwise a browser keeps serving a stale shell that loads an old bundle
+// and calls routes a later deploy has moved (the "worked, then 405 after a
+// deploy" trap). Applied to both the static files and the SPA fallback below.
+Action<StaticFileResponseContext> setSpaCacheHeaders = ctx =>
+{
+    ctx.Context.Response.Headers.CacheControl =
+        ctx.Context.Request.Path.StartsWithSegments("/assets")
+            ? "public, max-age=31536000, immutable"
+            : "no-cache";
+};
+
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions { OnPrepareResponse = setSpaCacheHeaders });
 
 app.UseAuthentication();
 app.UseMiddleware<UserContextMiddleware>();
@@ -229,8 +243,9 @@ app.MapControllers();
 app.MapNativeAuthProxy(authOptions.Authority);
 
 // Serves the built React SPA in the single-container deployment. Registered
-// after MapControllers so /api/* always wins.
-app.MapFallbackToFile("index.html");
+// after MapControllers so /api/* always wins. The no-cache header (above)
+// applies here too so the shell is revalidated on every navigation.
+app.MapFallbackToFile("index.html", new StaticFileOptions { OnPrepareResponse = setSpaCacheHeaders });
 
 await app.RunAsync();
 return 0;
