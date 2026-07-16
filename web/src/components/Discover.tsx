@@ -126,33 +126,34 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     refreshRecent()
   }, [refreshRecent])
 
-  // Folds freshly-completed analyses into the live result — updating just the
-  // affected cards in place (no re-rank, no re-search) — and fires each card's
-  // ignite glow. Used by both the batch flow and per-paper analysis.
-  const mergeAnalyzedPapers = useCallback(async (newIds: string[]) => {
-    if (newIds.length === 0) return
-    let fetched: Record<string, PaperDto>
+  // DTOs for a set of arXiv ids in ONE round-trip (batched — the batch flow
+  // fetches every newly-completed paper per poll tick, not one call per paper).
+  // Returns null on a failed request so the caller can retry those ids later.
+  const fetchPapers = useCallback(async (ids: string[]): Promise<Record<string, PaperDto> | null> => {
+    if (ids.length === 0) return {}
     try {
-      fetched = await getPapersByIds(newIds)
+      return await getPapersByIds(ids)
     } catch {
-      return // the next poll (or a manual refresh) will still reveal them
+      return null
     }
+  }, [])
+
+  // Folds one already-fetched paper into the live result (no re-rank, no
+  // network) and fires its ignite glow.
+  const revealPaper = useCallback((paper: PaperDto) => {
     setResult((prev) =>
       prev
         ? {
             ...prev,
-            hits: prev.hits.map((h) =>
-              fetched[h.paper.arxivId] ? { ...h, paper: fetched[h.paper.arxivId] } : h,
-            ),
+            hits: prev.hits.map((h) => (h.paper.arxivId === paper.arxivId ? { ...h, paper } : h)),
           }
         : prev,
     )
-    const landed = newIds.filter((id) => fetched[id])
-    setGlowIds((prev) => new Set([...prev, ...landed]))
+    setGlowIds((prev) => new Set([...prev, paper.arxivId]))
     window.setTimeout(() => {
       setGlowIds((prev) => {
         const next = new Set(prev)
-        landed.forEach((id) => next.delete(id))
+        next.delete(paper.arxivId)
         return next
       })
     }, 2000)
@@ -168,7 +169,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
       setError(err)
       return
     }
-    await mergeAnalyzedPapers([arxivId])
+    const dtos = await fetchPapers([arxivId])
+    if (dtos?.[arxivId]) revealPaper(dtos[arxivId])
   }
 
   async function handleSelectRecent(searchEventId: number) {
@@ -280,36 +282,69 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
 
   async function pollAnalysis(ids: string[]) {
     // Reveal completed analyses in rank order with a stagger. A cursor walks
-    // the ranks: reveal rank N only once it's done; if a later rank finishes
-    // first, hold it until its turn. Only once polling ends (nothing more will
-    // complete) do we skip past ranks that were declined/failed.
-    const done = new Set<string>()
+    // the ranks: reveal rank N only once its DTO is in hand; if a later rank
+    // finishes first, hold it until its turn. Only once polling ends (nothing
+    // more will complete) do we skip past ranks that were declined/failed.
+    // DTOs are batch-fetched once per poll tick (not one call per paper).
+    const cache: Record<string, PaperDto> = {}
+    const fetched = new Set<string>()
+    const analyzedIds = new Set<string>()
+    const inFlight: Promise<void>[] = []
     let cursor = 0
-    let revealing = false
+    let finalMode = false
+    let chain: Promise<void> = Promise.resolve()
 
-    async function pump(final: boolean) {
-      if (revealing) return
-      revealing = true
+    async function drain() {
       while (cursor < ids.length) {
-        if (done.has(ids[cursor])) {
-          await mergeAnalyzedPapers([ids[cursor]])
+        const dto = cache[ids[cursor]]
+        if (dto) {
+          revealPaper(dto)
           cursor++
           if (cursor < ids.length) await sleep(REVEAL_STAGGER_MS)
-        } else if (final) {
-          cursor++ // declined/failed — skip so the rest still reveal in order
+        } else if (finalMode) {
+          cursor++ // declined/failed or hydration miss — skip so the rest reveal
         } else {
-          break // still analyzing; wait for the next poll
+          break // still analyzing (or its fetch is mid-flight); wait for the next poll
         }
       }
-      revealing = false
+    }
+
+    // Drains are serialized on a promise chain so a poll tick landing while a
+    // stagger sleep is mid-flight can never swallow the final pass (a dropped
+    // final pass would leave declined ranks blocking every card behind them).
+    function pump(final: boolean): Promise<void> {
+      if (final) finalMode = true
+      chain = chain.then(drain)
+      return chain
     }
 
     const finalDone = await pollUntilAnalyzed(ids, (analyzed) => {
-      analyzed.forEach((id) => done.add(id))
       setAnalyzing({ total: ids.length, done: analyzed.length })
-      void pump(false)
+      analyzed.forEach((id) => analyzedIds.add(id))
+      const toFetch = ids.filter((id) => analyzedIds.has(id) && !fetched.has(id))
+      if (toFetch.length > 0) {
+        toFetch.forEach((id) => fetched.add(id))
+        inFlight.push(
+          fetchPapers(toFetch).then((dtos) => {
+            if (dtos) Object.assign(cache, dtos)
+            else toFetch.forEach((id) => fetched.delete(id)) // failed — retry on a later tick
+            void pump(false)
+          }),
+        )
+      } else {
+        void pump(false)
+      }
     })
 
+    // Polling has ended, but the last tick's DTO fetch may still be in flight —
+    // wait for it, then re-fetch anything analyzed whose fetch failed, so the
+    // final pass only skips papers that genuinely have no analysis.
+    await Promise.all(inFlight)
+    const missing = [...analyzedIds].filter((id) => !cache[id])
+    if (missing.length > 0) {
+      const dtos = await fetchPapers(missing)
+      if (dtos) Object.assign(cache, dtos)
+    }
     await pump(true)
     setAnalyzing(null)
     refreshMe() // analysis spent tokens — update the budget chip
