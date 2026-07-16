@@ -847,6 +847,13 @@ select {
   border-color: transparent;
 }
 
+.badge-rank {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  font-weight: 600;
+}
+
 .paper-authors {
   margin: 0 0 0.5rem;
   color: var(--muted);

@@ -198,6 +198,11 @@ export function PaperCard({
         )}
       </div>
       <div className="paper-meta">
+        {rank !== undefined && !isWildcard && (
+          <span className="badge badge-rank" title="Overall relevance rank in these results">
+            #{rank}
+          </span>
+        )}
         {isWildcard && (
           <span
             className="badge badge-wildcard"
