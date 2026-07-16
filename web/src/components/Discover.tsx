@@ -1,13 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   analyzeSelection,
   compileSearch,
-  getAnalysisStatus,
+  getRecentSearches,
+  replaySearch,
   runSearch,
 } from '../api/client'
-import type { LlmSettingsView, MeView, SearchPlan, SearchResult } from '../api/types'
+import type {
+  LlmSettingsView,
+  MeView,
+  RecentSearchSummary,
+  SearchPlan,
+  SearchResult,
+} from '../api/types'
+import { useAnalyze, pollUntilAnalyzed } from '../hooks/useAnalyze'
 import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
 import { PaperCard } from './PaperCard'
+import { RecentSearches } from './RecentSearches'
 import { EmberDots, PaperSkeletons } from './Skeletons'
 
 const SEARCH_STAGES = [
@@ -19,8 +28,6 @@ const SEARCH_STAGES = [
 
 const RESULT_LIMIT = 30
 const ANALYZE_TOP_N = 25
-const POLL_INTERVAL_MS = 3000
-const POLL_TIMEOUT_MS = 6 * 60_000
 
 const EXAMPLE_QUERIES = [
   'a weekend-scale ML project on anomaly detection — I have 4 years of backend experience',
@@ -29,8 +36,6 @@ const EXAMPLE_QUERIES = [
   'security research that would make a strong portfolio piece',
   'time-series forecasting methods I could demo with free market data',
 ]
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 interface AnalyzingState {
   total: number
@@ -56,6 +61,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
   const [sortBy, setSortBy] = useState<'match' | 'score'>('match')
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
+  const [recentSearches, setRecentSearches] = useState<RecentSearchSummary[]>([])
+  const [activeSearchId, setActiveSearchId] = useState<number | null>(null)
 
   // Funnel-stage copy that steps forward while the first search runs; the
   // ambient ember field (App-level) provides the visual feedback.
@@ -89,6 +96,56 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
   // Compile + analysis spend tokens: they need a signed-in, activated account
   // (locally the server runs as the dev admin, so this is always true there).
   const canSpend = me?.isActive === true
+  const signedIn = !signedOut
+
+  // Recent-search history (side panel). Loaded once signed in and refreshed
+  // after each executed search.
+  const refreshRecent = useCallback(() => {
+    if (!signedIn) return
+    getRecentSearches()
+      .then(setRecentSearches)
+      .catch(() => {
+        /* history is a convenience; a failure just leaves the panel as-is */
+      })
+  }, [signedIn])
+
+  useEffect(() => {
+    refreshRecent()
+  }, [refreshRecent])
+
+  // Analyzing a paper refreshes the current results in place so its card
+  // picks up the new analysis (no LLM, deterministic re-execution).
+  const { analyzingIds, analyzeOne } = useAnalyze(() => {
+    if (planRef.current) return executePlan(planRef.current)
+  })
+
+  async function handleAnalyzeOne(arxivId: string) {
+    const err = await analyzeOne(arxivId, result?.searchEventId)
+    if (err) setError(err)
+  }
+
+  async function handleSelectRecent(searchEventId: number) {
+    setError(null)
+    setNotice(null)
+    setBusy('search')
+    try {
+      const replay = await replaySearch(searchEventId)
+      setResult(replay)
+      setPlan(replay.plan)
+      setHiddenIds(new Set())
+      setSortBy('match')
+      setActiveSearchId(searchEventId)
+      // Prime the dedupe + prose so a follow-up "Refresh" re-runs this plan.
+      const summary = recentSearches.find((s) => s.searchEventId === searchEventId)
+      queryTextRef.current = summary?.queryText ?? null
+      setQuery(summary?.queryText ?? '')
+      setLastCompiledQuery(summary?.queryText ?? null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load that search')
+    } finally {
+      setBusy(null)
+    }
+  }
 
   const analysisEstimate = useMemo(() => {
     if (!llmSettings) return null
@@ -110,6 +167,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
       setResult(searchResult)
       setPlan(searchResult.plan)
       setHiddenIds(new Set())
+      setActiveSearchId(searchResult.searchEventId)
+      refreshRecent()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed')
     } finally {
@@ -172,35 +231,9 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
   }
 
   async function pollAnalysis(ids: string[]) {
-    const started = Date.now()
-    let lastDone = -1
-    let idleRounds = 0
-    let finalDone = 0
-
-    while (Date.now() - started < POLL_TIMEOUT_MS) {
-      await sleep(POLL_INTERVAL_MS)
-      let status
-      try {
-        status = await getAnalysisStatus(ids)
-      } catch {
-        continue // transient poll failure — keep going
-      }
-
-      finalDone = status.analyzed.length
-      setAnalyzing({ total: ids.length, done: finalDone })
-
-      if (finalDone >= ids.length) break
-
-      // Queue idle and the count stopped moving: the remainder was declined,
-      // failed, or was already current — done either way.
-      if (!status.active) {
-        idleRounds = finalDone === lastDone ? idleRounds + 1 : 0
-        if (idleRounds >= 2) break
-      } else {
-        idleRounds = 0
-      }
-      lastDone = finalDone
-    }
+    const finalDone = await pollUntilAnalyzed(ids, (done) =>
+      setAnalyzing({ total: ids.length, done }),
+    )
 
     setAnalyzing(null)
     setNotice(
@@ -252,7 +285,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
       : ''
 
   return (
-    <div className="discover">
+    <div className="discover-layout">
+      <div className="discover">
       <div className="search-box">
         <textarea
           value={query}
@@ -441,8 +475,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'match' | 'score')}
                 >
-                  <option value="match">Best match</option>
-                  <option value="score">Best project score</option>
+                  <option value="match">Relevance (ranked)</option>
+                  <option value="score">Analysis score</option>
                 </select>
               </label>
               <label className="toolbar-toggle">
@@ -465,6 +499,13 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
               )}
             </div>
           </div>
+          {sortBy === 'match' && (
+            <p className="results-note">
+              Ordered by overall relevance — meaning plus exact keywords. The bar on each card
+              shows that paper&apos;s semantic similarity, so a lower-similarity paper can still
+              rank higher.
+            </p>
+          )}
           <div
             className={busy === 'search' ? 'paper-list paper-list-refreshing' : 'paper-list'}
             key={result.searchEventId}
@@ -482,6 +523,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
                   onNotInterested={() =>
                     setHiddenIds((prev) => new Set(prev).add(hit.paper.arxivId))
                   }
+                  onAnalyze={() => void handleAnalyzeOne(hit.paper.arxivId)}
+                  analyzing={analyzingIds.has(hit.paper.arxivId)}
                 />
               </div>
             ))}
@@ -499,6 +542,15 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
             </p>
           )}
         </>
+      )}
+      </div>
+
+      {signedIn && (
+        <RecentSearches
+          searches={recentSearches}
+          activeId={activeSearchId}
+          onSelect={(id) => void handleSelectRecent(id)}
+        />
       )}
     </div>
   )

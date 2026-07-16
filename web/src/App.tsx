@@ -10,6 +10,7 @@ import { Logo } from './components/Logo'
 import { Pagination } from './components/Pagination'
 import { PaperList } from './components/PaperList'
 import { SettingsPanel } from './components/SettingsPanel'
+import { useAnalyze } from './hooks/useAnalyze'
 import { useCategories } from './hooks/useCategories'
 import { formatBudget, useMe } from './hooks/useMe'
 import { usePapers } from './hooks/usePapers'
@@ -41,7 +42,7 @@ export default function App() {
 
   const { me, ready, signedOut, refresh } = useMe()
   const { categories, error: categoriesError } = useCategories()
-  const { data, loading, error } = usePapers(
+  const { data, loading, error, refetch } = usePapers(
     selectedCategories,
     page,
     PAGE_SIZE,
@@ -49,6 +50,9 @@ export default function App() {
     analyzedOnly,
     bookmarkedOnly,
   )
+  // Analyzing a browsed paper refreshes the page in place so its card updates.
+  const { analyzingIds, analyzeOne } = useAnalyze(refetch)
+  const [browseAnalyzeError, setBrowseAnalyzeError] = useState<string | null>(null)
 
   useEffect(() => {
     if (me?.role === 'Owner') {
@@ -263,11 +267,20 @@ export default function App() {
           {categoriesError && (
             <p className="status status-error">Could not load categories: {categoriesError}</p>
           )}
+          {browseAnalyzeError && (
+            <p className="status status-error">{browseAnalyzeError}</p>
+          )}
           <PaperList
             data={data}
             loading={loading}
             error={error}
             canInteract={me?.isActive === true}
+            analyzingIds={analyzingIds}
+            onAnalyze={async (arxivId) => {
+              setBrowseAnalyzeError(null)
+              const err = await analyzeOne(arxivId)
+              if (err) setBrowseAnalyzeError(err)
+            }}
           />
           <Pagination
             page={page}

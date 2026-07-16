@@ -91,19 +91,26 @@ export interface PaperCardProps {
   searchContext?: SearchContext
   /** When set, shows a "not interested" control; the parent removes the card. */
   onNotInterested?: () => void
+  /** When set, shows an "Analyze this paper" action (hidden once analyzed). */
+  onAnalyze?: () => void
+  /** True while this specific paper's analysis is queued/running. */
+  analyzing?: boolean
   /** Bookmarks/feedback are per-account writes; false (signed out or gated) hides them. */
   canInteract?: boolean
 }
 
 /**
- * Match strength shown relative to the best hit in this result set (raw
- * cosine values cluster in a narrow band, so absolute percentages mislead).
+ * Semantic similarity to the query, shown relative to the best hit in this
+ * result set (raw cosine values cluster in a narrow band, so absolute
+ * percentages mislead). This describes the PAPER, not its rank: the list is
+ * ordered by overall relevance (meaning + exact keywords), so a
+ * medium-similarity paper can sit above a high-similarity one — by design.
  */
-function matchTier(score: number, top: number): { label: string; level: 1 | 2 | 3 } {
+function similarityTier(score: number, top: number): { label: string; level: 1 | 2 | 3 } {
   const ratio = top > 0 ? score / top : 0
-  if (ratio >= 0.92) return { label: 'strong match', level: 3 }
-  if (ratio >= 0.78) return { label: 'good match', level: 2 }
-  return { label: 'fair match', level: 1 }
+  if (ratio >= 0.92) return { label: 'high similarity', level: 3 }
+  if (ratio >= 0.78) return { label: 'medium similarity', level: 2 }
+  return { label: 'lower similarity', level: 1 }
 }
 
 export function PaperCard({
@@ -114,6 +121,8 @@ export function PaperCard({
   experienceProximity,
   searchContext,
   onNotInterested,
+  onAnalyze,
+  analyzing = false,
   canInteract = false,
 }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
@@ -204,15 +213,15 @@ export function PaperCard({
         )}
         {matchScore !== undefined && topMatchScore !== undefined && (
           <span
-            className={`match-meter match-level-${matchTier(matchScore, topMatchScore).level}`}
-            title={`Relevance to this search (raw similarity ${Math.round(matchScore * 100)}%)`}
+            className={`match-meter match-level-${similarityTier(matchScore, topMatchScore).level}`}
+            title={`Semantic similarity to your search (${Math.round(matchScore * 100)}%). Results are ordered by overall relevance — meaning plus exact keywords — so this bar isn't strictly the sort order.`}
           >
             <span className="match-segments" aria-hidden="true">
               <span />
               <span />
               <span />
             </span>
-            {matchTier(matchScore, topMatchScore).label}
+            {similarityTier(matchScore, topMatchScore).label}
           </span>
         )}
         {experienceProximity === 'close' && (
@@ -268,6 +277,17 @@ export function PaperCard({
             onClick={() => setAnalysisOpen(!analysisOpen)}
           >
             {analysisOpen ? 'Hide project analysis' : 'Project analysis'}
+          </button>
+        )}
+        {canInteract && onAnalyze && !paper.analysis && (
+          <button
+            type="button"
+            className="link-button link-button-analyze"
+            disabled={analyzing}
+            onClick={onAnalyze}
+            title="Get a personalized feasibility read on this paper"
+          >
+            {analyzing ? 'Analyzing…' : 'Analyze this paper'}
           </button>
         )}
       </div>

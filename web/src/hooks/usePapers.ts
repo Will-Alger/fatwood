@@ -6,6 +6,8 @@ interface UsePapersState {
   data: PagedResult<PaperDto> | null
   loading: boolean
   error: string | null
+  /** Re-fetches the current page (e.g. after analyzing a paper in place). */
+  refetch: () => void
 }
 
 export function usePapers(
@@ -16,11 +18,12 @@ export function usePapers(
   analyzedOnly: boolean,
   bookmarkedOnly: boolean,
 ): UsePapersState {
-  const [state, setState] = useState<UsePapersState>({
+  const [state, setState] = useState<Omit<UsePapersState, 'refetch'>>({
     data: null,
     loading: true,
     error: null,
   })
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Joined key keeps the effect dependency simple and value-based.
   const categoriesKey = categories.join(',')
@@ -51,7 +54,7 @@ export function usePapers(
       })
 
     return () => controller.abort()
-  }, [categoriesKey, page, pageSize, sort, analyzedOnly, bookmarkedOnly])
+  }, [categoriesKey, page, pageSize, sort, analyzedOnly, bookmarkedOnly, reloadKey])
 
-  return state
+  return { ...state, refetch: () => setReloadKey((k) => k + 1) }
 }

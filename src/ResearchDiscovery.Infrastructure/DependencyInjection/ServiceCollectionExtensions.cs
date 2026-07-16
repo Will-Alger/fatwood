@@ -114,6 +114,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IIngestionLockManager, DbIngestionLockManager>();
         services.AddScoped<IIngestionService, IngestionService>();
         services.AddScoped<IPaperQueryService, PaperQueryService>();
+        services.AddScoped<IRecentSearchService, RecentSearchService>();
         services.AddScoped<IBookmarkService, BookmarkService>();
 
         services.AddOptions<AnalysisOptions>()

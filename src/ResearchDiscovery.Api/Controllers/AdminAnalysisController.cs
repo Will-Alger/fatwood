@@ -75,63 +75,10 @@ public class AdminAnalysisController(
         });
     }
 
-    /// <param name="SearchEventId">The logged search the selection came from,
-    /// when triggered from search results — telemetry context only.</param>
-    public sealed record SelectionRequest(IReadOnlyList<string> ArxivIds, long? SearchEventId);
-
-    /// <summary>
-    /// Analyzes an explicit paper set — the "Analyze top N" action on search
-    /// results. Already-current analyses are skipped server-side, so the
-    /// enqueued set costs at most its stale members.
-    /// </summary>
-    [HttpPost("selection")]
-    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("llm")]
-    public async Task<IActionResult> TriggerSelection(
-        [FromBody] SelectionRequest request,
-        [FromServices] ISearchTelemetry telemetry,
-        CancellationToken ct)
-    {
-        if (request.ArxivIds is not { Count: > 0 })
-        {
-            return Problem(statusCode: StatusCodes.Status400BadRequest,
-                detail: "arxivIds must be a non-empty list.");
-        }
-
-        if (request.ArxivIds.Count > 200)
-        {
-            return Problem(statusCode: StatusCodes.Status400BadRequest,
-                detail: "At most 200 papers per selection run.");
-        }
-
-        if (!queue.TryEnqueue(new AnalysisJob.Selection(request.ArxivIds)
-        {
-            RequestedByUserId = HttpContext.GetAppUser()?.Id,
-        }))
-        {
-            return Problem(statusCode: StatusCodes.Status429TooManyRequests,
-                detail: "The analysis queue is full; try again once queued runs complete.");
-        }
-
-        // Spending analysis tokens on a paper is a strong interest signal;
-        // record it against the originating search when known (ranks resolve
-        // from the logged results).
-        if (request.SearchEventId is not null)
-        {
-            foreach (var arxivId in request.ArxivIds)
-            {
-                await telemetry.LogInteractionAsync(
-                    HttpContext.GetAppUser()?.Id, arxivId,
-                    Domain.Entities.InteractionType.AnalyzedFromSearch,
-                    request.SearchEventId, rank: null, ct);
-            }
-        }
-
-        return Accepted(value: new
-        {
-            message = $"Selection analysis queued ({request.ArxivIds.Count} paper(s)).",
-            checkStatusAt = "/api/admin/analysis/coverage",
-        });
-    }
+    // NOTE: analyzing an explicit paper SELECTION moved to the user-facing
+    // AnalysisController (api/analysis/selection, ActiveUser-gated) — any user
+    // may analyze their own picks. This controller keeps only the ops-only
+    // bulk-by-category run and its coverage report, which remain Owner-gated.
 
     /// <summary>
     /// Per-category analyzed/total counts for the CALLING admin — analyses

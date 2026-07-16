@@ -34,12 +34,20 @@ public class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Turns on the invite-code signup gate for this host.</summary>
     public bool RequireInviteCode { get; init; }
 
+    /// <summary>Overrides the starter budget grant. Set to 0 to provision a
+    /// member with no budget (exercises the budget-exhausted 402 path).</summary>
+    public long? StarterGrantMicros { get; init; }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Database:MigrateOnStartup", "false");
         builder.UseSetting("Ingestion:Schedule:Enabled", "false");
         builder.UseSetting("Accounts:RequireInviteCode", RequireInviteCode ? "true" : "false");
+        if (StarterGrantMicros is { } grant)
+        {
+            builder.UseSetting("Accounts:StarterGrantMicros", grant.ToString());
+        }
 
         builder.ConfigureServices(services =>
         {

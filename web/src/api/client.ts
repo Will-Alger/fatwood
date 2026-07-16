@@ -10,6 +10,7 @@ import type {
   PagedResult,
   PaperDto,
   ProfileView,
+  RecentSearchSummary,
   SearchContext,
   SearchPlan,
   SearchResult,
@@ -177,7 +178,7 @@ export function analyzeSelection(
   arxivIds: string[],
   searchEventId?: number,
 ): Promise<{ message: string }> {
-  return sendJson('POST', '/api/admin/analysis/selection', { arxivIds, searchEventId })
+  return sendJson('POST', '/api/analysis/selection', { arxivIds, searchEventId })
 }
 
 export interface AnalysisStatus {
@@ -190,6 +191,23 @@ export function getAnalysisStatus(
   signal?: AbortSignal,
 ): Promise<AnalysisStatus> {
   return sendJson('POST', '/api/papers/analysis-status', { arxivIds }, { signal })
+}
+
+// --- Recent searches ---
+
+export function getRecentSearches(
+  limit = 15,
+  signal?: AbortSignal,
+): Promise<RecentSearchSummary[]> {
+  return getJson(`/api/me/searches?limit=${limit}`, signal)
+}
+
+/** Replays a past search to its exact logged result set — no re-ranking, no LLM. */
+export function replaySearch(
+  searchEventId: number,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  return getJson(`/api/me/searches/${searchEventId}`, signal)
 }
 
 // --- Account ---

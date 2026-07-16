@@ -174,4 +174,47 @@ public class MeController(
             : Problem(statusCode: StatusCodes.Status400BadRequest,
                 detail: "That invite code is invalid, expired, or fully used.");
     }
+
+    /// <summary>
+    /// The caller's recent searches, newest first — the history side panel.
+    /// Replay a specific one via the sibling route below.
+    /// </summary>
+    [HttpGet("searches")]
+    public async Task<IActionResult> RecentSearches(
+        [FromServices] IRecentSearchService recent,
+        CancellationToken ct,
+        [FromQuery] int limit = 15)
+    {
+        var clamped = Math.Clamp(limit, 1, 50);
+        var searches = await recent.ListAsync(HttpContext.GetAppUser()!.Id, clamped, ct);
+        return Ok(searches);
+    }
+
+    /// <summary>
+    /// Replays one of the caller's past searches to the exact result set it
+    /// produced — no re-ranking, no LLM. Same shape as POST /api/search so the
+    /// client drops it straight into the results view. 404 when the search is
+    /// unknown or belongs to another account.
+    /// </summary>
+    [HttpGet("searches/{id:long}")]
+    public async Task<IActionResult> ReplaySearch(
+        long id,
+        [FromServices] IRecentSearchService recent,
+        CancellationToken ct)
+    {
+        var replay = await recent.ReplayAsync(HttpContext.GetAppUser()!.Id, id, ct);
+        if (replay is null)
+        {
+            return Problem(statusCode: StatusCodes.Status404NotFound,
+                detail: "No such search in your history.");
+        }
+
+        return Ok(new
+        {
+            searchEventId = replay.SearchEventId,
+            plan = replay.Plan,
+            hits = replay.Hits,
+            totalCandidates = replay.TotalCandidates,
+        });
+    }
 }

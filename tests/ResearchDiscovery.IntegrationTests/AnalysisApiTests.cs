@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using ResearchDiscovery.Application.Abstractions;
 using Xunit;
@@ -20,6 +21,86 @@ public class AnalysisApiTests
 
         Assert.Equal(HttpStatusCode.Forbidden, run.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, coverage.StatusCode);
+    }
+
+    [Fact]
+    public async Task Selection_AsMember_QueuesAndAnalyzes()
+    {
+        // The regression this guards: a regular member choosing "Analyze" used
+        // to hit the Owner-gated admin controller and get a 403.
+        using var factory = new ApiFactory { TestUserExternalId = "analyzing-member" };
+        await factory.SeedAsync(TestData.SeedPapersAsync);
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/analysis/selection", new { arxivIds = new[] { "2501.00001" } });
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+
+        // The queue worker runs asynchronously on the shared in-memory Sqlite;
+        // poll analysis-status until the paper is analyzed for THIS member,
+        // tolerating transient "database is locked" contention (the queue job
+        // and the poll share one connection).
+        var analyzed = false;
+        for (var attempt = 0; attempt < 80 && !analyzed; attempt++)
+        {
+            await Task.Delay(100);
+            try
+            {
+                var status = await client.PostAsJsonAsync(
+                    "/api/papers/analysis-status", new { arxivIds = new[] { "2501.00001" } });
+                if (!status.IsSuccessStatusCode) continue;
+                var body = await status.Content.ReadFromJsonAsync<JsonElement>();
+                analyzed = body.GetProperty("analyzed").EnumerateArray().Any();
+            }
+            catch (Exception ex) when (
+                ex is InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
+            {
+                // provider contention while the enqueued job holds the connection
+            }
+        }
+
+        Assert.True(analyzed);
+    }
+
+    [Fact]
+    public async Task Selection_MemberWithNoBudget_Returns402()
+    {
+        using var factory = new ApiFactory
+        {
+            TestUserExternalId = "broke-member",
+            StarterGrantMicros = 0,
+        };
+        await factory.SeedAsync(TestData.SeedPapersAsync);
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/analysis/selection", new { arxivIds = new[] { "2501.00001" } });
+
+        Assert.Equal(HttpStatusCode.PaymentRequired, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Selection_Anonymous_Returns401WhenAuthEnabled()
+    {
+        using var factory = new AuthOnlyApiFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/analysis/selection", new { arxivIds = new[] { "2501.00001" } });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    /// <summary>Enables real bearer auth so a tokenless request is 401, not the
+    /// dev admin — mirrors AccountApiTests' anonymous posture.</summary>
+    private sealed class AuthOnlyApiFactory : ApiFactory
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseSetting("Auth:Authority", "https://example.ciamlogin.com/tenant/v2.0");
+            builder.UseSetting("Auth:Audience", "test-audience");
+        }
     }
 
     [Fact]

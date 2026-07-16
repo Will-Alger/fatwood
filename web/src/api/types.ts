@@ -88,6 +88,16 @@ export interface SearchResult {
   totalCandidates: number
 }
 
+/** One entry in the signed-in user's recent-search history (side panel). */
+export interface RecentSearchSummary {
+  searchEventId: number
+  createdUtc: string
+  queryText: string | null
+  interpretation: string
+  resultCount: number
+  totalCandidates: number
+}
+
 /** Ties an interaction (bookmark, analyze) back to the search that surfaced the paper. */
 export interface SearchContext {
   searchEventId: number

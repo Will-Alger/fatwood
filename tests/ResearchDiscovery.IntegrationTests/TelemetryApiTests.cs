@@ -148,7 +148,7 @@ public class TelemetryApiTests
         var topArxivId = body.RootElement.GetProperty("hits")[0]
             .GetProperty("paper").GetProperty("arxivId").GetString();
 
-        var response = await client.PostAsJsonAsync("/api/admin/analysis/selection",
+        var response = await client.PostAsJsonAsync("/api/analysis/selection",
             new { arxivIds = new[] { topArxivId }, searchEventId });
         response.EnsureSuccessStatusCode();
 
