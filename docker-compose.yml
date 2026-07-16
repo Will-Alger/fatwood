@@ -16,6 +16,15 @@ services:
       timeout: 3s
       retries: 10
 
+  # Azure Storage emulator — backs the durable analysis queue for local dev,
+  # so the Storage-queue path and the analyze-worker can be exercised without
+  # a real Azure account. Queue endpoint on 10001.
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-queue --queueHost 0.0.0.0 --skipApiVersionCheck
+    ports:
+      - "10001:10001"
+
   api:
     build: .
     depends_on:

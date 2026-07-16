@@ -31,6 +31,11 @@ if (args.Length > 0 && args[0].Equals("embed", StringComparison.OrdinalIgnoreCas
     return await EmbedCommandRunner.RunAsync();
 }
 
+if (args.Length > 0 && args[0].Equals("analyze-worker", StringComparison.OrdinalIgnoreCase))
+{
+    return await AnalysisWorkerRunner.RunAsync();
+}
+
 if (args.Length > 0 && args[0].Equals("eval", StringComparison.OrdinalIgnoreCase))
 {
     return await EvalCommandRunner.RunAsync(args);
@@ -175,16 +180,17 @@ builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
 builder.Services.AddHostedService<DailyIngestionHostedService>();
 // Category (bulk) analysis stays on the in-process serial queue — a rare
-// Owner op. User-facing SELECTION analysis goes through IAnalysisQueue, which
-// fans out to one work item per paper and drains them with bounded
-// concurrency (and, in cloud, off a durable Storage queue via a scaled worker).
+// Owner op. User-facing SELECTION analysis goes through IAnalysisQueue
+// (registered in AddInfrastructure: durable Storage queue in cloud, in-process
+// otherwise). In in-memory mode the web host drains it here with bounded
+// concurrency; in Storage mode the external worker job consumes it instead.
 builder.Services.AddSingleton<AnalysisJobQueue>();
 builder.Services.AddSingleton<AnalysisProgressTracker>();
 builder.Services.AddHostedService<AnalysisQueueHostedService>();
-builder.Services.AddSingleton<ResearchDiscovery.Infrastructure.Analysis.InMemoryAnalysisQueue>();
-builder.Services.AddSingleton<IAnalysisQueue>(sp =>
-    sp.GetRequiredService<ResearchDiscovery.Infrastructure.Analysis.InMemoryAnalysisQueue>());
-builder.Services.AddHostedService<InMemoryAnalysisWorker>();
+if (!builder.Configuration.GetValue<bool>($"{AnalysisQueueOptions.SectionName}:UseStorageQueue"))
+{
+    builder.Services.AddHostedService<InMemoryAnalysisWorker>();
+}
 
 var app = builder.Build();
 

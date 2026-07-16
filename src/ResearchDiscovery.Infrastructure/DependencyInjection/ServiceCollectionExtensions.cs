@@ -130,6 +130,26 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPaperAnalyzer, AnthropicPaperAnalyzer>();
         services.AddScoped<IAnalysisService, AnalysisService>();
 
+        // Analysis queue: durable Storage queue in cloud (consumed by a scaled
+        // worker job), in-process queue otherwise. Registered here so the web
+        // host AND the worker job resolve the same implementation. The
+        // in-process worker itself is a hosted service the web host adds only
+        // in in-memory mode (see Program.cs).
+        var queueOptions = new AnalysisQueueOptions();
+        configuration.GetSection(AnalysisQueueOptions.SectionName).Bind(queueOptions);
+        services.AddOptions<AnalysisQueueOptions>()
+            .Bind(configuration.GetSection(AnalysisQueueOptions.SectionName));
+        if (queueOptions.UseStorageQueue)
+        {
+            services.AddSingleton<StorageAnalysisQueue>();
+            services.AddSingleton<IAnalysisQueue>(sp => sp.GetRequiredService<StorageAnalysisQueue>());
+        }
+        else
+        {
+            services.AddSingleton<InMemoryAnalysisQueue>();
+            services.AddSingleton<IAnalysisQueue>(sp => sp.GetRequiredService<InMemoryAnalysisQueue>());
+        }
+
         // Personalized discovery: LLM registry/settings, profile, local
         // embeddings, and the search pipeline.
         services.AddOptions<LlmOptions>()

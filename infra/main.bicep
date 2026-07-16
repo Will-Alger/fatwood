@@ -87,6 +87,18 @@ param deployIngestJob bool = true
 @description('Cron for the delta ingest job (UTC).')
 param ingestCron string = '30 6 * * *'
 
+@description('Durable analysis queue + KEDA-scaled worker job. When true the API enqueues to Azure Storage and the worker (not the web replica) drains it.')
+param deployAnalysisQueue bool = true
+
+@description('Name of the analysis work queue.')
+param analysisQueueName string = 'analysis-jobs'
+
+@description('Max concurrent analysis worker job executions KEDA may run.')
+param analysisWorkerMaxParallel int = 4
+
+@description('Papers a single worker analyzes at once.')
+param analysisWorkerConcurrency int = 4
+
 // ---------------------------------------------------------------- resources
 var suffix = uniqueString(resourceGroup().id)
 var acrName = '${baseName}acr${suffix}' // alphanumeric only
@@ -159,6 +171,67 @@ resource kvSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+// Durable analysis queue. The API (enqueue) and the worker job (dequeue) reach
+// it with the shared managed identity — no keys in config. Queue storage is
+// billed per-operation and the messages are tiny/transient, so cost is cents.
+var storageName = toLower(take(replace('${baseName}q${uniqueString(resourceGroup().id)}', '-', ''), 24))
+var storageQueueDataContributorRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+
+resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = if (deployAnalysisQueue) {
+  name: storageName
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: false
+    minimumTlsVersion: 'TLS1_2'
+  }
+}
+
+resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-01-01' = if (deployAnalysisQueue) {
+  parent: storage
+  name: 'default'
+}
+
+resource analysisQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-01-01' = if (deployAnalysisQueue) {
+  parent: queueService
+  name: analysisQueueName
+}
+
+resource storageQueueRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployAnalysisQueue) {
+  name: guid(storage.id, appIdentity.id, storageQueueDataContributorRoleId)
+  scope: storage
+  properties: {
+    principalId: appIdentity.properties.principalId
+    roleDefinitionId: storageQueueDataContributorRoleId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+var analysisQueueEndpoint = storage.?properties.primaryEndpoints.queue ?? ''
+
+// The KEDA queue-depth scaler on the worker JOB authenticates with a storage
+// connection string (job scale rules take a secret, not a managed identity).
+// The app's RUNTIME queue access stays managed-identity — only the scaler
+// reads queue length via this secret, kept in Key Vault like the others.
+resource secretStorageConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (deployAnalysisQueue) {
+  parent: keyVault
+  name: 'storage-connection-string'
+  properties: {
+    value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+  }
+}
+
+// Storage-queue env shared by the API (producer) and the worker job (consumer).
+// AZURE_CLIENT_ID pins DefaultAzureCredential to the user-assigned identity.
+var analysisQueueEnv = deployAnalysisQueue ? [
+  { name: 'AnalysisQueue__UseStorageQueue', value: 'true' }
+  { name: 'AnalysisQueue__AccountUrl', value: analysisQueueEndpoint }
+  { name: 'AnalysisQueue__QueueName', value: analysisQueueName }
+  { name: 'AZURE_CLIENT_ID', value: appIdentity.properties.clientId }
+] : []
+
 resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'db-connection-string'
@@ -219,7 +292,7 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 }
 
 // Shared shapes for the app and both jobs.
-var kvSecrets = [
+var kvSecrets = concat([
   {
     name: 'db-connection'
     keyVaultUrl: '${keyVault.properties.vaultUri}secrets/db-connection-string'
@@ -235,7 +308,13 @@ var kvSecrets = [
     keyVaultUrl: '${keyVault.properties.vaultUri}secrets/acs-connection-string'
     identity: appIdentity.id
   }
-]
+], deployAnalysisQueue ? [
+  {
+    name: 'storage-connection'
+    keyVaultUrl: '${keyVault.properties.vaultUri}secrets/storage-connection-string'
+    identity: appIdentity.id
+  }
+] : [])
 
 var registries = [
   { server: acr.properties.loginServer, identity: appIdentity.id }
@@ -267,7 +346,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'api'
           image: containerImage
           resources: { cpu: json(apiCpu), memory: apiMemory }
-          env: [
+          env: concat([
             { name: 'ConnectionStrings__Default', secretRef: 'db-connection' }
             { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }
             // User-account auth (Entra External ID JWT). While the authority
@@ -286,7 +365,9 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
             // The in-process scheduler dies with scale-to-zero; the cron job
             // below owns the daily delta instead.
             { name: 'Ingestion__Schedule__Enabled', value: 'false' }
-          ]
+            // With the durable queue on, the API only ENQUEUES; the worker job
+            // (below) drains it, so no in-process analysis worker runs here.
+          ], analysisQueueEnv)
         }
       ]
       scale: {
@@ -391,11 +472,78 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
   dependsOn: [acrPull, kvSecretsUser, secretDbConnection, secretAnthropicKey, secretAcsConnection]
 }
 
+// Analysis worker: an event-driven job KEDA scales on queue depth. When work
+// arrives it spins up (to analysisWorkerMaxParallel executions), each drains
+// the queue with bounded intra-execution concurrency and exits when empty —
+// scale-to-zero, so idle costs nothing. Survives web restarts (work persists
+// in the queue) and processes multiple users' papers in parallel.
+resource analyzeJob 'Microsoft.App/jobs@2024-03-01' = if (deployAnalysisQueue) {
+  name: '${baseName}-analyze-worker'
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: { '${appIdentity.id}': {} }
+  }
+  properties: {
+    environmentId: acaEnv.id
+    configuration: {
+      triggerType: 'Event'
+      replicaTimeout: 1800
+      replicaRetryLimit: 1
+      eventTriggerConfig: {
+        parallelism: 1
+        replicaCompletionCount: 1
+        scale: {
+          minExecutions: 0
+          maxExecutions: analysisWorkerMaxParallel
+          pollingInterval: 30
+          rules: [
+            {
+              name: 'queue-depth'
+              type: 'azure-queue'
+              metadata: {
+                queueName: analysisQueueName
+                queueLength: '1'
+              }
+              auth: [
+                {
+                  triggerParameter: 'connection'
+                  secretRef: 'storage-connection'
+                }
+              ]
+            }
+          ]
+        }
+      }
+      registries: registries
+      secrets: kvSecrets
+    }
+    template: {
+      containers: [
+        {
+          name: 'analyze-worker'
+          image: containerImage
+          args: ['analyze-worker']
+          resources: { cpu: json('0.5'), memory: '1Gi' }
+          env: concat([
+            { name: 'ConnectionStrings__Default', secretRef: 'db-connection' }
+            { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }
+            { name: 'Database__MigrateOnStartup', value: 'false' }
+            { name: 'AnalysisQueue__WorkerConcurrency', value: string(analysisWorkerConcurrency) }
+          ], analysisQueueEnv)
+        }
+      ]
+    }
+  }
+  dependsOn: [acrPull, kvSecretsUser, storageQueueRole, analysisQueue, secretDbConnection, secretAnthropicKey, secretStorageConnection]
+}
+
 output acrLoginServer string = acr.properties.loginServer
 output acrName string = acr.name
 output containerAppName string = api.name
 output migrateJobName string = migrateJob.name
 output ingestJobName string = deployIngestJob ? '${baseName}-ingest-delta' : ''
+output analyzeJobName string = deployAnalysisQueue ? '${baseName}-analyze-worker' : ''
 output keyVaultName string = keyVault.name
 output postgresFqdn string = postgres.properties.fullyQualifiedDomainName
 output apiUrl string = 'https://${api.properties.configuration.ingress.fqdn}'

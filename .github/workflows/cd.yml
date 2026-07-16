@@ -12,6 +12,7 @@
 #   CONTAINERAPP_NAME      e.g. rdisc-api
 #   MIGRATE_JOB_NAME       e.g. rdisc-migrate
 #   INGEST_JOB_NAME        e.g. rdisc-ingest-delta (unset to skip)
+#   ANALYZE_JOB_NAME       e.g. rdisc-analyze-worker (unset to skip)
 # The federated credential on the app registration must have subject
 #   repo:<OWNER>/<REPO>:ref:refs/heads/main
 # (issuer https://token.actions.githubusercontent.com, audience
@@ -106,6 +107,15 @@ jobs:
           az containerapp job update \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
             --name "${{ vars.INGEST_JOB_NAME }}" \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO:${{ github.sha }}" \
+            --output none
+
+      - name: Roll analysis worker job to new image
+        if: vars.ANALYZE_JOB_NAME != ''
+        run: |
+          az containerapp job update \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.ANALYZE_JOB_NAME }}" \
             --image "${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO:${{ github.sha }}" \
             --output none
 
