@@ -38,8 +38,11 @@ export async function pollUntilAnalyzed(
     if (finalDone >= ids.length) break
 
     if (!status.active) {
+      // A failed paper's queued retry keeps `active` true, but the queue depth
+      // behind it is approximate — tolerate a few stalled ticks before
+      // concluding the remainder was declined or lost.
       idleRounds = finalDone === lastDone ? idleRounds + 1 : 0
-      if (idleRounds >= 2) break
+      if (idleRounds >= 4) break
     } else {
       idleRounds = 0
     }

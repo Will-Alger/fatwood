@@ -29,6 +29,11 @@ public static class AnalysisWorkerRunner
     /// the scale-to-zero job every visibility timeout.</summary>
     private const int PoisonDequeueCount = 5;
 
+    /// <summary>How soon a transiently-failed paper's message becomes visible
+    /// for its retry. Short, so the retry lands within the user's polling
+    /// session instead of after the full visibility timeout.</summary>
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(10);
+
     public static async Task<int> RunAsync()
     {
         using var cts = new CancellationTokenSource();
@@ -110,8 +115,24 @@ public static class AnalysisWorkerRunner
                         }
 
                         scope.ServiceProvider.GetRequiredService<ILlmUsageContext>().UserId = item.UserId;
-                        await scope.ServiceProvider.GetRequiredService<IAnalysisService>()
+                        var summary = await scope.ServiceProvider.GetRequiredService<IAnalysisService>()
                             .AnalyzeSelectionAsync([item.ArxivId], item.UserId, cts.Token);
+
+                        // The analysis service swallows per-paper LLM failures
+                        // (a bulk run shouldn't die on one bad paper), so a
+                        // failed call still RETURNS — deleting here would
+                        // silently forfeit the retry. Re-surface the message in
+                        // seconds instead; attempts stay bounded by the poison
+                        // cap. Declined (refused) papers are permanent: delete.
+                        if (summary.PapersFailed > 0)
+                        {
+                            logger.LogWarning(
+                                "Analysis of {ArxivId} failed (attempt {Attempt}); retrying in {Delay}s",
+                                item.ArxivId, message.DequeueCount, RetryDelay.TotalSeconds);
+                            await queue.AbandonAsync(message, RetryDelay, cts.Token);
+                            return;
+                        }
+
                         await queue.DeleteAsync(message, cts.Token);
                         Interlocked.Increment(ref processed);
                     }

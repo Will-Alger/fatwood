@@ -93,6 +93,13 @@ public sealed class StorageAnalysisQueue : IAnalysisQueue
     public Task DeleteAsync(QueueMessage message, CancellationToken ct) =>
         _client.DeleteMessageAsync(message.MessageId, message.PopReceipt, ct);
 
+    /// <summary>Makes a received message visible again after <paramref name="delay"/>
+    /// instead of its full visibility timeout, so a transiently-failed paper is
+    /// retried while the user is still watching the reveal.</summary>
+    public Task AbandonAsync(QueueMessage message, TimeSpan delay, CancellationToken ct) =>
+        _client.UpdateMessageAsync(
+            message.MessageId, message.PopReceipt, visibilityTimeout: delay, cancellationToken: ct);
+
     public static AnalysisWorkItem Parse(string messageText) =>
         JsonSerializer.Deserialize<AnalysisWorkItem>(messageText, Json)
         ?? throw new InvalidOperationException("Unparseable analysis queue message.");

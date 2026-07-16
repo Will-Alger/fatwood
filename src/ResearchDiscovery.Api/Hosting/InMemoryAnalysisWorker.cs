@@ -18,6 +18,12 @@ public sealed class InMemoryAnalysisWorker(
 {
     private const int MaxConcurrency = 4;
 
+    // The in-memory queue has no redelivery, so a transiently-failed LLM call
+    // (the analysis service swallows it and returns PapersFailed > 0) gets a
+    // bounded in-process retry instead of being silently lost.
+    private const int MaxAttempts = 2;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(3);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var slots = new SemaphoreSlim(MaxConcurrency, MaxConcurrency);
@@ -37,7 +43,24 @@ public sealed class InMemoryAnalysisWorker(
             await using var scope = scopeFactory.CreateAsyncScope();
             scope.ServiceProvider.GetRequiredService<ILlmUsageContext>().UserId = item.UserId;
             var analysis = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
-            await analysis.AnalyzeSelectionAsync([item.ArxivId], item.UserId, ct);
+            for (var attempt = 1; ; attempt++)
+            {
+                var summary = await analysis.AnalyzeSelectionAsync([item.ArxivId], item.UserId, ct);
+                if (summary.PapersFailed == 0)
+                {
+                    break;
+                }
+
+                if (attempt >= MaxAttempts)
+                {
+                    logger.LogWarning(
+                        "Analysis of {ArxivId} failed after {Attempts} attempt(s); giving up (re-click retries)",
+                        item.ArxivId, attempt);
+                    break;
+                }
+
+                await Task.Delay(RetryDelay, ct);
+            }
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
