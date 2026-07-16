@@ -172,6 +172,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         [FromServices] AppDbContext db,
         [FromServices] ProfileService profileService,
         [FromServices] AnalysisProgressTracker tracker,
+        [FromServices] IAnalysisQueue analysisQueue,
         CancellationToken ct)
     {
         if (request.ArxivIds is not { Count: > 0 and <= 500 })
@@ -194,7 +195,10 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
             .Select(p => p.ArxivId)
             .ToListAsync(ct);
 
-        return Ok(new AnalysisStatusView(tracker.Active, analyzed));
+        // "Active" = a category run is executing (tracker) OR selection work is
+        // still queued/in-flight — either way the UI should keep polling.
+        var active = tracker.Active || await analysisQueue.HasPendingWorkAsync(ct);
+        return Ok(new AnalysisStatusView(active, analyzed));
     }
 
     /// <summary>

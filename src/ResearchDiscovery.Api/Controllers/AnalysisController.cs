@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ResearchDiscovery.Api.Auth;
-using ResearchDiscovery.Api.Hosting;
 using ResearchDiscovery.Application.Abstractions;
 
 namespace ResearchDiscovery.Api.Controllers;
@@ -16,7 +15,7 @@ namespace ResearchDiscovery.Api.Controllers;
 [ApiController]
 [Route("api/analysis")]
 [Authorize(Policy = AuthPolicies.ActiveUser)]
-public class AnalysisController(AnalysisJobQueue queue) : ControllerBase
+public class AnalysisController(IAnalysisQueue queue) : ControllerBase
 {
     /// <param name="SearchEventId">The logged search the selection came from,
     /// when triggered from search results — telemetry context only. Null when
@@ -62,14 +61,10 @@ public class AnalysisController(AnalysisJobQueue queue) : ControllerBase
             return Problem(statusCode: StatusCodes.Status402PaymentRequired, detail: ex.Message);
         }
 
-        if (!queue.TryEnqueue(new AnalysisJob.Selection(request.ArxivIds)
-        {
-            RequestedByUserId = userId,
-        }))
-        {
-            return Problem(statusCode: StatusCodes.Status429TooManyRequests,
-                detail: "The analysis queue is full; try again once queued runs complete.");
-        }
+        // Fan out to one work item per paper, in submitted (rank) order, so a
+        // worker pool can drain them concurrently. Idempotent: an item for an
+        // already-current analysis is a cheap no-op.
+        await queue.EnqueueSelectionAsync(userId, request.ArxivIds, ct);
 
         // Spending analysis tokens on a paper is a strong interest signal;
         // record it against the originating search when known.

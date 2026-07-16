@@ -31,6 +31,11 @@ const SEARCH_STAGES = [
 const RESULT_LIMIT = 30
 const ANALYZE_OPTIONS = [5, 10, 15, 20, 25]
 const ANALYZE_DEFAULT = 10
+// Reveal completed analyses strictly in rank order with a beat between each,
+// so the cards cascade 1→2→3 even though the backend finishes them out of
+// order — and the ignite glows never all fire at once.
+const REVEAL_STAGGER_MS = 350
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const EXAMPLE_QUERIES = [
   'a weekend-scale ML project on anomaly detection — I have 4 years of backend experience',
@@ -274,16 +279,38 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
   }
 
   async function pollAnalysis(ids: string[]) {
-    // Reveal each paper the moment its analysis lands, rather than waiting for
-    // the whole batch — merge the newly-completed ones on every poll tick.
-    const merged = new Set<string>()
+    // Reveal completed analyses in rank order with a stagger. A cursor walks
+    // the ranks: reveal rank N only once it's done; if a later rank finishes
+    // first, hold it until its turn. Only once polling ends (nothing more will
+    // complete) do we skip past ranks that were declined/failed.
+    const done = new Set<string>()
+    let cursor = 0
+    let revealing = false
+
+    async function pump(final: boolean) {
+      if (revealing) return
+      revealing = true
+      while (cursor < ids.length) {
+        if (done.has(ids[cursor])) {
+          await mergeAnalyzedPapers([ids[cursor]])
+          cursor++
+          if (cursor < ids.length) await sleep(REVEAL_STAGGER_MS)
+        } else if (final) {
+          cursor++ // declined/failed — skip so the rest still reveal in order
+        } else {
+          break // still analyzing; wait for the next poll
+        }
+      }
+      revealing = false
+    }
+
     const finalDone = await pollUntilAnalyzed(ids, (analyzed) => {
+      analyzed.forEach((id) => done.add(id))
       setAnalyzing({ total: ids.length, done: analyzed.length })
-      const fresh = analyzed.filter((id) => !merged.has(id))
-      fresh.forEach((id) => merged.add(id))
-      void mergeAnalyzedPapers(fresh)
+      void pump(false)
     })
 
+    await pump(true)
     setAnalyzing(null)
     refreshMe() // analysis spent tokens — update the budget chip
     setNotice(

@@ -63,36 +63,36 @@ public class AnalysisApiTests
     }
 
     [Fact]
-    public async Task Selection_AnalyzesInSubmittedRankOrder()
+    public async Task Selection_AnalyzesEveryRequestedPaper()
     {
-        // The UI reveals results as they finish, so they must be analyzed in
-        // the caller's submitted (search-rank) order, not the DB's paper-id
-        // order. Submit deliberately out of paper-id order and assert the
-        // analyzer saw them in submitted order.
-        var order = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        // Selection fans out to one work item per paper and a bounded-concurrency
+        // worker drains them (order is a UI concern now, not a processing one).
+        // Assert every requested paper ends up analyzed.
+        var analyzed = new System.Collections.Concurrent.ConcurrentBag<string>();
         using var factory = new ApiFactory
         {
             AnalyzePaper = paper =>
             {
-                order.Enqueue(paper.ArxivId);
+                analyzed.Add(paper.ArxivId);
                 return ApiFactory.DefaultAnalysis(paper);
             },
         };
         await factory.SeedAsync(TestData.SeedPapersAsync);
         using var client = factory.CreateClient();
 
-        // Papers seed as 2501.00001, 00002, 00003 (ascending id); submit reversed.
-        var submitted = new[] { "2501.00003", "2501.00002", "2501.00001" };
+        var requested = new[] { "2501.00003", "2501.00002", "2501.00001" };
         var response = await client.PostAsJsonAsync(
-            "/api/analysis/selection", new { arxivIds = submitted });
+            "/api/analysis/selection", new { arxivIds = requested });
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
 
-        for (var attempt = 0; attempt < 80 && order.Count < 3; attempt++)
+        for (var attempt = 0; attempt < 80 && analyzed.Distinct().Count() < 3; attempt++)
         {
             await Task.Delay(100);
         }
 
-        Assert.Equal(submitted, order.ToArray());
+        Assert.Equal(
+            requested.OrderBy(x => x),
+            analyzed.Distinct().OrderBy(x => x));
     }
 
     [Fact]

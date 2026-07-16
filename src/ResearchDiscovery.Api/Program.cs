@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using ResearchDiscovery.Api.Auth;
 using ResearchDiscovery.Api.Cli;
 using ResearchDiscovery.Api.Hosting;
+using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.DependencyInjection;
 using ResearchDiscovery.Infrastructure.Persistence;
@@ -173,9 +174,17 @@ builder.Services.AddHttpClient(NativeAuthProxy.HttpClientName, client =>
 builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
 builder.Services.AddHostedService<DailyIngestionHostedService>();
+// Category (bulk) analysis stays on the in-process serial queue — a rare
+// Owner op. User-facing SELECTION analysis goes through IAnalysisQueue, which
+// fans out to one work item per paper and drains them with bounded
+// concurrency (and, in cloud, off a durable Storage queue via a scaled worker).
 builder.Services.AddSingleton<AnalysisJobQueue>();
 builder.Services.AddSingleton<AnalysisProgressTracker>();
 builder.Services.AddHostedService<AnalysisQueueHostedService>();
+builder.Services.AddSingleton<ResearchDiscovery.Infrastructure.Analysis.InMemoryAnalysisQueue>();
+builder.Services.AddSingleton<IAnalysisQueue>(sp =>
+    sp.GetRequiredService<ResearchDiscovery.Infrastructure.Analysis.InMemoryAnalysisQueue>());
+builder.Services.AddHostedService<InMemoryAnalysisWorker>();
 
 var app = builder.Build();
 
