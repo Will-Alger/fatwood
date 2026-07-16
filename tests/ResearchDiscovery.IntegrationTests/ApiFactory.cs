@@ -63,6 +63,19 @@ public class ApiFactory : WebApplicationFactory<Program>
 
             _connection.Open();
 
+            // Create the schema BEFORE the host starts: hosted services and
+            // DataProtection's key-ring warmup touch the database as soon as
+            // the host runs, and racing them against a post-start
+            // EnsureCreated on this single shared connection flakes with
+            // "no such table" errors.
+            var schemaOptions = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite(_connection)
+                .Options;
+            using (var schemaDb = new AppDbContext(schemaOptions))
+            {
+                schemaDb.Database.EnsureCreated();
+            }
+
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
             services.RemoveAll(typeof(IDbContextOptionsConfiguration<AppDbContext>));
             services.RemoveAll(typeof(IDbContextFactory<AppDbContext>));
@@ -120,15 +133,7 @@ public class ApiFactory : WebApplicationFactory<Program>
             2,
             0);
 
-    protected override IHost CreateHost(IHostBuilder builder)
-    {
-        var host = base.CreateHost(builder);
-
-        using var scope = host.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
-
-        return host;
-    }
+    // Schema creation happens in ConfigureServices (pre-start) — see above.
 
     public async Task SeedAsync(Func<AppDbContext, Task> seed)
     {
