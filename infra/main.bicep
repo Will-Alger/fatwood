@@ -97,7 +97,7 @@ param analysisQueueName string = 'analysis-jobs'
 param analysisWorkerMaxParallel int = 4
 
 @description('Papers a single worker analyzes at once.')
-param analysisWorkerConcurrency int = 4
+param analysisWorkerConcurrency int = 8
 
 // ---------------------------------------------------------------- resources
 var suffix = uniqueString(resourceGroup().id)
@@ -496,7 +496,9 @@ resource analyzeJob 'Microsoft.App/jobs@2024-03-01' = if (deployAnalysisQueue) {
         scale: {
           minExecutions: 0
           maxExecutions: analysisWorkerMaxParallel
-          pollingInterval: 30
+          // Poll briskly so the first analysis after idle isn't waiting up to a
+          // full interval just to be noticed (cold start is the other half).
+          pollingInterval: 10
           rules: [
             {
               name: 'queue-depth'
