@@ -251,11 +251,6 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
     setSortBy('score')
   }
 
-  const topMatchScore = useMemo(
-    () => (result ? Math.max(...result.hits.map((h) => h.matchScore), 0) : 0),
-    [result],
-  )
-
   const displayedHits = useMemo(() => {
     if (!result) return []
     // Rank is assigned from the ORIGINAL result order before any client-side
@@ -501,9 +496,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
           </div>
           {sortBy === 'match' && (
             <p className="results-note">
-              Ordered by overall relevance — meaning plus exact keywords. The bar on each card
-              shows that paper&apos;s semantic similarity, so a lower-similarity paper can still
-              rank higher.
+              Ranked by overall relevance — meaning plus exact keywords. Hover a paper&apos;s
+              relevance bar for its rank and semantic-similarity score.
             </p>
           )}
           <div
@@ -516,7 +510,8 @@ export function Discover({ llmSettings, me, signedOut, onSignIn }: DiscoverProps
                   canInteract={canSpend}
                   paper={hit.paper}
                   matchScore={hit.matchScore}
-                  topMatchScore={topMatchScore}
+                  rank={hit.rank}
+                  rankedCount={result.hits.length}
                   isWildcard={hit.isWildcard}
                   experienceProximity={hit.experienceProximity}
                   searchContext={{ searchEventId: result.searchEventId, rank: hit.rank }}

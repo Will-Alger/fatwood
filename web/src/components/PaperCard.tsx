@@ -82,9 +82,11 @@ function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
 
 export interface PaperCardProps {
   paper: PaperDto
+  /** Raw semantic similarity (cosine) — shown in the tooltip only. */
   matchScore?: number
-  /** Best match score in the current result set — match strength is relative to it. */
-  topMatchScore?: number
+  /** The paper's 1-based overall-relevance rank and the ranked total; drives the meter. */
+  rank?: number
+  rankedCount?: number
   isWildcard?: boolean
   experienceProximity?: 'close' | 'stretch' | null
   /** Present when this card came from a search — bookmarks then carry (search, rank) telemetry. */
@@ -100,23 +102,24 @@ export interface PaperCardProps {
 }
 
 /**
- * Semantic similarity to the query, shown relative to the best hit in this
- * result set (raw cosine values cluster in a narrow band, so absolute
- * percentages mislead). This describes the PAPER, not its rank: the list is
- * ordered by overall relevance (meaning + exact keywords), so a
- * medium-similarity paper can sit above a high-similarity one — by design.
+ * Overall-relevance tier from the paper's RANK, not its raw cosine. The list
+ * is ordered by the full ranker (meaning + exact keywords), so keying the
+ * meter to rank makes it monotonic with position — a "high relevance" card can
+ * never sit below a "good relevance" one. The raw semantic similarity still
+ * appears in the tooltip for the curious.
  */
-function similarityTier(score: number, top: number): { label: string; level: 1 | 2 | 3 } {
-  const ratio = top > 0 ? score / top : 0
-  if (ratio >= 0.92) return { label: 'high similarity', level: 3 }
-  if (ratio >= 0.78) return { label: 'medium similarity', level: 2 }
-  return { label: 'lower similarity', level: 1 }
+function relevanceTier(rank: number, count: number): { label: string; level: 1 | 2 | 3 } {
+  const frac = count > 1 ? (rank - 1) / count : 0
+  if (frac < 0.25) return { label: 'high relevance', level: 3 }
+  if (frac < 0.6) return { label: 'good relevance', level: 2 }
+  return { label: 'fair relevance', level: 1 }
 }
 
 export function PaperCard({
   paper,
   matchScore,
-  topMatchScore,
+  rank,
+  rankedCount,
   isWildcard,
   experienceProximity,
   searchContext,
@@ -211,17 +214,22 @@ export function PaperCard({
             ★ {Math.round(score)}
           </span>
         )}
-        {matchScore !== undefined && topMatchScore !== undefined && (
+        {rank !== undefined && rankedCount !== undefined && rankedCount > 0 && (
           <span
-            className={`match-meter match-level-${similarityTier(matchScore, topMatchScore).level}`}
-            title={`Semantic similarity to your search (${Math.round(matchScore * 100)}%). Results are ordered by overall relevance — meaning plus exact keywords — so this bar isn't strictly the sort order.`}
+            className={`match-meter match-level-${relevanceTier(rank, rankedCount).level}`}
+            title={
+              `Ranked #${rank} of ${rankedCount} by overall relevance (meaning + exact keywords)` +
+              (matchScore !== undefined
+                ? ` — semantic similarity ${Math.round(matchScore * 100)}%.`
+                : '.')
+            }
           >
             <span className="match-segments" aria-hidden="true">
               <span />
               <span />
               <span />
             </span>
-            {similarityTier(matchScore, topMatchScore).label}
+            {relevanceTier(rank, rankedCount).label}
           </span>
         )}
         {experienceProximity === 'close' && (
