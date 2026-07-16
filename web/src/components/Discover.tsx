@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   analyzeSelection,
   compileSearch,
+  getPapersByIds,
   getRecentSearches,
   replaySearch,
   runSearch,
@@ -9,6 +10,7 @@ import {
 import type {
   LlmSettingsView,
   MeView,
+  PaperDto,
   RecentSearchSummary,
   SearchPlan,
   SearchResult,
@@ -27,7 +29,8 @@ const SEARCH_STAGES = [
 ]
 
 const RESULT_LIMIT = 30
-const ANALYZE_TOP_N = 25
+const ANALYZE_OPTIONS = [5, 10, 15, 20, 25]
+const ANALYZE_DEFAULT = 10
 
 const EXAMPLE_QUERIES = [
   'a weekend-scale ML project on anomaly detection — I have 4 years of backend experience',
@@ -61,10 +64,13 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'match' | 'score'>('match')
+  const [analyzeN, setAnalyzeN] = useState(ANALYZE_DEFAULT)
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [recentSearches, setRecentSearches] = useState<RecentSearchSummary[]>([])
   const [activeSearchId, setActiveSearchId] = useState<number | null>(null)
+  // arXiv ids whose analysis just landed — drives the one-shot "ignite" glow.
+  const [glowIds, setGlowIds] = useState<ReadonlySet<string>>(new Set())
 
   // Funnel-stage copy that steps forward while the first search runs; the
   // ambient ember field (App-level) provides the visual feedback.
@@ -115,17 +121,49 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     refreshRecent()
   }, [refreshRecent])
 
-  // Analyzing a paper refreshes the current results in place so its card
-  // picks up the new analysis (no LLM, deterministic re-execution), and
-  // refreshes the account so the budget chip reflects the spend.
-  const { analyzingIds, analyzeOne } = useAnalyze(async () => {
-    refreshMe()
-    if (planRef.current) await executePlan(planRef.current)
-  })
+  // Folds freshly-completed analyses into the live result — updating just the
+  // affected cards in place (no re-rank, no re-search) — and fires each card's
+  // ignite glow. Used by both the batch flow and per-paper analysis.
+  const mergeAnalyzedPapers = useCallback(async (newIds: string[]) => {
+    if (newIds.length === 0) return
+    let fetched: Record<string, PaperDto>
+    try {
+      fetched = await getPapersByIds(newIds)
+    } catch {
+      return // the next poll (or a manual refresh) will still reveal them
+    }
+    setResult((prev) =>
+      prev
+        ? {
+            ...prev,
+            hits: prev.hits.map((h) =>
+              fetched[h.paper.arxivId] ? { ...h, paper: fetched[h.paper.arxivId] } : h,
+            ),
+          }
+        : prev,
+    )
+    const landed = newIds.filter((id) => fetched[id])
+    setGlowIds((prev) => new Set([...prev, ...landed]))
+    window.setTimeout(() => {
+      setGlowIds((prev) => {
+        const next = new Set(prev)
+        landed.forEach((id) => next.delete(id))
+        return next
+      })
+    }, 2000)
+  }, [])
+
+  // Per-paper analysis: only the budget needs refreshing here — the reveal +
+  // glow are handled by mergeAnalyzedPapers below.
+  const { analyzingIds, analyzeOne } = useAnalyze(() => refreshMe())
 
   async function handleAnalyzeOne(arxivId: string) {
     const err = await analyzeOne(arxivId, result?.searchEventId)
-    if (err) setError(err)
+    if (err) {
+      setError(err)
+      return
+    }
+    await mergeAnalyzedPapers([arxivId])
   }
 
   async function handleSelectRecent(searchEventId: number) {
@@ -221,7 +259,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
 
   async function handleAnalyzeTop() {
     if (!result || analyzing) return
-    const ids = result.hits.slice(0, ANALYZE_TOP_N).map((h) => h.paper.arxivId)
+    const ids = result.hits.slice(0, analyzeCount).map((h) => h.paper.arxivId)
     setError(null)
     setNotice(null)
     try {
@@ -236,25 +274,26 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
   }
 
   async function pollAnalysis(ids: string[]) {
-    const finalDone = await pollUntilAnalyzed(ids, (done) =>
-      setAnalyzing({ total: ids.length, done }),
-    )
+    // Reveal each paper the moment its analysis lands, rather than waiting for
+    // the whole batch — merge the newly-completed ones on every poll tick.
+    const merged = new Set<string>()
+    const finalDone = await pollUntilAnalyzed(ids, (analyzed) => {
+      setAnalyzing({ total: ids.length, done: analyzed.length })
+      const fresh = analyzed.filter((id) => !merged.has(id))
+      fresh.forEach((id) => merged.add(id))
+      void mergeAnalyzedPapers(fresh)
+    })
 
     setAnalyzing(null)
     refreshMe() // analysis spent tokens — update the budget chip
     setNotice(
       finalDone >= ids.length
-        ? `All ${ids.length} papers analyzed.`
+        ? `All ${ids.length} papers analyzed — sort by “Analysis score” to lead with the best.`
         : `${finalDone} of ${ids.length} papers analyzed (the rest were declined, failed, or timed out).`,
     )
-
-    // Refresh scores in place by re-executing the current plan — no LLM call,
-    // deterministic, so the result list stays stable. Then lead with the
-    // best-scored projects, which is what the user paid for.
-    if (planRef.current) {
-      await executePlan(planRef.current)
-    }
-    setSortBy('score')
+    // The incremental merge already revealed each card in place; leave the
+    // order alone so the reveal isn't yanked out from under the user. They can
+    // switch to score sort from the header when they're ready.
   }
 
   const displayedHits = useMemo(() => {
@@ -279,7 +318,12 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     return hits
   }, [result, sortBy, analyzedOnly, hiddenIds])
 
-  const analyzeCount = Math.min(ANALYZE_TOP_N, result?.hits.length ?? 0)
+  // Offer 5/10/15/20/25, capped at how many results there are; when fewer
+  // than 5 exist, the only choice is "all of them".
+  const hitCount = result?.hits.length ?? 0
+  const analyzeChoices = ANALYZE_OPTIONS.filter((n) => n <= hitCount)
+  if (analyzeChoices.length === 0 && hitCount > 0) analyzeChoices.push(hitCount)
+  const analyzeCount = Math.min(analyzeN, hitCount)
   const estimateText =
     analysisEstimate && analyzeCount > 0
       ? ` — est. $${(analysisEstimate.perPaper * analyzeCount).toFixed(2)} with ${analysisEstimate.model.displayName}`
@@ -489,14 +533,32 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
                 Analyzed only
               </label>
               {canSpend && analyzeCount > 0 && (
-                <button
-                  type="button"
-                  className="primary-button"
-                  disabled={analyzing !== null}
-                  onClick={() => void handleAnalyzeTop()}
-                >
-                  {analyzing ? 'Analyzing…' : `Analyze top ${analyzeCount}${estimateText}`}
-                </button>
+                <div className="analyze-control">
+                  {analyzeChoices.length > 1 && (
+                    <label>
+                      Top{' '}
+                      <select
+                        value={analyzeCount}
+                        disabled={analyzing !== null}
+                        onChange={(e) => setAnalyzeN(Number(e.target.value))}
+                      >
+                        {analyzeChoices.map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <button
+                    type="button"
+                    className="primary-button"
+                    disabled={analyzing !== null}
+                    onClick={() => void handleAnalyzeTop()}
+                  >
+                    {analyzing ? 'Analyzing…' : `Analyze${estimateText}`}
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -526,6 +588,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
                   }
                   onAnalyze={() => void handleAnalyzeOne(hit.paper.arxivId)}
                   analyzing={analyzingIds.has(hit.paper.arxivId)}
+                  justAnalyzed={glowIds.has(hit.paper.arxivId)}
                 />
               </div>
             ))}

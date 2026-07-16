@@ -761,10 +761,80 @@ select {
 }
 
 .paper-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1.05rem 1.2rem;
+}
+
+/* One-shot "ignite" when a card's analysis lands: an ember light races around
+   the border (Tron-style) with a brief glow, then fades — same palette and
+   lighting as the loading fuse. Degrades to a clean fade where @property
+   isn't supported. */
+@property --ignite-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.paper-card-ignite {
+  animation: ignite-glow 2s ease-out;
+}
+
+.ignite-trace {
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 2px; /* ring thickness */
+  background: conic-gradient(
+    from var(--ignite-angle),
+    transparent 0deg,
+    transparent 250deg,
+    var(--ember) 320deg,
+    var(--ember-strong) 350deg,
+    #ffffff 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: ignite-race 1.9s ease-out forwards;
+}
+
+@keyframes ignite-race {
+  0% {
+    --ignite-angle: 0deg;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    --ignite-angle: 360deg;
+    opacity: 0;
+  }
+}
+
+@keyframes ignite-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(217, 122, 69, 0);
+  }
+  30% {
+    box-shadow: 0 0 20px rgba(217, 122, 69, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(217, 122, 69, 0);
+  }
 }
 
 .paper-title-row {
@@ -1117,40 +1187,33 @@ select {
   height: 6px;
   border-radius: 50%;
   background: var(--ember);
-  animation: ember-pulse 1.2s ease-in-out infinite;
+  /* A bump travels left→right across the three dots (o O o → o o O), one
+     enlarged at a time. Delays are a third of the cycle apart so exactly one
+     dot peaks at any moment. No glow — just the size travel. */
+  animation: ember-travel 1.8s ease-in-out infinite;
 }
 
 .ember-dots span:nth-child(2) {
-  animation-delay: 0.2s;
+  animation-delay: 0.6s;
 }
 
 .ember-dots span:nth-child(3) {
-  animation-delay: 0.4s;
+  animation-delay: 1.2s;
 }
 
-@keyframes ember-pulse {
+@keyframes ember-travel {
   0%,
+  33%,
   100% {
-    opacity: 0.25;
-    transform: scale(0.85);
+    opacity: 0.3;
+    transform: scale(0.72);
   }
-  50% {
+  12% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.45);
   }
 }
 
-/* The fuse: top-of-viewport burn line shown while the app waits on the
-   network. Above everything, never interactive. */
-.fuse-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 8px;
-  z-index: 60;
-  pointer-events: none;
-}
 
 .skeleton-card {
   pointer-events: none;
@@ -1237,10 +1300,13 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* NB: the ember-dots "analyzing" indicator is deliberately NOT disabled
+     here — Windows reports reduced-motion when "show animations" is off,
+     which would silently kill the effect on desktop Chrome (same trap that
+     bit the typing placeholder). The dots are a load indicator, not decor. */
   .ignite,
   .ignite .paper-card::before,
-  .skeleton-line,
-  .ember-dots span {
+  .skeleton-line {
     animation: none;
   }
 
@@ -1565,6 +1631,16 @@ select {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.analyze-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analyze-control select {
+  margin-left: 0.25rem;
 }
 
 /* ---------- Analysis progress ---------- */

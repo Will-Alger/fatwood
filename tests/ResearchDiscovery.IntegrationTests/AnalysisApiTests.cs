@@ -63,6 +63,39 @@ public class AnalysisApiTests
     }
 
     [Fact]
+    public async Task Selection_AnalyzesInSubmittedRankOrder()
+    {
+        // The UI reveals results as they finish, so they must be analyzed in
+        // the caller's submitted (search-rank) order, not the DB's paper-id
+        // order. Submit deliberately out of paper-id order and assert the
+        // analyzer saw them in submitted order.
+        var order = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using var factory = new ApiFactory
+        {
+            AnalyzePaper = paper =>
+            {
+                order.Enqueue(paper.ArxivId);
+                return ApiFactory.DefaultAnalysis(paper);
+            },
+        };
+        await factory.SeedAsync(TestData.SeedPapersAsync);
+        using var client = factory.CreateClient();
+
+        // Papers seed as 2501.00001, 00002, 00003 (ascending id); submit reversed.
+        var submitted = new[] { "2501.00003", "2501.00002", "2501.00001" };
+        var response = await client.PostAsJsonAsync(
+            "/api/analysis/selection", new { arxivIds = submitted });
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+
+        for (var attempt = 0; attempt < 80 && order.Count < 3; attempt++)
+        {
+            await Task.Delay(100);
+        }
+
+        Assert.Equal(submitted, order.ToArray());
+    }
+
+    [Fact]
     public async Task Selection_MemberWithNoBudget_Returns402()
     {
         using var factory = new ApiFactory

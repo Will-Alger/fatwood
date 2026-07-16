@@ -97,6 +97,8 @@ export interface PaperCardProps {
   onAnalyze?: () => void
   /** True while this specific paper's analysis is queued/running. */
   analyzing?: boolean
+  /** Fires a one-shot "ignite" glow that races the card border when analysis just landed. */
+  justAnalyzed?: boolean
   /** Bookmarks/feedback are per-account writes; false (signed out or gated) hides them. */
   canInteract?: boolean
 }
@@ -126,6 +128,7 @@ export function PaperCard({
   onNotInterested,
   onAnalyze,
   analyzing = false,
+  justAnalyzed = false,
   canInteract = false,
 }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
@@ -161,7 +164,13 @@ export function PaperCard({
       : `${paper.abstract.slice(0, ABSTRACT_PREVIEW_LENGTH).trimEnd()}…`
 
   return (
-    <article className={isWildcard ? 'paper-card paper-card-wildcard' : 'paper-card'}>
+    <article
+      className={
+        (isWildcard ? 'paper-card paper-card-wildcard' : 'paper-card') +
+        (justAnalyzed ? ' paper-card-ignite' : '')
+      }
+    >
+      {justAnalyzed && <span className="ignite-trace" aria-hidden="true" />}
       <div className="paper-title-row">
         <h3>
           <a href={paper.absUrl} target="_blank" rel="noreferrer">

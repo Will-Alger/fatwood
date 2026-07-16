@@ -196,4 +196,27 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
 
         return Ok(new AnalysisStatusView(tracker.Active, analyzed));
     }
+
+    /// <summary>
+    /// Full DTOs (with the caller's current analysis/bookmark state) for a set
+    /// of arXiv ids. The client folds these into a live result list as analyses
+    /// complete, so cards reveal one-by-one without re-running the search.
+    /// </summary>
+    [HttpPost("by-ids")]
+    [Authorize]
+    [ProducesResponseType<IReadOnlyDictionary<string, PaperDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetByIds(
+        [FromBody] AnalysisStatusRequest request,
+        CancellationToken ct)
+    {
+        if (request.ArxivIds is not { Count: > 0 and <= 500 })
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "arxivIds must contain between 1 and 500 entries.");
+        }
+
+        var papers = await queryService.GetPapersByArxivIdsAsync(
+            request.ArxivIds, HttpContext.GetAppUser()?.Id, ct);
+        return Ok(papers);
+    }
 }

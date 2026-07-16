@@ -193,6 +193,14 @@ export function getAnalysisStatus(
   return sendJson('POST', '/api/papers/analysis-status', { arxivIds }, { signal })
 }
 
+/** Full paper DTOs (with the caller's current analysis) keyed by arXiv id. */
+export function getPapersByIds(
+  arxivIds: string[],
+  signal?: AbortSignal,
+): Promise<Record<string, PaperDto>> {
+  return sendJson('POST', '/api/papers/by-ids', { arxivIds }, { signal })
+}
+
 // --- Recent searches ---
 
 export function getRecentSearches(

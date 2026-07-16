@@ -63,9 +63,17 @@ public class AnalysisService(
         var profile = await profileService.GetAsync(userId, ct);
         var profileVersion = profile?.Version ?? 0;
 
-        var papers = await SelectStale(userId, profileVersion)
-            .Where(p => ids.Contains(p.ArxivId))
-            .ToListAsync(ct);
+        // Process in the caller's submitted order (search rank, top-to-bottom)
+        // so the UI reveals results in order — the DB would otherwise return
+        // them in an arbitrary (paper-id) order.
+        var rank = ids
+            .Select((id, i) => (id, i))
+            .ToDictionary(x => x.id, x => x.i, StringComparer.Ordinal);
+        var papers = (await SelectStale(userId, profileVersion)
+                .Where(p => ids.Contains(p.ArxivId))
+                .ToListAsync(ct))
+            .OrderBy(p => rank[p.ArxivId])
+            .ToList();
 
         logger.LogInformation(
             "Selection analysis: {Stale} of {Requested} paper(s) need analysis (user {UserId}, profile v{ProfileVersion})",

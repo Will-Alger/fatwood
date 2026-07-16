@@ -5,7 +5,6 @@ import { AdminPanel } from './components/AdminPanel'
 import { AuthPanel } from './components/AuthPanel'
 import { CategoryFilter } from './components/CategoryFilter'
 import { Discover } from './components/Discover'
-import { FuseBar } from './components/FuseBar'
 import { Logo } from './components/Logo'
 import { Pagination } from './components/Pagination'
 import { PaperList } from './components/PaperList'
@@ -115,7 +114,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <FuseBar />
       <header className="app-header">
         <div className="app-header-top">
           <div className="app-brand">

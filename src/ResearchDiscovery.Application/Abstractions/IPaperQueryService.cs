@@ -32,5 +32,11 @@ public interface IPaperQueryService
     Task<IReadOnlyDictionary<long, PaperDto>> GetPapersByIdsAsync(
         IReadOnlyCollection<long> paperIds, long? userId, CancellationToken ct);
 
+    /// <summary>DTOs keyed by arXiv id, with the caller's current bookmark/
+    /// analysis state — used to fold freshly-completed analyses into a live
+    /// result list without re-running the search.</summary>
+    Task<IReadOnlyDictionary<string, PaperDto>> GetPapersByArxivIdsAsync(
+        IReadOnlyCollection<string> arxivIds, long? userId, CancellationToken ct);
+
     Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync(CancellationToken ct);
 }

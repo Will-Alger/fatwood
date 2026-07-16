@@ -77,6 +77,17 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
         return rows.ToDictionary(r => r.Id, r => ToDto(r));
     }
 
+    public async Task<IReadOnlyDictionary<string, PaperDto>> GetPapersByArxivIdsAsync(
+        IReadOnlyCollection<string> arxivIds, long? userId, CancellationToken ct)
+    {
+        var ids = arxivIds.ToList();
+        var rows = await ProjectRows(
+                db.Papers.AsNoTracking().Where(p => ids.Contains(p.ArxivId)), userId)
+            .ToListAsync(ct);
+
+        return rows.ToDictionary(r => r.ArxivId, r => ToDto(r), StringComparer.Ordinal);
+    }
+
     private static IQueryable<PaperRow> ProjectRows(
         IQueryable<Domain.Entities.Paper> papers, long? userId) =>
         papers.Select(p => new PaperRow(

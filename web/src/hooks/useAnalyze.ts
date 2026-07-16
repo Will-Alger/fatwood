@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { analyzeSelection, getAnalysisStatus } from '../api/client'
 
-const POLL_INTERVAL_MS = 3000
+// Poll briskly so results reveal close to one-at-a-time as each finishes,
+// rather than arriving in clumps between slow polls.
+const POLL_INTERVAL_MS = 1200
 const POLL_TIMEOUT_MS = 6 * 60_000
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -13,7 +15,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
  */
 export async function pollUntilAnalyzed(
   ids: string[],
-  onProgress?: (done: number) => void,
+  onTick?: (analyzed: string[], active: boolean) => void,
 ): Promise<number> {
   const started = Date.now()
   let lastDone = -1
@@ -30,7 +32,7 @@ export async function pollUntilAnalyzed(
     }
 
     finalDone = status.analyzed.length
-    onProgress?.(finalDone)
+    onTick?.(status.analyzed, status.active)
     if (finalDone >= ids.length) break
 
     if (!status.active) {
