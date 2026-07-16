@@ -32,7 +32,7 @@ public class AnalysisController(IAnalysisQueue queue) : ControllerBase
     public async Task<IActionResult> Selection(
         [FromBody] SelectionRequest request,
         [FromServices] IBudgetService budget,
-        [FromServices] ISearchTelemetry telemetry,
+        [FromServices] IServiceScopeFactory scopeFactory,
         CancellationToken ct)
     {
         if (request.ArxivIds is not { Count: > 0 })
@@ -67,16 +67,32 @@ public class AnalysisController(IAnalysisQueue queue) : ControllerBase
         await queue.EnqueueSelectionAsync(userId, request.ArxivIds, ct);
 
         // Spending analysis tokens on a paper is a strong interest signal;
-        // record it against the originating search when known.
+        // record it against the originating search when known. Off the request
+        // path (own scope, not the request's cancellation): each row is its
+        // own DB round trip, and a large selection shouldn't delay the 202.
         if (request.SearchEventId is not null)
         {
-            foreach (var arxivId in request.ArxivIds)
+            var searchEventId = request.SearchEventId;
+            var arxivIds = request.ArxivIds;
+            _ = Task.Run(async () =>
             {
-                await telemetry.LogInteractionAsync(
-                    userId, arxivId,
-                    Domain.Entities.InteractionType.AnalyzedFromSearch,
-                    request.SearchEventId, rank: null, ct);
-            }
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var telemetry = scope.ServiceProvider.GetRequiredService<ISearchTelemetry>();
+                foreach (var arxivId in arxivIds)
+                {
+                    try
+                    {
+                        await telemetry.LogInteractionAsync(
+                            userId, arxivId,
+                            Domain.Entities.InteractionType.AnalyzedFromSearch,
+                            searchEventId, rank: null, CancellationToken.None);
+                    }
+                    catch
+                    {
+                        // Telemetry never fails (or slows) a user action.
+                    }
+                }
+            });
         }
 
         return Accepted(value: new

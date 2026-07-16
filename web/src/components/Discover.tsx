@@ -33,8 +33,11 @@ const ANALYZE_OPTIONS = [5, 10, 15, 20, 25]
 const ANALYZE_DEFAULT = 10
 // Reveal completed analyses strictly in rank order with a beat between each,
 // so the cards cascade 1→2→3 even though the backend finishes them out of
-// order — and the ignite glows never all fire at once.
+// order — and the ignite glows never all fire at once. When several finished
+// cards are queued up behind a slow one, drain the backlog on the faster beat
+// so a burst doesn't feel sluggish.
 const REVEAL_STAGGER_MS = 350
+const REVEAL_STAGGER_FAST_MS = 150
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const EXAMPLE_QUERIES = [
@@ -300,7 +303,11 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
         if (dto) {
           revealPaper(dto)
           cursor++
-          if (cursor < ids.length) await sleep(REVEAL_STAGGER_MS)
+          if (cursor < ids.length) {
+            let buffered = 0
+            for (let i = cursor; i < ids.length && cache[ids[i]]; i++) buffered++
+            await sleep(buffered >= 3 ? REVEAL_STAGGER_FAST_MS : REVEAL_STAGGER_MS)
+          }
         } else if (finalMode) {
           cursor++ // declined/failed or hydration miss — skip so the rest reveal
         } else {

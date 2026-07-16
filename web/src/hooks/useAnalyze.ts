@@ -2,8 +2,10 @@ import { useRef, useState } from 'react'
 import { analyzeSelection, getAnalysisStatus } from '../api/client'
 
 // Poll briskly so results reveal close to one-at-a-time as each finishes,
-// rather than arriving in clumps between slow polls.
-const POLL_INTERVAL_MS = 1200
+// rather than arriving in clumps between slow polls. The first poll fires
+// immediately: already-current analyses (idempotent re-runs) reveal at once
+// instead of waiting out a full tick.
+const POLL_INTERVAL_MS = 1000
 const POLL_TIMEOUT_MS = 6 * 60_000
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -23,11 +25,11 @@ export async function pollUntilAnalyzed(
   let finalDone = 0
 
   while (Date.now() - started < POLL_TIMEOUT_MS) {
-    await sleep(POLL_INTERVAL_MS)
     let status
     try {
       status = await getAnalysisStatus(ids)
     } catch {
+      await sleep(POLL_INTERVAL_MS)
       continue // transient poll failure — keep going
     }
 
@@ -42,6 +44,7 @@ export async function pollUntilAnalyzed(
       idleRounds = 0
     }
     lastDone = finalDone
+    await sleep(POLL_INTERVAL_MS)
   }
 
   return finalDone

@@ -141,8 +141,12 @@ public static class ServiceCollectionExtensions
             .Bind(configuration.GetSection(AnalysisQueueOptions.SectionName));
         if (queueOptions.UseStorageQueue)
         {
+            // Hybrid: head of each selection to the in-process hot lane
+            // (drained by the web host — first cards in seconds), tail to the
+            // durable Storage queue for the worker job.
+            services.AddSingleton<InMemoryAnalysisQueue>();
             services.AddSingleton<StorageAnalysisQueue>();
-            services.AddSingleton<IAnalysisQueue>(sp => sp.GetRequiredService<StorageAnalysisQueue>());
+            services.AddSingleton<IAnalysisQueue, HybridAnalysisQueue>();
         }
         else
         {

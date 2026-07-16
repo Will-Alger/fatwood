@@ -187,10 +187,10 @@ builder.Services.AddHostedService<DailyIngestionHostedService>();
 builder.Services.AddSingleton<AnalysisJobQueue>();
 builder.Services.AddSingleton<AnalysisProgressTracker>();
 builder.Services.AddHostedService<AnalysisQueueHostedService>();
-if (!builder.Configuration.GetValue<bool>($"{AnalysisQueueOptions.SectionName}:UseStorageQueue"))
-{
-    builder.Services.AddHostedService<InMemoryAnalysisWorker>();
-}
+// The in-process worker always runs in the web host: it drains the whole
+// in-memory queue in local/dev mode, and the hot lane (head of each selection)
+// in Storage mode while the external worker job handles the queued tail.
+builder.Services.AddHostedService<InMemoryAnalysisWorker>();
 
 var app = builder.Build();
 

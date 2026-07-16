@@ -22,10 +22,20 @@ public class AnalysisQueueOptions
     /// e.g. https://acct.queue.core.windows.net.</summary>
     public string? AccountUrl { get; set; }
 
+    /// <summary>In Storage mode, how many papers from the head of a selection
+    /// are analyzed in-process by the web host (the hot lane) instead of being
+    /// queued for the worker job — the user's first cards appear in seconds
+    /// while the job cold-starts for the tail. The lanes are strictly
+    /// partitioned, so no paper is processed (or billed) twice. 0 disables.</summary>
+    public int HotLaneCount { get; set; } = 3;
+
     /// <summary>How many papers a single worker analyzes at once.</summary>
     public int WorkerConcurrency { get; set; } = 4;
 
-    /// <summary>Consecutive empty receives before the worker job exits (so an
-    /// event-driven ACA job terminates once the queue is drained).</summary>
-    public int WorkerMaxIdlePolls { get; set; } = 3;
+    /// <summary>Consecutive empty 1s receives before the worker job exits.
+    /// Long enough that an "analyze a few, read, analyze more" session reuses
+    /// the warm worker instead of paying a fresh container cold start; short
+    /// enough to keep scale-to-zero (90s of idle 0.5 vCPU ≈ a fraction of a
+    /// cent).</summary>
+    public int WorkerMaxIdlePolls { get; set; } = 90;
 }

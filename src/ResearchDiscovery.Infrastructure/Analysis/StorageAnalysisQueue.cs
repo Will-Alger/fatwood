@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Azure.Core;
 using Azure.Identity;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
@@ -33,23 +34,37 @@ public sealed class StorageAnalysisQueue : IAnalysisQueue
             MessageEncoding = QueueMessageEncoding.Base64,
         };
 
-        _client = !string.IsNullOrWhiteSpace(o.ConnectionString)
-            ? new QueueClient(o.ConnectionString, o.QueueName, clientOptions)
-            : new QueueClient(
-                new Uri($"{o.AccountUrl!.TrimEnd('/')}/{o.QueueName}"),
-                new DefaultAzureCredential(),
-                clientOptions);
+        if (!string.IsNullOrWhiteSpace(o.ConnectionString))
+        {
+            _client = new QueueClient(o.ConnectionString, o.QueueName, clientOptions);
+            return;
+        }
+
+        // Pin managed identity directly when the client id is known — the
+        // DefaultAzureCredential chain probes several credential sources
+        // first, which costs seconds on a cold-started worker.
+        var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+        TokenCredential credential = string.IsNullOrWhiteSpace(clientId)
+            ? new DefaultAzureCredential()
+            : new ManagedIdentityCredential(clientId);
+        _client = new QueueClient(
+            new Uri($"{o.AccountUrl!.TrimEnd('/')}/{o.QueueName}"), credential, clientOptions);
     }
 
     public async Task EnqueueSelectionAsync(
         long? userId, IReadOnlyList<string> arxivIds, CancellationToken ct)
     {
         await EnsureCreatedAsync(ct);
-        foreach (var arxivId in arxivIds)
+
+        // Parallel sends: Storage queues have no batch API, and a serial loop
+        // holds the enqueue HTTP request open ~100ms per paper. Approximate
+        // FIFO is fine — workers drain concurrently and the client reveals in
+        // rank order regardless of queue order.
+        await Task.WhenAll(arxivIds.Select(arxivId =>
         {
             var body = JsonSerializer.Serialize(new AnalysisWorkItem(userId, arxivId), Json);
-            await _client.SendMessageAsync(body, cancellationToken: ct);
-        }
+            return _client.SendMessageAsync(body, cancellationToken: ct);
+        }));
     }
 
     public async Task<bool> HasPendingWorkAsync(CancellationToken ct)

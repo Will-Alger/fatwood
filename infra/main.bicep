@@ -93,11 +93,14 @@ param deployAnalysisQueue bool = true
 @description('Name of the analysis work queue.')
 param analysisQueueName string = 'analysis-jobs'
 
-@description('Max concurrent analysis worker job executions KEDA may run.')
-param analysisWorkerMaxParallel int = 4
+@description('Max concurrent analysis worker job executions KEDA may run. Kept low: executions × per-worker concurrency is the ceiling on simultaneous Anthropic calls.')
+param analysisWorkerMaxParallel int = 2
 
 @description('Papers a single worker analyzes at once.')
 param analysisWorkerConcurrency int = 8
+
+@description('Consecutive empty 1s polls before a worker execution exits. Long enough that bursts within a session reuse the warm worker instead of paying a fresh cold start.')
+param analysisWorkerMaxIdlePolls int = 90
 
 // ---------------------------------------------------------------- resources
 var suffix = uniqueString(resourceGroup().id)
@@ -532,6 +535,7 @@ resource analyzeJob 'Microsoft.App/jobs@2024-03-01' = if (deployAnalysisQueue) {
             { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }
             { name: 'Database__MigrateOnStartup', value: 'false' }
             { name: 'AnalysisQueue__WorkerConcurrency', value: string(analysisWorkerConcurrency) }
+            { name: 'AnalysisQueue__WorkerMaxIdlePolls', value: string(analysisWorkerMaxIdlePolls) }
           ], analysisQueueEnv)
         }
       ]
