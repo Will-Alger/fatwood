@@ -30,7 +30,7 @@ public class AnthropicSearchPlanCompiler(
       "properties": {
         "interpretation": {
           "type": "string",
-          "description": "One sentence, shown to the user above the results: what you understood them to be looking for."
+          "description": "One sentence, shown to the user above the results: what you understood them to be looking for - and, when you narrowed by category, which field(s) you searched and why, so the user can correct you via the category chips."
         },
         "anchor_text": {
           "type": "string",

@@ -16,16 +16,24 @@ public class BulkHarvestServiceTests
     [Fact]
     public void DeriveSets_PassesThroughDotlessArchiveCodes()
     {
-        // Some arXiv archives (e.g. econ before subdivision, "math-ph") have
-        // no dotted subcategory; the code is already the set.
-        var sets = BulkHarvestService.DeriveSets(["math-ph", "cs.AI"]);
+        // Dotless archive codes pass through as their own set — except
+        // physics-group archives, which map to their scoped OAI set names.
+        var sets = BulkHarvestService.DeriveSets(["math-ph", "econ", "cs.AI"]);
 
-        Assert.Equal(["cs", "math-ph"], sets);
+        Assert.Equal(["cs", "econ", "physics:math-ph"], sets);
     }
 
     [Fact]
     public void DeriveSets_EmptyInput_YieldsNoSets()
     {
         Assert.Empty(BulkHarvestService.DeriveSets([]));
+    }
+    [Fact]
+    public void DeriveSets_MapsPhysicsGroupArchivesToScopedSets()
+    {
+        var sets = BulkHarvestService.DeriveSets(
+            ["physics.comp-ph", "astro-ph.IM", "math.OC", "cs.LG"]);
+
+        Assert.Equal(["cs", "math", "physics:astro-ph", "physics:physics"], sets);
     }
 }

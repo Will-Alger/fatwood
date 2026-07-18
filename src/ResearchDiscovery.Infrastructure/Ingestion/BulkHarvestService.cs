@@ -123,15 +123,42 @@ public class BulkHarvestService(
     }
 
     /// <summary>
+    /// Physics-group archives are not top-level OAI sets: per ListSets they
+    /// are scoped under physics ("physics:astro-ph"), and "physics:physics"
+    /// selects the physics archive proper — WITHOUT this mapping, harvesting
+    /// physics.comp-ph would page the entire physics supergroup (astro-ph,
+    /// cond-mat, all the hep archives…) just to filter one archive.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string> PhysicsGroupSets =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["physics"] = "physics:physics",
+            ["astro-ph"] = "physics:astro-ph",
+            ["cond-mat"] = "physics:cond-mat",
+            ["gr-qc"] = "physics:gr-qc",
+            ["hep-ex"] = "physics:hep-ex",
+            ["hep-lat"] = "physics:hep-lat",
+            ["hep-ph"] = "physics:hep-ph",
+            ["hep-th"] = "physics:hep-th",
+            ["math-ph"] = "physics:math-ph",
+            ["nlin"] = "physics:nlin",
+            ["nucl-ex"] = "physics:nucl-ex",
+            ["nucl-th"] = "physics:nucl-th",
+            ["quant-ph"] = "physics:quant-ph",
+        };
+
+    /// <summary>
     /// OAI sets from category codes: the archive prefix before the dot
-    /// ("cs.LG" → "cs", "q-fin.CP" → "q-fin"), distinct, ordered.
+    /// ("cs.LG" → "cs", "q-fin.CP" → "q-fin"), with physics-group archives
+    /// mapped to their scoped set names; distinct, ordered.
     /// </summary>
     public static IReadOnlyList<string> DeriveSets(IEnumerable<string> categoryCodes) =>
         categoryCodes
             .Select(code =>
             {
                 var dot = code.IndexOf('.');
-                return dot < 0 ? code : code[..dot];
+                var archive = dot < 0 ? code : code[..dot];
+                return PhysicsGroupSets.GetValueOrDefault(archive, archive);
             })
             .Where(set => set.Length > 0)
             .Distinct(StringComparer.Ordinal)
