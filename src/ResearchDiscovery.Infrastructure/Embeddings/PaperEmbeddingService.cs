@@ -37,11 +37,18 @@ public class PaperEmbeddingService(
         var embedded = 0;
         var failed = 0;
 
+        // Keyset cursor: without `Id > lastId`, every batch re-runs an
+        // anti-join over the WHOLE corpus (30s+ at 400k papers on a small
+        // server); with it, each batch scans forward from the cursor via the
+        // primary key. Correctness is unchanged — embedded papers stop
+        // matching the filter anyway — the cursor only bounds the scan.
+        var lastId = 0L;
         while (!ct.IsCancellationRequested)
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
             var papers = await db.Papers
-                .Where(p => p.Embedding == null || p.Embedding.ModelVersion != modelVersion)
+                .Where(p => p.Id > lastId
+                    && (p.Embedding == null || p.Embedding.ModelVersion != modelVersion))
                 .OrderBy(p => p.Id)
                 .Take(batchSize)
                 .Select(p => new { p.Id, p.Title, p.Abstract })
@@ -51,6 +58,8 @@ public class PaperEmbeddingService(
             {
                 break;
             }
+
+            lastId = papers[^1].Id;
 
             try
             {
@@ -147,11 +156,13 @@ public class PaperEmbeddingService(
     private async Task<int> QuantizeMissingAsync(string modelVersion, CancellationToken ct)
     {
         var quantized = 0;
+        var lastId = 0L; // keyset cursor — same full-scan-per-batch trap as above
         while (!ct.IsCancellationRequested)
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
             var rows = await db.PaperEmbeddings
-                .Where(e => e.ModelVersion == modelVersion && e.VectorInt8 == null)
+                .Where(e => e.PaperId > lastId
+                    && e.ModelVersion == modelVersion && e.VectorInt8 == null)
                 .OrderBy(e => e.PaperId)
                 .Take(1024)
                 .ToListAsync(ct);
@@ -160,6 +171,8 @@ public class PaperEmbeddingService(
             {
                 break;
             }
+
+            lastId = rows[^1].PaperId;
 
             foreach (var row in rows)
             {
