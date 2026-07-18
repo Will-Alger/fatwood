@@ -30,14 +30,44 @@ public sealed class SearchIndexSnapshotWriter(
         var modelVersion = embeddingOptions.Value.ModelVersion;
 
         var vectors = await InMemoryEmbeddingIndex.BuildFromDatabaseAsync(dbFactory, modelVersion, ct);
-        await store.UploadAsync(
-            InMemoryEmbeddingIndex.SnapshotBlobName(modelVersion), vectors.Serialize(), ct);
+        var vectorCount = vectors.Count;
+        await UploadViaTempFileAsync(
+            InMemoryEmbeddingIndex.SnapshotBlobName(modelVersion), vectors.Serialize, ct);
+        vectors = null!; // release before building the (bigger) lexical index
 
         var postings = await InMemoryLexicalIndex.BuildFromDatabaseAsync(dbFactory, ct);
-        await store.UploadAsync(InMemoryLexicalIndex.SnapshotBlobName, postings.Serialize(), ct);
+        await UploadViaTempFileAsync(InMemoryLexicalIndex.SnapshotBlobName, postings.Serialize, ct);
 
         logger.LogInformation(
             "Search-index snapshots written: {Vectors} vectors, {Docs} documents / {Terms} terms",
-            vectors.Count, postings.DocIds.Length, postings.Terms.Length);
+            vectorCount, postings.DocIds.Length, postings.Terms.Length);
+    }
+
+    /// <summary>Serialize to a temp file, upload from it, delete — the index
+    /// is never duplicated as an in-memory buffer.</summary>
+    private async Task UploadViaTempFileAsync(
+        string blobName, Action<Stream> serialize, CancellationToken ct)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"rdisc-snapshot-{Guid.NewGuid():N}.bin");
+        try
+        {
+            await using (var file = File.Create(path))
+            {
+                serialize(file);
+            }
+
+            await store.UploadFromFileAsync(blobName, path, ct);
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (IOException)
+            {
+                // best effort — temp cleanup only
+            }
+        }
     }
 }

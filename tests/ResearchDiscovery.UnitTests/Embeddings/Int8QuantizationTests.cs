@@ -80,7 +80,10 @@ public class Int8QuantizationTests
             Dims = 4,
         };
 
-        var restored = InMemoryEmbeddingIndex.PackedVectors.Deserialize(original.Serialize());
+        using var stream = new MemoryStream();
+        original.Serialize(stream);
+        stream.Position = 0;
+        var restored = InMemoryEmbeddingIndex.PackedVectors.Deserialize(stream);
 
         Assert.Equal(original.PaperIds, restored.PaperIds);
         Assert.Equal(original.EpochDays, restored.EpochDays);
@@ -92,8 +95,9 @@ public class Int8QuantizationTests
     [Fact]
     public void PackedVectors_Deserialize_RejectsGarbage()
     {
+        using var garbage = new MemoryStream(new byte[64]);
         Assert.Throws<FormatException>(
-            () => InMemoryEmbeddingIndex.PackedVectors.Deserialize(new byte[64]));
+            () => InMemoryEmbeddingIndex.PackedVectors.Deserialize(garbage));
     }
 
     [Fact]
@@ -111,7 +115,10 @@ public class Int8QuantizationTests
             PostingTfs = [2, 1, 3, 1],
         };
 
-        var restored = InMemoryLexicalIndex.PackedPostings.Deserialize(original.Serialize());
+        using var stream = new MemoryStream();
+        original.Serialize(stream);
+        stream.Position = 0;
+        var restored = InMemoryLexicalIndex.PackedPostings.Deserialize(stream);
 
         Assert.Equal(original.DocIds, restored.DocIds);
         Assert.Equal(original.DocEpochDays, restored.DocEpochDays);

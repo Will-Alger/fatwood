@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -153,12 +154,16 @@ public class InMemoryEmbeddingIndex(
             var modelVersion = options.Value.ModelVersion;
             PackedVectors? loaded = null;
 
-            var blob = await snapshots.TryDownloadAsync(SnapshotBlobName(modelVersion), ct);
+            var blob = await snapshots.TryOpenReadAsync(SnapshotBlobName(modelVersion), ct);
             if (blob is not null)
             {
                 try
                 {
-                    loaded = PackedVectors.Deserialize(blob);
+                    await using (blob)
+                    {
+                        loaded = PackedVectors.Deserialize(blob);
+                    }
+
                     logger.LogInformation(
                         "Embedding index loaded from snapshot: {Count} vectors", loaded.Count);
                 }
@@ -279,51 +284,38 @@ public class InMemoryEmbeddingIndex(
 
         public int Count => PaperIds.Length;
 
-        public byte[] Serialize()
+        // Numeric arrays are written as raw native-endian spans (all our
+        // targets are little-endian); only the header uses explicit LE. This
+        // streams straight to/from disk so a large index is never doubled up
+        // as a byte[] in memory.
+        public void Serialize(Stream stream)
         {
-            var count = Count;
-            var size = 16 + count * (8 + 4 + 4) + count * Dims;
-            var buffer = new byte[size];
-            var span = buffer.AsSpan();
+            Span<byte> header = stackalloc byte[16];
+            BinaryPrimitives.WriteUInt32LittleEndian(header, Magic);
+            BinaryPrimitives.WriteInt32LittleEndian(header[4..], FormatVersion);
+            BinaryPrimitives.WriteInt32LittleEndian(header[8..], Count);
+            BinaryPrimitives.WriteInt32LittleEndian(header[12..], Dims);
+            stream.Write(header);
 
-            BinaryPrimitives.WriteUInt32LittleEndian(span, Magic);
-            BinaryPrimitives.WriteInt32LittleEndian(span[4..], FormatVersion);
-            BinaryPrimitives.WriteInt32LittleEndian(span[8..], count);
-            BinaryPrimitives.WriteInt32LittleEndian(span[12..], Dims);
-            var offset = 16;
-
-            for (var i = 0; i < count; i++, offset += 8)
-            {
-                BinaryPrimitives.WriteInt64LittleEndian(span[offset..], PaperIds[i]);
-            }
-
-            for (var i = 0; i < count; i++, offset += 4)
-            {
-                BinaryPrimitives.WriteInt32LittleEndian(span[offset..], EpochDays[i]);
-            }
-
-            for (var i = 0; i < count; i++, offset += 4)
-            {
-                BinaryPrimitives.WriteSingleLittleEndian(span[offset..], Scales[i]);
-            }
-
-            Buffer.BlockCopy(Vectors, 0, buffer, offset, count * Dims);
-            return buffer;
+            stream.Write(MemoryMarshal.AsBytes(PaperIds.AsSpan()));
+            stream.Write(MemoryMarshal.AsBytes(EpochDays.AsSpan()));
+            stream.Write(MemoryMarshal.AsBytes(Scales.AsSpan()));
+            stream.Write(MemoryMarshal.AsBytes(Vectors.AsSpan()));
         }
 
-        public static PackedVectors Deserialize(byte[] buffer)
+        public static PackedVectors Deserialize(Stream stream)
         {
-            var span = buffer.AsSpan();
-            if (BinaryPrimitives.ReadUInt32LittleEndian(span) != Magic ||
-                BinaryPrimitives.ReadInt32LittleEndian(span[4..]) != FormatVersion)
+            Span<byte> header = stackalloc byte[16];
+            stream.ReadExactly(header);
+            if (BinaryPrimitives.ReadUInt32LittleEndian(header) != Magic ||
+                BinaryPrimitives.ReadInt32LittleEndian(header[4..]) != FormatVersion)
             {
                 throw new FormatException("Unrecognized embedding snapshot format.");
             }
 
-            var count = BinaryPrimitives.ReadInt32LittleEndian(span[8..]);
-            var dims = BinaryPrimitives.ReadInt32LittleEndian(span[12..]);
-            var expected = 16L + count * (8L + 4 + 4) + (long)count * dims;
-            if (count < 0 || dims < 0 || buffer.Length != expected)
+            var count = BinaryPrimitives.ReadInt32LittleEndian(header[8..]);
+            var dims = BinaryPrimitives.ReadInt32LittleEndian(header[12..]);
+            if (count < 0 || dims < 0 || (dims > 0 && count > int.MaxValue / dims))
             {
                 throw new FormatException("Corrupt embedding snapshot.");
             }
@@ -332,24 +324,12 @@ public class InMemoryEmbeddingIndex(
             var epochDays = new int[count];
             var scales = new float[count];
             var vectors = new sbyte[count * dims];
-            var offset = 16;
 
-            for (var i = 0; i < count; i++, offset += 8)
-            {
-                paperIds[i] = BinaryPrimitives.ReadInt64LittleEndian(span[offset..]);
-            }
+            stream.ReadExactly(MemoryMarshal.AsBytes(paperIds.AsSpan()));
+            stream.ReadExactly(MemoryMarshal.AsBytes(epochDays.AsSpan()));
+            stream.ReadExactly(MemoryMarshal.AsBytes(scales.AsSpan()));
+            stream.ReadExactly(MemoryMarshal.AsBytes(vectors.AsSpan()));
 
-            for (var i = 0; i < count; i++, offset += 4)
-            {
-                epochDays[i] = BinaryPrimitives.ReadInt32LittleEndian(span[offset..]);
-            }
-
-            for (var i = 0; i < count; i++, offset += 4)
-            {
-                scales[i] = BinaryPrimitives.ReadSingleLittleEndian(span[offset..]);
-            }
-
-            Buffer.BlockCopy(buffer, offset, vectors, 0, count * dims);
             return new PackedVectors
             {
                 PaperIds = paperIds,

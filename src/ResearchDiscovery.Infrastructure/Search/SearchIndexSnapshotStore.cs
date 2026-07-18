@@ -45,31 +45,49 @@ public sealed class SearchIndexSnapshotStore
 
     public bool Enabled => _container is not null;
 
-    /// <summary>Downloads a snapshot into memory, or null when absent/unreadable.</summary>
-    public async Task<byte[]?> TryDownloadAsync(string blobName, CancellationToken ct)
+    /// <summary>
+    /// Downloads a snapshot to a delete-on-close temp file and returns a
+    /// stream over it, or null when absent/unreadable. Spooling through disk
+    /// keeps a large snapshot from being resident twice (download buffer +
+    /// parsed arrays) during index load.
+    /// </summary>
+    public async Task<Stream?> TryOpenReadAsync(string blobName, CancellationToken ct)
     {
         if (_container is null)
         {
             return null;
         }
 
+        var path = Path.Combine(Path.GetTempPath(), $"rdisc-snapshot-{Guid.NewGuid():N}.bin");
         try
         {
             var blob = _container.GetBlobClient(blobName);
-            var response = await blob.DownloadContentAsync(ct);
-            return response.Value.Content.ToArray();
+            await blob.DownloadToAsync(path, ct);
+            return new FileStream(
+                path, FileMode.Open, FileAccess.Read, FileShare.None, 1 << 16,
+                FileOptions.SequentialScan | FileOptions.DeleteOnClose);
         }
         catch (Exception ex)
         {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (IOException)
+            {
+                // best effort — temp cleanup only
+            }
+
             _logger.LogWarning(ex,
                 "Snapshot {Blob} unavailable; falling back to a database build", blobName);
             return null;
         }
     }
 
-    /// <summary>Uploads (replaces) a snapshot. Throws on failure — writers run
-    /// in offline jobs where a loud failure is more useful than a silent skip.</summary>
-    public async Task UploadAsync(string blobName, byte[] content, CancellationToken ct)
+    /// <summary>Uploads (replaces) a snapshot from a local file. Throws on
+    /// failure — writers run in offline jobs where a loud failure is more
+    /// useful than a silent skip.</summary>
+    public async Task UploadFromFileAsync(string blobName, string path, CancellationToken ct)
     {
         if (_container is null)
         {
@@ -83,8 +101,8 @@ public sealed class SearchIndexSnapshotStore
             await _container.CreateIfNotExistsAsync(cancellationToken: ct);
         }
 
-        await _container.GetBlobClient(blobName)
-            .UploadAsync(new BinaryData(content), overwrite: true, ct);
+        await using var content = File.OpenRead(path);
+        await _container.GetBlobClient(blobName).UploadAsync(content, overwrite: true, ct);
         _logger.LogInformation(
             "Uploaded snapshot {Blob} ({Size:N0} bytes)", blobName, content.Length);
     }

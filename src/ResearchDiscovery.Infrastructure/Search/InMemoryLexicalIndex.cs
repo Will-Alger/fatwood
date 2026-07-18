@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -105,12 +106,16 @@ public class InMemoryLexicalIndex(
             }
 
             PackedPostings? loaded = null;
-            var blob = await snapshots.TryDownloadAsync(SnapshotBlobName, ct);
+            var blob = await snapshots.TryOpenReadAsync(SnapshotBlobName, ct);
             if (blob is not null)
             {
                 try
                 {
-                    loaded = PackedPostings.Deserialize(blob);
+                    await using (blob)
+                    {
+                        loaded = PackedPostings.Deserialize(blob);
+                    }
+
                     logger.LogInformation(
                         "Lexical index loaded from snapshot: {Docs} documents, {Terms} terms",
                         loaded.DocIds.Length, loaded.Terms.Length);
@@ -304,9 +309,11 @@ public class InMemoryLexicalIndex(
 
         public required byte[] PostingTfs { get; init; }
 
-        public byte[] Serialize()
+        // Header and strings go through Binary(Writer|Reader); the numeric
+        // arrays are raw native-endian spans streamed straight to/from the
+        // stream, so a large index is never doubled up as a byte[] in memory.
+        public void Serialize(Stream stream)
         {
-            using var stream = new MemoryStream();
             using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
 
             writer.Write(Magic);
@@ -316,44 +323,23 @@ public class InMemoryLexicalIndex(
             writer.Write(PostingDocIndexes.Length);
             writer.Write(AverageDocLength);
 
-            foreach (var id in DocIds)
-            {
-                writer.Write(id);
-            }
-
-            foreach (var day in DocEpochDays)
-            {
-                writer.Write(day);
-            }
-
-            foreach (var len in DocLengths)
-            {
-                writer.Write(len);
-            }
+            stream.Write(MemoryMarshal.AsBytes(DocIds.AsSpan()));
+            stream.Write(MemoryMarshal.AsBytes(DocEpochDays.AsSpan()));
+            stream.Write(MemoryMarshal.AsBytes(DocLengths.AsSpan()));
 
             foreach (var term in Terms)
             {
                 writer.Write(term);
             }
 
-            foreach (var s in TermPostingStarts)
-            {
-                writer.Write(s);
-            }
-
-            foreach (var d in PostingDocIndexes)
-            {
-                writer.Write(d);
-            }
-
-            writer.Write(PostingTfs);
             writer.Flush();
-            return stream.ToArray();
+            stream.Write(MemoryMarshal.AsBytes(TermPostingStarts.AsSpan()));
+            stream.Write(MemoryMarshal.AsBytes(PostingDocIndexes.AsSpan()));
+            stream.Write(PostingTfs);
         }
 
-        public static PackedPostings Deserialize(byte[] buffer)
+        public static PackedPostings Deserialize(Stream stream)
         {
-            using var stream = new MemoryStream(buffer, writable: false);
             using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
 
             if (reader.ReadUInt32() != Magic || reader.ReadInt32() != FormatVersion)
@@ -371,22 +357,11 @@ public class InMemoryLexicalIndex(
             }
 
             var docIds = new long[docCount];
-            for (var i = 0; i < docCount; i++)
-            {
-                docIds[i] = reader.ReadInt64();
-            }
-
             var docEpochDays = new int[docCount];
-            for (var i = 0; i < docCount; i++)
-            {
-                docEpochDays[i] = reader.ReadInt32();
-            }
-
             var docLengths = new int[docCount];
-            for (var i = 0; i < docCount; i++)
-            {
-                docLengths[i] = reader.ReadInt32();
-            }
+            stream.ReadExactly(MemoryMarshal.AsBytes(docIds.AsSpan()));
+            stream.ReadExactly(MemoryMarshal.AsBytes(docEpochDays.AsSpan()));
+            stream.ReadExactly(MemoryMarshal.AsBytes(docLengths.AsSpan()));
 
             var terms = new string[termCount];
             for (var i = 0; i < termCount; i++)
@@ -395,22 +370,11 @@ public class InMemoryLexicalIndex(
             }
 
             var starts = new int[termCount + 1];
-            for (var i = 0; i < starts.Length; i++)
-            {
-                starts[i] = reader.ReadInt32();
-            }
-
             var postingDocIndexes = new int[postingCount];
-            for (var i = 0; i < postingCount; i++)
-            {
-                postingDocIndexes[i] = reader.ReadInt32();
-            }
-
-            var postingTfs = reader.ReadBytes(postingCount);
-            if (postingTfs.Length != postingCount)
-            {
-                throw new FormatException("Corrupt lexical snapshot.");
-            }
+            var postingTfs = new byte[postingCount];
+            stream.ReadExactly(MemoryMarshal.AsBytes(starts.AsSpan()));
+            stream.ReadExactly(MemoryMarshal.AsBytes(postingDocIndexes.AsSpan()));
+            stream.ReadExactly(postingTfs);
 
             return new PackedPostings
             {
