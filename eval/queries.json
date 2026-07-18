@@ -760,6 +760,213 @@
         "hypotheticalAbstract": "We present a deep learning framework for environmental sound event detection that achieves robust classification of non-speech acoustic phenomena including traffic, machinery, animal calls, and weather sounds. Our approach combines convolutional neural networks with temporal modeling to capture both spectral patterns and temporal dynamics in mel-spectrograms, addressing the challenge of limited labeled audio data through semi-supervised learning and data augmentation techniques. Evaluated on multiple environmental sound datasets, our method outperforms baseline approaches and demonstrates strong transfer learning capabilities across diverse acoustic scenes. We demonstrate practical deployment considerations for embedded audio processing and provide analysis of failure modes in noisy urban environments.",
         "intent": "exploratory"
       }
+    },
+    {
+      "id": "premed-resume",
+      "persona": "Pre-med junior with a CS minor, comfortable in Python. Goal: research-flavored projects that stand out on a medical school application.",
+      "query": "projects to make my med school application stand out - something science-y, I know some python",
+      "plan": null,
+      "expectedCategories": [
+        "q-bio.QM",
+        "eess.IV"
+      ],
+      "acceptableCategories": [
+        "q-bio.BM",
+        "q-bio.PE",
+        "cs.LG",
+        "stat.ML",
+        "cs.CV"
+      ]
+    },
+    {
+      "id": "med-imaging-reconstruction",
+      "persona": "Radiology technologist studying computer science part-time; strong imaging domain knowledge, intermediate Python.",
+      "query": "deep learning projects for CT or MRI reconstruction and segmentation",
+      "plan": null,
+      "expectedCategories": [
+        "eess.IV"
+      ],
+      "acceptableCategories": [
+        "cs.CV",
+        "cs.LG",
+        "physics.med-ph"
+      ]
+    },
+    {
+      "id": "physics-gradschool-sim",
+      "persona": "Physics undergraduate who codes in Python and C++; applying to computational physics grad programs.",
+      "query": "I want to build a simulation project that would impress physics grad programs",
+      "plan": null,
+      "expectedCategories": [
+        "physics.comp-ph"
+      ],
+      "acceptableCategories": [
+        "astro-ph.IM",
+        "physics.data-an",
+        "math.NA",
+        "nlin.CD",
+        "cond-mat.stat-mech"
+      ]
+    },
+    {
+      "id": "audio-career-dsp",
+      "persona": "Live-sound audio engineer teaching themselves programming; goal is a junior audio software or DSP role.",
+      "query": "portfolio projects for breaking into audio software development",
+      "plan": null,
+      "expectedCategories": [
+        "cs.SD",
+        "eess.AS"
+      ],
+      "acceptableCategories": [
+        "eess.SP",
+        "cs.MM"
+      ]
+    },
+    {
+      "id": "backend-infra-interviews",
+      "persona": "Backend engineer, 4 years of Go and Postgres; targeting infrastructure and platform teams at large tech companies.",
+      "query": "something impressive to build for infra and platform engineering interviews",
+      "plan": null,
+      "expectedCategories": [
+        "cs.DC",
+        "cs.DB"
+      ],
+      "acceptableCategories": [
+        "cs.OS",
+        "cs.NI",
+        "cs.PF",
+        "cs.SE"
+      ]
+    },
+    {
+      "id": "wetlab-to-compbio",
+      "persona": "Wet-lab molecular biologist learning Python; wants to move into computational biology.",
+      "query": "how do I go from the bench to computational biology - what could I build?",
+      "plan": null,
+      "expectedCategories": [
+        "q-bio.QM",
+        "q-bio.BM"
+      ],
+      "acceptableCategories": [
+        "q-bio.GN",
+        "q-bio.PE",
+        "cs.LG",
+        "stat.ML"
+      ]
+    },
+    {
+      "id": "robotics-tinkerer",
+      "persona": "Mechanical engineer who tinkers with Arduino and ROS on weekends; wants a robotics software portfolio.",
+      "query": "robot arm or drone project ideas grounded in recent research",
+      "plan": null,
+      "expectedCategories": [
+        "cs.RO"
+      ],
+      "acceptableCategories": [
+        "eess.SY",
+        "cs.CV",
+        "cs.AI"
+      ]
+    },
+    {
+      "id": "quant-trading-hopeful",
+      "persona": "Mathematics undergraduate aiming for quantitative trading roles; strong probability, decent Python.",
+      "query": "projects that would impress quant trading firms",
+      "plan": null,
+      "expectedCategories": [
+        "q-fin.TR",
+        "q-fin.CP"
+      ],
+      "acceptableCategories": [
+        "q-fin.PM",
+        "q-fin.ST",
+        "q-fin.MF",
+        "q-fin.RM",
+        "stat.ML",
+        "cs.LG",
+        "math.OC"
+      ]
+    },
+    {
+      "id": "econ-applied-metrics",
+      "persona": "Economics masters student, comfortable in R and Python; building an applied econometrics portfolio for policy jobs.",
+      "query": "data projects for economics grad school or policy work",
+      "plan": null,
+      "expectedCategories": [
+        "econ.EM"
+      ],
+      "acceptableCategories": [
+        "econ.GN",
+        "stat.AP",
+        "stat.ME",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "gamedev-graphics",
+      "persona": "Self-taught game developer shipping small Unity games; wants deeper graphics and simulation chops.",
+      "query": "graphics or physics engine projects to level up beyond engine tutorials",
+      "plan": null,
+      "expectedCategories": [
+        "cs.GR"
+      ],
+      "acceptableCategories": [
+        "cs.CV",
+        "cs.MM",
+        "physics.comp-ph",
+        "math.NA"
+      ]
+    },
+    {
+      "id": "ux-to-code",
+      "persona": "UX designer learning frontend engineering; wants research-grounded interactive prototypes.",
+      "query": "interactive projects at the intersection of design and code",
+      "plan": null,
+      "expectedCategories": [
+        "cs.HC"
+      ],
+      "acceptableCategories": [
+        "cs.GR",
+        "cs.MM",
+        "cs.CY"
+      ]
+    },
+    {
+      "id": "embedded-sensors",
+      "persona": "Embedded firmware engineer writing C on STM32; interested in sensors and on-device signal processing.",
+      "query": "sensor data and signal processing projects based on real research",
+      "plan": null,
+      "expectedCategories": [
+        "eess.SP"
+      ],
+      "acceptableCategories": [
+        "eess.SY",
+        "cs.NI",
+        "eess.AS",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "data-journalist-broad",
+      "persona": "Journalist learning data analysis in Python; wants portfolio pieces that tell a story with data.",
+      "query": "impressive data analysis projects with a story behind them",
+      "plan": null,
+      "expectedCategories": [],
+      "acceptableCategories": [
+        "stat.AP",
+        "cs.SI",
+        "cs.CY",
+        "physics.soc-ph",
+        "econ.GN"
+      ]
+    },
+    {
+      "id": "cs-senior-undecided",
+      "persona": "CS senior with broad interests and no specialty yet; just wants to build something genuinely cool.",
+      "query": "show me the coolest recent papers I could actually build something from",
+      "plan": null,
+      "expectedCategories": [],
+      "acceptableCategories": null
     }
   ]
 }

@@ -29,6 +29,7 @@ public static class EvalCommandRunner
                 "Usage: eval compile   [--queries <path>]\n" +
                 "       eval judge     [--queries <path>] [--judgments <path>] [--pool <N>] [--random <N>]\n" +
                 "       eval search    [--queries <path>] [--judgments <path>]\n" +
+                "       eval categories [--queries <path>]   (fresh-compiles; costs tokens)\n" +
                 "       eval bias\n" +
                 "       eval adopt     [--queries <path>]\n" +
                 "       eval tune      [--queries <path>] [--judgments <path>]\n" +
@@ -95,6 +96,11 @@ public static class EvalCommandRunner
                     }
 
                     return ExitOk;
+
+                case "categories":
+                    var inference = await runner.ScoreCategoriesAsync(queriesPath, cts.Token);
+                    PrintCategoryInference(inference);
+                    return inference.Queries.Count > 0 ? ExitOk : ExitRunFailed;
 
                 case "bias":
                     var analyzer = scope.ServiceProvider.GetRequiredService<TelemetryAnalyzer>();
@@ -185,6 +191,55 @@ public static class EvalCommandRunner
         Console.WriteLine();
         Console.WriteLine("judged@10 < 10 means unjudged papers reached the top 10 (scored as grade 0);");
         Console.WriteLine("re-run `eval judge` to grade the current ranker's head before trusting deltas.");
+    }
+
+    private static void PrintCategoryInference(CategoryInferenceReport report)
+    {
+        if (report.Queries.Count == 0)
+        {
+            Console.WriteLine("No queries carry expectedCategories — author some in eval/queries.json first.");
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"{"query",-26} {"prec",6} {"recall",7} {"reach-R",8} {"F1",6}  emitted");
+        Console.WriteLine(new string('-', 100));
+        foreach (var q in report.Queries)
+        {
+            Console.WriteLine(
+                $"{q.QueryId,-26} {q.Precision,6:0.00} {q.Recall,7:0.00} {q.ReachableRecall,8:0.00} " +
+                $"{q.F1,6:0.00}  [{string.Join(", ", q.Emitted)}]");
+            if (q.ExpectedMissed.Count > 0)
+            {
+                Console.WriteLine($"{string.Empty,-26} missed: {string.Join(", ", q.ExpectedMissed)}");
+            }
+
+            if (q.Unexpected.Count > 0)
+            {
+                Console.WriteLine($"{string.Empty,-26} off-target: {string.Join(", ", q.Unexpected)}");
+            }
+        }
+
+        Console.WriteLine(new string('-', 100));
+        Console.WriteLine(
+            $"{"MEAN",-26} {report.MeanPrecision,6:0.00} {report.MeanRecall,7:0.00} " +
+            $"{report.MeanReachableRecall,8:0.00} {report.MeanF1,6:0.00}");
+
+        var unreachable = report.Queries
+            .SelectMany(q => q.UnreachableExpected)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(c => c, StringComparer.Ordinal)
+            .ToList();
+        if (unreachable.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine(
+                $"Expected codes NOT in the corpus taxonomy (Phase C gap, excluded from reach-R/F1): " +
+                string.Join(", ", unreachable));
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("Fresh compiles; nothing was written to queries.json. F1 pairs precision with reach-R.");
     }
 
     private static void PrintTuneResults(IReadOnlyList<EvalRunner.TuneResult> results)
@@ -305,7 +360,7 @@ public static class EvalCommandRunner
 
         verb = args[1].ToLowerInvariant();
         if (verb is not ("compile" or "judge" or "search" or "bias" or "adopt" or "tune" or "audit"
-            or "calibrate" or "export-corpus" or "seed" or "regrade"))
+            or "calibrate" or "export-corpus" or "seed" or "regrade" or "categories"))
         {
             return false;
         }

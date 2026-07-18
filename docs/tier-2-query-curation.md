@@ -35,6 +35,11 @@ storage and prod serves the full corpus.
    scoring requires the right category slice. Measure plan.Categories
    precision/recall against judged expectations AND downstream nDCG. Gate:
    compiler changes ship only on eval wins (docs/search-quality.md rules).
+   *Harness shipped 2026-07-18: 14 persona queries with
+   `expectedCategories`/`acceptableCategories` in eval/queries.json (plan:
+   null — invisible to `eval search`/CI until judged) + the `eval categories`
+   verb (fresh-compiles, scores P/R/F1, flags taxonomy-unreachable codes).
+   First scored run + downstream-nDCG half pending Phase A completion.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
 

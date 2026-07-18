@@ -84,6 +84,52 @@ public class EvalRunner(
         return compiled;
     }
 
+    /// <summary>
+    /// The Tier 2 category-inference eval: compile a FRESH plan for every
+    /// query carrying ExpectedCategories and score the emitted categories
+    /// against the authored expectations. Fresh compiles are deliberate —
+    /// this measures the CURRENT compiler prompt (frozen plans stay the
+    /// untouched nDCG baseline) — and are never persisted into the artifact.
+    /// Costs one compiler call per target query (pennies at haiku tier).
+    /// </summary>
+    public async Task<CategoryInferenceReport> ScoreCategoriesAsync(
+        string queriesPath, CancellationToken ct)
+    {
+        var set = EvalFileStore.LoadQueries(queriesPath);
+        var targets = set.Queries.Where(q => q.ExpectedCategories is not null).ToList();
+        if (targets.Count == 0)
+        {
+            return new CategoryInferenceReport([], null, null, null, null);
+        }
+
+        await using var db = await dbFactory.CreateDbContextAsync(ct);
+        var knownCategories = await db.Categories
+            .AsNoTracking()
+            .OrderBy(c => c.Code)
+            .Select(c => c.Code)
+            .ToListAsync(ct);
+
+        var scores = new List<CategoryInferenceScore>();
+        foreach (var q in targets)
+        {
+            ct.ThrowIfCancellationRequested();
+            var plan = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
+            var score = CategoryInferenceMetrics.Score(
+                q.Id, plan.Categories, q.ExpectedCategories!, q.AcceptableCategories, knownCategories);
+            scores.Add(score);
+            logger.LogInformation(
+                "Category inference {Id}: emitted [{Emitted}] P={Precision:0.00} R={Recall:0.00}",
+                q.Id, string.Join(", ", score.Emitted), score.Precision, score.Recall);
+        }
+
+        return new CategoryInferenceReport(
+            scores,
+            scores.Average(s => s.Precision),
+            scores.Average(s => s.Recall),
+            scores.Average(s => s.ReachableRecall),
+            scores.Average(s => s.F1));
+    }
+
     public sealed record CorpusFixturePaper(
         string ArxivId,
         int LatestVersion,

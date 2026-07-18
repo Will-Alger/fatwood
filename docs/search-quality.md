@@ -74,6 +74,7 @@ and future learning-to-rank features.
 | `eval search` | none | Score current ranker: nDCG@10, Recall@50, MRR per query + means. **The regression gate.** |
 | `eval judge` | ~$0.1–0.5 | Grade unjudged (query, paper) pairs in the current ranker's pool head + seeded random sample. Incremental, resumable, batched haiku. |
 | `eval compile` | pennies | Fill missing plans in queries.json (rare). |
+| `eval categories` | pennies | Tier 2 category-inference eval: fresh-compile every query carrying `expectedCategories`, score emitted categories P/R/F1 against authored expectations. Fresh compiles are never persisted (frozen plans stay the nDCG baseline). Reach-R excludes expected codes absent from the corpus taxonomy (Phase C gap, reported separately). |
 | `eval tune` | none | Grid-search blend weights; prints table, applies nothing. |
 | `eval bias` | none | Telemetry skew report + interleaving scoreboard. |
 | `eval adopt` | none | Promote logged real queries into queries.json. |

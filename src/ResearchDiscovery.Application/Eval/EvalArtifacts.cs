@@ -8,12 +8,19 @@ namespace ResearchDiscovery.Application.Eval;
 /// and the compiled plan. The plan is frozen into the artifact by
 /// `eval compile` so that scoring runs are fully deterministic and token-free;
 /// re-compiling is an explicit, deliberate act that changes the artifact.
+/// ExpectedCategories/AcceptableCategories are authored ground truth for the
+/// category-inference eval (`eval categories`): Expected = codes an ideal
+/// curator must pick (empty list = the correct choice is NO filter),
+/// Acceptable = defensible extras that don't count against precision. Null
+/// Expected = the query is not part of the category eval.
 /// </summary>
 public sealed record EvalQuery(
     string Id,
     string Persona,
     string Query,
-    SearchPlan? Plan);
+    SearchPlan? Plan,
+    IReadOnlyList<string>? ExpectedCategories = null,
+    IReadOnlyList<string>? AcceptableCategories = null);
 
 public sealed record EvalQuerySet(
     int Version,
