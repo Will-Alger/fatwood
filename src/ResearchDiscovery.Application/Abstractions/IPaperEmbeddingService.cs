@@ -17,8 +17,12 @@ public sealed record ScoredPaper(long PaperId, float Score);
 public interface IEmbeddingIndex
 {
     /// <summary>Top-N papers by cosine similarity to the query vector, restricted to the candidate set when given.</summary>
+    /// <param name="publishedAfter">When set, papers published before this
+    /// moment are skipped inside the scan — cheaper than materializing a huge
+    /// candidate-id set for date-only gates.</param>
     Task<IReadOnlyList<ScoredPaper>> TopAsync(
-        float[] query, int n, IReadOnlySet<long>? restrictTo, CancellationToken ct);
+        float[] query, int n, IReadOnlySet<long>? restrictTo, CancellationToken ct,
+        DateTimeOffset? publishedAfter = null);
 
     /// <summary>
     /// Top-N papers scored as the average of (a) similarity to the primary
@@ -32,7 +36,8 @@ public interface IEmbeddingIndex
         IReadOnlyList<float[]> topics,
         int n,
         IReadOnlySet<long>? restrictTo,
-        CancellationToken ct);
+        CancellationToken ct,
+        DateTimeOffset? publishedAfter = null);
 
     /// <summary>Cosine scores for a specific set of papers against a vector.</summary>
     Task<IReadOnlyDictionary<long, float>> ScoreAsync(

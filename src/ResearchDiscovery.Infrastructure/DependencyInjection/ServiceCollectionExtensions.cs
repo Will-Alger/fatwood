@@ -110,6 +110,17 @@ public static class ServiceCollectionExtensions
 
         httpBuilder.AddHttpMessageHandler(sp => sp.GetRequiredService<ArxivThrottlingHandler>());
 
+        // OAI-PMH bulk harvest. No resilience handler and no
+        // ArxivThrottlingHandler on purpose: ArxivOaiClient owns 503/Retry-After
+        // handling and 3s pacing itself, per arXiv's bulk-harvest flow control.
+        services.AddHttpClient<IArxivOaiClient, ArxivOaiClient>(client =>
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                "ResearchDiscovery/1.0 (research-to-project discovery tool)");
+            client.Timeout = TimeSpan.FromMinutes(2); // OAI pages are ~1000 records / ~3 MB
+        });
+        services.AddScoped<IBulkHarvestService, BulkHarvestService>();
+
         services.AddSingleton<PaperUpserter>();
         services.AddSingleton<IIngestionLockManager, DbIngestionLockManager>();
         services.AddScoped<IIngestionService, IngestionService>();
@@ -176,6 +187,15 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITextEmbedder, OnnxTextEmbedder>();
         services.AddSingleton<IEmbeddingIndex, InMemoryEmbeddingIndex>();
         services.AddSingleton<IPaperEmbeddingService, PaperEmbeddingService>();
+
+        // Packed-index snapshots in blob storage: cold replicas download the
+        // prebuilt indexes in seconds instead of scanning the database.
+        // Unconfigured (local/dev) the store disables itself and indexes
+        // build straight from the database.
+        services.AddOptions<SearchIndexOptions>()
+            .Bind(configuration.GetSection(SearchIndexOptions.SectionName));
+        services.AddSingleton<SearchIndexSnapshotStore>();
+        services.AddSingleton<ISearchIndexSnapshots, SearchIndexSnapshotWriter>();
 
         // Hybrid retrieval + reranking stages (config-flagged; both local, no
         // tokens). The cross-encoder only downloads its model when first used.

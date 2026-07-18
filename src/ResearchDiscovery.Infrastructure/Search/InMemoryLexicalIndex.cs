@@ -1,3 +1,5 @@
+using System.Buffers.Binary;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ResearchDiscovery.Application.Abstractions;
@@ -7,69 +9,85 @@ namespace ResearchDiscovery.Infrastructure.Search;
 
 /// <summary>
 /// Classic BM25 (k1=1.2, b=0.75) over lowercased alphanumeric tokens of
-/// title + abstract. ~21k documents build in a few seconds and score in
-/// milliseconds; the postings live in memory alongside the embedding index
-/// (same lazy-load + Invalidate lifecycle).
+/// title + abstract, held as packed postings arrays: at 300k documents the
+/// old dictionary-of-lists layout costs ~600 MB and a minutes-long cold
+/// rebuild, while the packed form is ~250 MB and loads from a blob snapshot
+/// in seconds (database build remains the fallback). Terms are sorted for
+/// binary-search lookup; per-document publication days support date-gated
+/// search inside the scoring loop.
 /// </summary>
 public class InMemoryLexicalIndex(
     IDbContextFactory<AppDbContext> dbFactory,
+    SearchIndexSnapshotStore snapshots,
     ILogger<InMemoryLexicalIndex> logger) : ILexicalIndex
 {
     private const float K1 = 1.2f;
     private const float B = 0.75f;
+    private const int DbBuildBatchSize = 5000;
 
-    private sealed record Index(
-        Dictionary<string, List<(long PaperId, int TermFrequency)>> Postings,
-        Dictionary<long, int> DocLengths,
-        double AverageDocLength);
+    public const string SnapshotBlobName = "lexical-v1.bin";
 
     private readonly SemaphoreSlim _loadLock = new(1, 1);
-    private volatile Index? _index;
+    private volatile PackedPostings? _index;
 
     public async Task<IReadOnlyList<ScoredPaper>> TopAsync(
-        string query, int n, IReadOnlySet<long>? restrictTo, CancellationToken ct)
+        string query, int n, IReadOnlySet<long>? restrictTo, CancellationToken ct,
+        DateTimeOffset? publishedAfter = null)
     {
         var index = await GetIndexAsync(ct);
         var terms = Tokenize(query).Distinct().ToList();
-        var docCount = index.DocLengths.Count;
+        var docCount = index.DocIds.Length;
         if (terms.Count == 0 || docCount == 0)
         {
             return [];
         }
 
-        var scores = new Dictionary<long, float>();
+        var cutoff = Embeddings.InMemoryEmbeddingIndex.ToEpochDay(publishedAfter);
+        var scores = new Dictionary<int, float>();
         foreach (var term in terms)
         {
-            if (!index.Postings.TryGetValue(term, out var postings))
+            var termIdx = Array.BinarySearch(index.Terms, term, StringComparer.Ordinal);
+            if (termIdx < 0)
             {
                 continue;
             }
 
-            var idf = MathF.Log(1 + (docCount - postings.Count + 0.5f) / (postings.Count + 0.5f));
-            foreach (var (paperId, tf) in postings)
+            var start = index.TermPostingStarts[termIdx];
+            var end = index.TermPostingStarts[termIdx + 1];
+            var df = end - start;
+            var idf = MathF.Log(1 + (docCount - df + 0.5f) / (df + 0.5f));
+
+            for (var p = start; p < end; p++)
             {
-                if (restrictTo is not null && !restrictTo.Contains(paperId))
+                var docIdx = index.PostingDocIndexes[p];
+                if (cutoff is { } day && index.DocEpochDays[docIdx] < day)
                 {
                     continue;
                 }
 
-                var docLen = index.DocLengths[paperId];
+                if (restrictTo is not null && !restrictTo.Contains(index.DocIds[docIdx]))
+                {
+                    continue;
+                }
+
+                float tf = index.PostingTfs[p];
+                var docLen = index.DocLengths[docIdx];
                 var norm = tf * (K1 + 1) /
                     (tf + K1 * (1 - B + B * (float)(docLen / index.AverageDocLength)));
-                scores[paperId] = scores.GetValueOrDefault(paperId) + idf * norm;
+                scores[docIdx] = scores.GetValueOrDefault(docIdx) + idf * norm;
             }
         }
 
         return scores
-            .Select(kv => new ScoredPaper(kv.Key, kv.Value))
-            .OrderByDescending(s => s.Score)
+            .OrderByDescending(kv => kv.Value)
             .Take(n)
+            .Select(kv => new ScoredPaper(index.DocIds[kv.Key], kv.Value))
             .ToList();
     }
 
     public void Invalidate() => _index = null;
 
-    private async Task<Index> GetIndexAsync(CancellationToken ct)
+    private async Task<PackedPostings> GetIndexAsync(CancellationToken ct)
     {
         var cached = _index;
         if (cached is not null)
@@ -86,53 +104,160 @@ public class InMemoryLexicalIndex(
                 return cached;
             }
 
-            await using var db = await dbFactory.CreateDbContextAsync(ct);
-            var docs = await db.Papers
-                .AsNoTracking()
-                .Select(p => new { p.Id, p.Title, p.Abstract })
-                .ToListAsync(ct);
-
-            var postings = new Dictionary<string, List<(long, int)>>(StringComparer.Ordinal);
-            var docLengths = new Dictionary<long, int>(docs.Count);
-            long totalLength = 0;
-
-            foreach (var doc in docs)
+            PackedPostings? loaded = null;
+            var blob = await snapshots.TryDownloadAsync(SnapshotBlobName, ct);
+            if (blob is not null)
             {
-                var counts = new Dictionary<string, int>(StringComparer.Ordinal);
-                var length = 0;
-                foreach (var token in Tokenize($"{doc.Title} {doc.Abstract}"))
+                try
                 {
-                    counts[token] = counts.GetValueOrDefault(token) + 1;
-                    length++;
+                    loaded = PackedPostings.Deserialize(blob);
+                    logger.LogInformation(
+                        "Lexical index loaded from snapshot: {Docs} documents, {Terms} terms",
+                        loaded.DocIds.Length, loaded.Terms.Length);
                 }
-
-                docLengths[doc.Id] = length;
-                totalLength += length;
-                foreach (var (term, tf) in counts)
+                catch (Exception ex)
                 {
-                    if (!postings.TryGetValue(term, out var list))
-                    {
-                        postings[term] = list = [];
-                    }
-
-                    list.Add((doc.Id, tf));
+                    logger.LogWarning(ex, "Lexical snapshot unreadable; rebuilding from database");
                 }
             }
 
-            var built = new Index(
-                postings,
-                docLengths,
-                docLengths.Count > 0 ? totalLength / (double)docLengths.Count : 1);
-
+            loaded ??= await BuildFromDatabaseAsync(dbFactory, ct);
             logger.LogInformation(
-                "Lexical index built: {Docs} documents, {Terms} terms", docs.Count, postings.Count);
-            _index = built;
-            return built;
+                "Lexical index ready: {Docs} documents, {Terms} terms",
+                loaded.DocIds.Length, loaded.Terms.Length);
+            _index = loaded;
+            return loaded;
         }
         finally
         {
             _loadLock.Release();
         }
+    }
+
+    /// <summary>
+    /// Two-pass packed build: pass 1 streams the corpus to count document
+    /// frequencies (sizing every array exactly), pass 2 streams again to fill
+    /// postings. Streaming batches keep peak memory near the final packed
+    /// size instead of holding 400 MB of abstracts. Also used by the
+    /// snapshot writer.
+    /// </summary>
+    internal static async Task<PackedPostings> BuildFromDatabaseAsync(
+        IDbContextFactory<AppDbContext> dbFactory, CancellationToken ct)
+    {
+        // Pass 1: document frequencies + per-doc lengths/dates.
+        var df = new Dictionary<string, int>(StringComparer.Ordinal);
+        var docIds = new List<long>();
+        var docEpochDays = new List<int>();
+        var docLengths = new List<int>();
+        long totalLength = 0;
+
+        await foreach (var doc in StreamDocsAsync(dbFactory, ct))
+        {
+            var counts = CountTerms(doc.Title, doc.Abstract, out var length);
+            docIds.Add(doc.Id);
+            docEpochDays.Add(Embeddings.InMemoryEmbeddingIndex.ToEpochDay(doc.PublishedUtc)!.Value);
+            docLengths.Add(length);
+            totalLength += length;
+            foreach (var term in counts.Keys)
+            {
+                df[term] = df.GetValueOrDefault(term) + 1;
+            }
+        }
+
+        var terms = df.Keys.ToArray();
+        Array.Sort(terms, StringComparer.Ordinal);
+
+        var termIdxByTerm = new Dictionary<string, int>(terms.Length, StringComparer.Ordinal);
+        for (var i = 0; i < terms.Length; i++)
+        {
+            termIdxByTerm[terms[i]] = i;
+        }
+
+        var starts = new int[terms.Length + 1];
+        for (var i = 0; i < terms.Length; i++)
+        {
+            starts[i + 1] = starts[i] + df[terms[i]];
+        }
+
+        var postingCount = starts[^1];
+        var postingDocIndexes = new int[postingCount];
+        var postingTfs = new byte[postingCount];
+        var fill = new int[terms.Length];
+        Array.Copy(starts, fill, terms.Length);
+
+        // Pass 2: fill postings. Documents stream in the same PaperId order,
+        // so docIdx assignment matches pass 1.
+        var docIdx = 0;
+        await foreach (var doc in StreamDocsAsync(dbFactory, ct))
+        {
+            var counts = CountTerms(doc.Title, doc.Abstract, out _);
+            foreach (var (term, tf) in counts)
+            {
+                var t = termIdxByTerm[term];
+                postingDocIndexes[fill[t]] = docIdx;
+                postingTfs[fill[t]] = (byte)Math.Min(tf, byte.MaxValue);
+                fill[t]++;
+            }
+
+            docIdx++;
+        }
+
+        return new PackedPostings
+        {
+            DocIds = docIds.ToArray(),
+            DocEpochDays = docEpochDays.ToArray(),
+            DocLengths = docLengths.ToArray(),
+            AverageDocLength = docIds.Count > 0 ? totalLength / (double)docIds.Count : 1,
+            Terms = terms,
+            TermPostingStarts = starts,
+            PostingDocIndexes = postingDocIndexes,
+            PostingTfs = postingTfs,
+        };
+    }
+
+    private sealed record DocRow(long Id, string Title, string Abstract, DateTimeOffset PublishedUtc);
+
+    private static async IAsyncEnumerable<DocRow> StreamDocsAsync(
+        IDbContextFactory<AppDbContext> dbFactory,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    {
+        var lastId = 0L;
+        while (true)
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+            var batch = await db.Papers
+                .AsNoTracking()
+                .Where(p => p.Id > lastId)
+                .OrderBy(p => p.Id)
+                .Take(DbBuildBatchSize)
+                .Select(p => new DocRow(p.Id, p.Title, p.Abstract, p.PublishedUtc))
+                .ToListAsync(ct);
+
+            if (batch.Count == 0)
+            {
+                yield break;
+            }
+
+            foreach (var row in batch)
+            {
+                yield return row;
+            }
+
+            lastId = batch[^1].Id;
+        }
+    }
+
+    private static Dictionary<string, int> CountTerms(string title, string abstractText, out int length)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        length = 0;
+        foreach (var token in Tokenize($"{title} {abstractText}"))
+        {
+            counts[token] = counts.GetValueOrDefault(token) + 1;
+            length++;
+        }
+
+        return counts;
     }
 
     internal static IEnumerable<string> Tokenize(string text)
@@ -154,6 +279,150 @@ public class InMemoryLexicalIndex(
 
                 start = -1;
             }
+        }
+    }
+
+    /// <summary>Packed BM25 postings; docIdx-space arrays ordered by paper id.</summary>
+    internal sealed class PackedPostings
+    {
+        private const uint Magic = 0x494C4452; // "RDLI"
+        private const int FormatVersion = 1;
+
+        public required long[] DocIds { get; init; }
+
+        public required int[] DocEpochDays { get; init; }
+
+        public required int[] DocLengths { get; init; }
+
+        public required double AverageDocLength { get; init; }
+
+        public required string[] Terms { get; init; }
+
+        public required int[] TermPostingStarts { get; init; }
+
+        public required int[] PostingDocIndexes { get; init; }
+
+        public required byte[] PostingTfs { get; init; }
+
+        public byte[] Serialize()
+        {
+            using var stream = new MemoryStream();
+            using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
+
+            writer.Write(Magic);
+            writer.Write(FormatVersion);
+            writer.Write(DocIds.Length);
+            writer.Write(Terms.Length);
+            writer.Write(PostingDocIndexes.Length);
+            writer.Write(AverageDocLength);
+
+            foreach (var id in DocIds)
+            {
+                writer.Write(id);
+            }
+
+            foreach (var day in DocEpochDays)
+            {
+                writer.Write(day);
+            }
+
+            foreach (var len in DocLengths)
+            {
+                writer.Write(len);
+            }
+
+            foreach (var term in Terms)
+            {
+                writer.Write(term);
+            }
+
+            foreach (var s in TermPostingStarts)
+            {
+                writer.Write(s);
+            }
+
+            foreach (var d in PostingDocIndexes)
+            {
+                writer.Write(d);
+            }
+
+            writer.Write(PostingTfs);
+            writer.Flush();
+            return stream.ToArray();
+        }
+
+        public static PackedPostings Deserialize(byte[] buffer)
+        {
+            using var stream = new MemoryStream(buffer, writable: false);
+            using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
+
+            if (reader.ReadUInt32() != Magic || reader.ReadInt32() != FormatVersion)
+            {
+                throw new FormatException("Unrecognized lexical snapshot format.");
+            }
+
+            var docCount = reader.ReadInt32();
+            var termCount = reader.ReadInt32();
+            var postingCount = reader.ReadInt32();
+            var averageDocLength = reader.ReadDouble();
+            if (docCount < 0 || termCount < 0 || postingCount < 0)
+            {
+                throw new FormatException("Corrupt lexical snapshot.");
+            }
+
+            var docIds = new long[docCount];
+            for (var i = 0; i < docCount; i++)
+            {
+                docIds[i] = reader.ReadInt64();
+            }
+
+            var docEpochDays = new int[docCount];
+            for (var i = 0; i < docCount; i++)
+            {
+                docEpochDays[i] = reader.ReadInt32();
+            }
+
+            var docLengths = new int[docCount];
+            for (var i = 0; i < docCount; i++)
+            {
+                docLengths[i] = reader.ReadInt32();
+            }
+
+            var terms = new string[termCount];
+            for (var i = 0; i < termCount; i++)
+            {
+                terms[i] = reader.ReadString();
+            }
+
+            var starts = new int[termCount + 1];
+            for (var i = 0; i < starts.Length; i++)
+            {
+                starts[i] = reader.ReadInt32();
+            }
+
+            var postingDocIndexes = new int[postingCount];
+            for (var i = 0; i < postingCount; i++)
+            {
+                postingDocIndexes[i] = reader.ReadInt32();
+            }
+
+            var postingTfs = reader.ReadBytes(postingCount);
+            if (postingTfs.Length != postingCount)
+            {
+                throw new FormatException("Corrupt lexical snapshot.");
+            }
+
+            return new PackedPostings
+            {
+                DocIds = docIds,
+                DocEpochDays = docEpochDays,
+                DocLengths = docLengths,
+                AverageDocLength = averageDocLength,
+                Terms = terms,
+                TermPostingStarts = starts,
+                PostingDocIndexes = postingDocIndexes,
+                PostingTfs = postingTfs,
+            };
         }
     }
 }

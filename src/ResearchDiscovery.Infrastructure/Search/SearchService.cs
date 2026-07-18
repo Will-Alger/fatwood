@@ -61,13 +61,31 @@ public class SearchService(
         // ranker: config flags still apply, interleaving never does.
         var isTuningRun = weights is not null;
 
-        // Stage 0: deterministic SQL filters.
-        var candidateIds = (await FilterCandidates(db.Papers.AsNoTracking(), plan)
-            .Select(p => p.Id)
-            .ToListAsync(ct))
-            .ToHashSet();
+        // Stage 0: deterministic SQL filters. Category/code filters still
+        // materialize a candidate-id set; a date-only (or absent) filter is
+        // pushed into the index scans instead — at 300k papers, SELECTing
+        // every id on every search is pure waste.
+        var publishedAfter = plan.DateWindowDays is { } days and > 0
+            ? DateTimeOffset.UtcNow.AddDays(-days)
+            : (DateTimeOffset?)null;
+        var needsIdSet = plan.Categories.Count > 0 || plan.RequireNoCode == true;
 
-        if (candidateIds.Count == 0)
+        IReadOnlySet<long>? candidateIds = null;
+        int candidateCount;
+        if (needsIdSet)
+        {
+            candidateIds = (await FilterCandidates(db.Papers.AsNoTracking(), plan)
+                .Select(p => p.Id)
+                .ToListAsync(ct))
+                .ToHashSet();
+            candidateCount = candidateIds.Count;
+        }
+        else
+        {
+            candidateCount = await FilterCandidates(db.Papers.AsNoTracking(), plan).CountAsync(ct);
+        }
+
+        if (candidateCount == 0)
         {
             return new SearchResult(plan, [], 0);
         }
@@ -77,15 +95,18 @@ public class SearchService(
         List<(ScoredPaper Paper, string? Variant)> pool;
         if (!isTuningRun && options.InterleaveCandidate && options.Candidate is not null)
         {
-            var control = await RankAsync(plan, poolSize, candidateIds, options, options.ToWeights(), ct);
+            var control = await RankAsync(
+                plan, poolSize, candidateIds, publishedAfter, options, options.ToWeights(), ct);
             var candidate = await RankAsync(
-                plan, poolSize, candidateIds, options.Candidate, options.Candidate.ToWeights(), ct);
+                plan, poolSize, candidateIds, publishedAfter,
+                options.Candidate, options.Candidate.ToWeights(), ct);
             pool = TeamDraftInterleave(control, candidate, poolSize);
         }
         else
         {
             var ranked = await RankAsync(
-                plan, poolSize, candidateIds, options, weights ?? options.ToWeights(), ct);
+                plan, poolSize, candidateIds, publishedAfter,
+                options, weights ?? options.ToWeights(), ct);
             pool = ranked.Select(p => (p, (string?)null)).ToList();
         }
 
@@ -93,8 +114,8 @@ public class SearchService(
         {
             logger.LogWarning(
                 "Search matched {Candidates} papers but none have embeddings — run `embed` first",
-                candidateIds.Count);
-            return new SearchResult(plan, [], candidateIds.Count);
+                candidateCount);
+            return new SearchResult(plan, [], candidateCount);
         }
 
         // Experience annotation + wildcards need the profile's experience vector.
@@ -126,7 +147,7 @@ public class SearchService(
                 variantByPaper.GetValueOrDefault(s.Paper.PaperId)))
             .ToList();
 
-        return new SearchResult(plan, hits, candidateIds.Count);
+        return new SearchResult(plan, hits, candidateCount);
     }
 
     /// <summary>
@@ -137,7 +158,8 @@ public class SearchService(
     private async Task<List<ScoredPaper>> RankAsync(
         SearchPlan plan,
         int poolSize,
-        IReadOnlySet<long> candidateIds,
+        IReadOnlySet<long>? candidateIds,
+        DateTimeOffset? publishedAfter,
         RankingProfile profile,
         RankingWeights weights,
         CancellationToken ct)
@@ -182,14 +204,15 @@ public class SearchService(
         }
 
         var pool = (await index.TopMultiAsync(
-            primaryVector, topicVectors, poolSize, candidateIds, ct)).ToList();
+            primaryVector, topicVectors, poolSize, candidateIds, ct, publishedAfter)).ToList();
         var anchorVectors = new List<float[]> { primaryVector };
         anchorVectors.AddRange(topicVectors);
 
         // Stage 1b: lexical fusion.
         if (profile.UseHybrid)
         {
-            var lexical = await lexicalIndex.TopAsync(plan.AnchorText, poolSize, candidateIds, ct);
+            var lexical = await lexicalIndex.TopAsync(
+                plan.AnchorText, poolSize, candidateIds, ct, publishedAfter);
             pool = await FuseAsync(pool, lexical, anchorVectors, poolSize, ct);
         }
 

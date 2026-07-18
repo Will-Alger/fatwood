@@ -17,5 +17,16 @@ public class PaperEmbedding
     /// <summary>Little-endian float32 vector bytes.</summary>
     public required byte[] Vector { get; set; }
 
+    /// <summary>
+    /// Int8-quantized copy of the vector (per-vector max-abs scale), kept
+    /// alongside the float original so the in-memory index can load a
+    /// 4×-smaller representation at 300k-paper scale. Null on legacy rows
+    /// until the embed run's quantize-missing pass fills it.
+    /// </summary>
+    public byte[]? VectorInt8 { get; set; }
+
+    /// <summary>Dequantization scale: original ≈ (sbyte)q × scale.</summary>
+    public float? Int8Scale { get; set; }
+
     public DateTimeOffset CreatedUtc { get; set; }
 }

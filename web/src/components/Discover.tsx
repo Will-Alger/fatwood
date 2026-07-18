@@ -479,6 +479,10 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
                 <option value="7">last week</option>
                 <option value="30">last month</option>
                 <option value="90">last 90 days</option>
+                <option value="365">last year</option>
+                <option value="1095">last 3 years</option>
+                <option value="1825">last 5 years</option>
+                <option value="3650">last 10 years</option>
               </select>
             </span>
             <label className="chip chip-toggle">

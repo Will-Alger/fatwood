@@ -74,7 +74,7 @@ param apiMaxReplicas int = 2
 
 @description('vCPU per API replica, as a string for json() (e.g. \'0.5\', \'1\').')
 param apiCpu string = '0.5'
-param apiMemory string = '1Gi'
+param apiMemory string = '2Gi'
 
 @allowed(['Basic', 'Standard', 'Premium'])
 param acrSku string = 'Basic'
@@ -212,7 +212,34 @@ resource storageQueueRole 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   }
 }
 
+// Packed search-index snapshots (embedding + lexical) live in a blob
+// container on the same account: cold replicas download prebuilt indexes in
+// seconds instead of rebuilding a 300k-paper corpus from the database.
+var storageBlobDataContributorRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = if (deployAnalysisQueue) {
+  parent: storage
+  name: 'default'
+}
+
+resource searchIndexContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = if (deployAnalysisQueue) {
+  parent: blobService
+  name: 'search-index'
+}
+
+resource storageBlobRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployAnalysisQueue) {
+  name: guid(storage.id, appIdentity.id, storageBlobDataContributorRoleId)
+  scope: storage
+  properties: {
+    principalId: appIdentity.properties.principalId
+    roleDefinitionId: storageBlobDataContributorRoleId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 var analysisQueueEndpoint = storage.?properties.primaryEndpoints.queue ?? ''
+var searchIndexBlobEndpoint = storage.?properties.primaryEndpoints.blob ?? ''
 
 // The KEDA queue-depth scaler on the worker JOB authenticates with a storage
 // connection string (job scale rules take a secret, not a managed identity).
@@ -232,6 +259,7 @@ var analysisQueueEnv = deployAnalysisQueue ? [
   { name: 'AnalysisQueue__UseStorageQueue', value: 'true' }
   { name: 'AnalysisQueue__AccountUrl', value: analysisQueueEndpoint }
   { name: 'AnalysisQueue__QueueName', value: analysisQueueName }
+  { name: 'SearchIndex__AccountUrl', value: searchIndexBlobEndpoint }
   { name: 'AZURE_CLIENT_ID', value: appIdentity.properties.clientId }
 ] : []
 
@@ -463,10 +491,14 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
           name: 'ingest-delta'
           image: containerImage
           args: ['ingest', 'delta']
-          resources: { cpu: json('0.5'), memory: '1Gi' }
+          resources: { cpu: json('0.5'), memory: '2Gi' }
           env: [
             { name: 'ConnectionStrings__Default', secretRef: 'db-connection' }
             { name: 'Database__MigrateOnStartup', value: 'false' }
+            // Post-ingest embed runs write fresh search-index snapshots so
+            // API cold starts never rebuild the corpus from the database.
+            { name: 'SearchIndex__AccountUrl', value: searchIndexBlobEndpoint }
+            { name: 'AZURE_CLIENT_ID', value: appIdentity.properties.clientId }
           ]
         }
       ]

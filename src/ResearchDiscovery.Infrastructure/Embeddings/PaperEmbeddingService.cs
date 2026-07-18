@@ -18,6 +18,7 @@ public class PaperEmbeddingService(
     ITextEmbedder embedder,
     IEmbeddingIndex index,
     ILexicalIndex lexicalIndex,
+    ISearchIndexSnapshots snapshots,
     IOptions<EmbeddingOptions> options,
     ILogger<PaperEmbeddingService> logger) : IPaperEmbeddingService
 {
@@ -66,10 +67,14 @@ public class PaperEmbeddingService(
                 for (var i = 0; i < papers.Count; i++)
                 {
                     var bytes = ToBytes(vectors[i]);
+                    var (q, scale) = Int8Quantization.Quantize(vectors[i]);
+                    var int8Bytes = ToInt8Bytes(q);
                     if (existing.TryGetValue(papers[i].Id, out var row))
                     {
                         row.ModelVersion = modelVersion;
                         row.Vector = bytes;
+                        row.VectorInt8 = int8Bytes;
+                        row.Int8Scale = scale;
                         row.CreatedUtc = DateTimeOffset.UtcNow;
                     }
                     else
@@ -79,6 +84,8 @@ public class PaperEmbeddingService(
                             PaperId = papers[i].Id,
                             ModelVersion = modelVersion,
                             Vector = bytes,
+                            VectorInt8 = int8Bytes,
+                            Int8Scale = scale,
                             CreatedUtc = DateTimeOffset.UtcNow,
                         });
                     }
@@ -107,17 +114,77 @@ public class PaperEmbeddingService(
             }
         }
 
-        if (embedded > 0)
+        var quantized = await QuantizeMissingAsync(modelVersion, ct);
+
+        if (embedded > 0 || quantized > 0)
         {
             // The corpus changed (embed runs follow every ingest), so both
-            // in-memory indexes reload on next use.
+            // in-memory indexes reload on next use — and cold replicas get a
+            // fresh packed snapshot instead of a database rebuild.
             index.Invalidate();
             lexicalIndex.Invalidate();
+            try
+            {
+                await snapshots.WriteAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                // Snapshots are an optimization; indexes fall back to database
+                // builds, so a failed write must not fail the embed run.
+                logger.LogError(ex, "Search-index snapshot write failed");
+            }
         }
 
         logger.LogInformation("Embedding run finished: embedded {Embedded}, failed {Failed}",
             embedded, failed);
         return new EmbedRunSummary(embedded, 0, failed);
+    }
+
+    /// <summary>
+    /// Backfills the int8 columns on rows embedded before quantization
+    /// existed — pure math over the stored float vector, no model calls.
+    /// </summary>
+    private async Task<int> QuantizeMissingAsync(string modelVersion, CancellationToken ct)
+    {
+        var quantized = 0;
+        while (!ct.IsCancellationRequested)
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+            var rows = await db.PaperEmbeddings
+                .Where(e => e.ModelVersion == modelVersion && e.VectorInt8 == null)
+                .OrderBy(e => e.PaperId)
+                .Take(1024)
+                .ToListAsync(ct);
+
+            if (rows.Count == 0)
+            {
+                break;
+            }
+
+            foreach (var row in rows)
+            {
+                var (q, scale) = Int8Quantization.Quantize(FromBytes(row.Vector));
+                row.VectorInt8 = ToInt8Bytes(q);
+                row.Int8Scale = scale;
+            }
+
+            await db.SaveChangesAsync(ct);
+            quantized += rows.Count;
+        }
+
+        if (quantized > 0)
+        {
+            logger.LogInformation("Quantized {Count} legacy embedding rows", quantized);
+        }
+
+        return quantized;
+    }
+
+    internal static byte[] ToInt8Bytes(sbyte[] quantized)
+    {
+        var bytes = new byte[quantized.Length];
+        Buffer.BlockCopy(quantized, 0, bytes, 0, quantized.Length);
+        return bytes;
     }
 
     internal static byte[] ToBytes(float[] vector)

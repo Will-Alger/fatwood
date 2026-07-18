@@ -21,10 +21,15 @@ public class PaperUpserter(
     public sealed record UpsertResult(int Added, int Updated);
 
     /// <param name="categoryIdCache">Per-run cache of category code → id; appended as new codes appear.</param>
+    /// <param name="addOnly">When true, papers that already exist are left
+    /// untouched instead of updated. Bulk historical harvests use this: the
+    /// OAI-PMH metadata format carries no version number, so letting it
+    /// update an existing row would regress <c>LatestVersion</c>.</param>
     public async Task<UpsertResult> UpsertPageAsync(
         IReadOnlyList<ArxivEntry> entries,
         Dictionary<string, long> categoryIdCache,
-        CancellationToken ct)
+        CancellationToken ct,
+        bool addOnly = false)
     {
         if (entries.Count == 0)
         {
@@ -33,18 +38,19 @@ public class PaperUpserter(
 
         try
         {
-            return await UpsertCoreAsync(entries, categoryIdCache, ct);
+            return await UpsertCoreAsync(entries, categoryIdCache, addOnly, ct);
         }
         catch (DbUpdateException ex)
         {
             logger.LogWarning(ex, "Page upsert hit a database conflict; retrying the page once");
-            return await UpsertCoreAsync(entries, categoryIdCache, ct);
+            return await UpsertCoreAsync(entries, categoryIdCache, addOnly, ct);
         }
     }
 
     private async Task<UpsertResult> UpsertCoreAsync(
         IReadOnlyList<ArxivEntry> entries,
         Dictionary<string, long> categoryIdCache,
+        bool addOnly,
         CancellationToken ct)
     {
         // Fresh context per page keeps the change tracker bounded (≤ pageSize).
@@ -66,7 +72,7 @@ public class PaperUpserter(
         {
             if (existing.TryGetValue(entry.ArxivId, out var paper))
             {
-                if (ApplyUpdate(db, paper, entry, categoryIdCache, now))
+                if (!addOnly && ApplyUpdate(db, paper, entry, categoryIdCache, now))
                 {
                     updated++;
                 }

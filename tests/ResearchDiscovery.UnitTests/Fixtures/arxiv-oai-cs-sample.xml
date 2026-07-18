@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>2026-07-18T01:41:58Z</responseDate>
+                <request verb="ListRecords" metadataPrefix="arXiv" from="2026-07-10" until="2026-07-11" set="cs">http://oaipmh.arxiv.org/oai</request>
+
+
+    <ListRecords>
+                    <record>
+                <header>
+        <identifier>oai:arXiv.org:1612.06115</identifier>
+        <datestamp>2026-07-10</datestamp>
+            <setSpec>cs:cs:SI</setSpec>
+            <setSpec>physics:physics:soc-ph</setSpec>
+    </header>
+
+            <metadata>
+                        <arXiv xmlns="http://arxiv.org/OAI/arXiv/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXiv/ https://oaipmh.arxiv.org/OAI/arXiv.xsd">
+        <id>1612.06115</id>
+        <created>2016-12-24</created>
+            <updated>2026-07-10</updated>
+        <authors>
+                <author>
+                    <keyname>Spadon</keyname>
+                        <forenames>Gabriel</forenames>
+                </author>
+                <author>
+                    <keyname>Scabora</keyname>
+                        <forenames>Lucas C.</forenames>
+                </author>
+                <author>
+                    <keyname>Araujo</keyname>
+                        <forenames>Marcus V. S.</forenames>
+                </author>
+                <author>
+                    <keyname>Oliveira</keyname>
+                        <forenames>Paulo H.</forenames>
+                </author>
+                <author>
+                    <keyname>Machado</keyname>
+                        <forenames>Bruno B.</forenames>
+                </author>
+                <author>
+                    <keyname>Sousa</keyname>
+                        <forenames>Elaine P. M.</forenames>
+                </author>
+                <author>
+                    <keyname>Traina-Jr</keyname>
+                        <forenames>Caetano</forenames>
+                </author>
+                <author>
+                    <keyname>Rodrigues-Jr</keyname>
+                        <forenames>Jose F.</forenames>
+                </author>
+        </authors>
+        <title>Complex Network Tools to Understand the Behavior of Criminality in Urban Areas</title>
+            <categories>cs.SI physics.soc-ph</categories>
+            <comments>7 pages, 2 figures, 14th International Conference on Information Technology : New Generations</comments>
+            <msc-class>05C82, 91C20, 68R10</msc-class>
+            <acm-class>05C82, 91C20, 68R10</acm-class>
+            <journal-ref>Information Technology - New Generations, Advances in Intelligent Systems and Computing, 558, 2017</journal-ref>
+            <doi>10.1007/978-3-319-54978-1_63</doi>
+            <license>http://arxiv.org/licenses/nonexclusive-distrib/1.0/</license>
+            <abstract>Complex networks are nowadays employed in several applications. Modeling urban street networks is one of them, and in particular to analyze criminal aspects of a city. Several research groups have focused on such application, but until now, there is a lack of a well-defined methodology for employing complex networks in a whole crime analysis process, i.e. from data preparation to a deep analysis of criminal communities. Furthermore, the &#34;toolset&#34; available for those works is not complete enough, also lacking techniques to maintain up-to-date, complete crime datasets and proper assessment measures. In this sense, we propose a threefold methodology for employing complex networks in the detection of highly criminal areas within a city. Our methodology comprises three tasks: (i) Mapping of Urban Crimes; (ii) Criminal Community Identification; and (iii) Crime Analysis. Moreover, it provides a proper set of assessment measures for analyzing intrinsic criminality of communities, especially when considering different crime types. We show our methodology by applying it to a real crime dataset from the city of San Francisco - CA, USA. The results confirm its effectiveness to identify and analyze high criminality areas within a city. Hence, our contributions provide a basis for further developments on complex networks applied to crime analysis.</abstract>
+    </arXiv>
+
+            </metadata>
+        </record>
+                    <record>
+                <header>
+        <identifier>oai:arXiv.org:2202.13142</identifier>
+        <datestamp>2026-07-10</datestamp>
+            <setSpec>cs:cs:CV</setSpec>
+    </header>
+
+            <metadata>
+                        <arXiv xmlns="http://arxiv.org/OAI/arXiv/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXiv/ https://oaipmh.arxiv.org/OAI/arXiv.xsd">
+        <id>2202.13142</id>
+        <created>2026-07-09</created>
+            <updated>2026-07-10</updated>
+        <authors>
+                <author>
+                    <keyname>Chen</keyname>
+                        <forenames>Chaofeng</forenames>
+                </author>
+                <author>
+                    <keyname>Shi</keyname>
+                        <forenames>Xinyu</forenames>
+                </author>
+                <author>
+                    <keyname>Qin</keyname>
+                        <forenames>Yipeng</forenames>
+                </author>
+                <author>
+                    <keyname>Li</keyname>
+                        <forenames>Xiaoming</forenames>
+                </author>
+                <author>
+                    <keyname>Han</keyname>
+                        <forenames>Xiaoguang</forenames>
+                </author>
+                <author>
+                    <keyname>Yang</keyname>
+                        <forenames>Tao</forenames>
+                </author>
+                <author>
+                    <keyname>Guo</keyname>
+                        <forenames>Shihui</forenames>
+                </author>
+        </authors>
+        <title>Real-World Blind Super-Resolution via Feature Matching with Implicit High-Resolution Priors</title>
+            <categories>cs.CV</categories>
+            <comments>Fix training details and some typos</comments>
+            <license>http://creativecommons.org/licenses/by-nc-sa/4.0/</license>
+            <abstract>A key challenge of real-world image super-resolution (SR) is to recover the missing details in low-resolution (LR) images with complex unknown degradations (e.g., downsampling, noise and compression). Most previous works restore such missing details in the image space. To cope with the high diversity of natural images, they either rely on the unstable GANs that are difficult to train and prone to artifacts, or resort to explicit references from high-resolution (HR) images that are usually unavailable. In this work, we propose Feature Matching SR (FeMaSR), which restores realistic HR images in a much more compact feature space. Unlike image-space methods, our FeMaSR restores HR images by matching distorted LR image features to their distortion-free HR counterparts in our pretrained HR priors, and decoding the matched features to obtain realistic HR images. Specifically, our HR priors contain a discrete feature codebook and its associated decoder, which are pretrained on HR images with a Vector Quantized Generative Adversarial Network (VQGAN). Notably, we incorporate a novel semantic regularization in VQGAN to improve the quality of reconstructed images. For the feature matching, we first extract LR features with an LR encoder consisting of several Swin Transformer blocks and then follow a simple nearest neighbour strategy to match them with the pretrained codebook. In particular, we equip the LR encoder with residual shortcut connections to the decoder, which is critical to the optimization of feature matching loss and also helps to complement the possible feature matching errors. Experimental results show that our approach produces more realistic HR images than previous methods. Codes are released at https://github.com/chaofengc/FeMaSR.</abstract>
+    </arXiv>
+
+            </metadata>
+        </record>
+                    <record>
+                <header>
+        <identifier>oai:arXiv.org:2311.00296</identifier>
+        <datestamp>2026-07-10</datestamp>
+            <setSpec>cs:cs:CL</setSpec>
+    </header>
+
+            <metadata>
+                        <arXiv xmlns="http://arxiv.org/OAI/arXiv/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXiv/ https://oaipmh.arxiv.org/OAI/arXiv.xsd">
+        <id>2311.00296</id>
+        <created>2026-07-09</created>
+            <updated>2026-07-10</updated>
+        <authors>
+                <author>
+                    <keyname>Gao</keyname>
+                        <forenames>Hongrui</forenames>
+                </author>
+                <author>
+                    <keyname>Li</keyname>
+                        <forenames>Yawen</forenames>
+                </author>
+                <author>
+                    <keyname>Liang</keyname>
+                        <forenames>Meiyu</forenames>
+                </author>
+                <author>
+                    <keyname>Guan</keyname>
+                        <forenames>Zeli</forenames>
+                </author>
+                <author>
+                    <keyname>Xue</keyname>
+                        <forenames>Zhe</forenames>
+                </author>
+        </authors>
+        <title>Semantic Representation Learning of Scientific Literature based on Adaptive Feature and Graph Neural Network</title>
+            <categories>cs.CL</categories>
+            <comments>7 pages</comments>
+            <license>http://arxiv.org/licenses/nonexclusive-distrib/1.0/</license>
+            <abstract>Because most scientific literature data are unlabeled, semantic representation learning based on unsupervised graphs has become crucial. To enrich scientific-literature features, this paper proposes a semantic representation learning method based on adaptive features and graph neural networks. By introducing adaptive feature processing, scientific-literature features are considered globally and locally. The graph attention mechanism weights and aggregates features of scientific documents connected by citation relations, so that correlations among different documents can be expressed more effectively. In addition, an unsupervised graph neural network semantic representation learning method is proposed. By comparing the mutual information between positive and negative local semantic representations of scientific literature and the global graph semantic representation in the latent space, the graph neural network captures local and global information and improves semantic representation learning. Experimental results show that the proposed method is competitive for scientific literature classification.</abstract>
+    </arXiv>
+
+            </metadata>
+        </record>
+                    <record>
+                <header>
+        <identifier>oai:arXiv.org:2503.05598</identifier>
+        <datestamp>2026-07-10</datestamp>
+            <setSpec>cs:cs:CE</setSpec>
+            <setSpec>cs:cs:LG</setSpec>
+    </header>
+
+            <metadata>
+                        <arXiv xmlns="http://arxiv.org/OAI/arXiv/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXiv/ https://oaipmh.arxiv.org/OAI/arXiv.xsd">
+        <id>2503.05598</id>
+        <created>2026-07-09</created>
+            <updated>2026-07-10</updated>
+        <authors>
+                <author>
+                    <keyname>Jha</keyname>
+                        <forenames>Prashant K.</forenames>
+                </author>
+        </authors>
+        <title>From Theory to Application: A Practical Introduction to Neural Operators in Scientific Computing</title>
+            <categories>cs.CE cs.LG</categories>
+            <comments>72 pages, 22 figures, GitHub repository: https://github.com/CEADpx/neural_operators</comments>
+            <msc-class>62M45, 68T07</msc-class>
+            <journal-ref>Mathematics, 14(13), 2421</journal-ref>
+            <doi>10.3390/math14132421</doi>
+            <license>http://creativecommons.org/licenses/by/4.0/</license>
+            <abstract>This review examines neural operator architectures for learning solution operators of parametric partial differential equations (PDEs), with an emphasis on conceptual clarity and practical implementation. The work analyzes key models, including DeepONet, PCANet, and the Fourier Neural Operator, highlighting their underlying representations, computational structures, and comparative performance. These architectures are demonstrated on three canonical PDE problems: the Poisson equation, a linear elasticity problem, and a hyperelasticity problem. To make the presentation self-contained, key foundational topics are introduced, including finite-dimensional representations of function spaces, singular-value decomposition, and sampling from infinite-dimensional function spaces. Beyond forward modeling, the review discusses the use of neural operators as surrogate models within a Bayesian inverse-problem framework, including prior specification, forward-map approximation, and posterior computation. The performance of the three neural-operator architectures is evaluated on in-distribution samples, out-of-distribution samples, and Bayesian inference tasks. The review also discusses challenges related to prediction accuracy and generalization, outlining emerging strategies such as residual-based error correction and multi-level training. The review concludes by positioning neural operators within broader scientific-computing workflows and by identifying directions for reliable, scalable operator learning.</abstract>
+    </arXiv>
+
+            </metadata>
+        </record>
+                    <record>
+                <header>
+        <identifier>oai:arXiv.org:2606.10062</identifier>
+        <datestamp>2026-07-10</datestamp>
+            <setSpec>cs:cs:AI</setSpec>
+            <setSpec>cs:cs:MA</setSpec>
+    </header>
+
+            <metadata>
+                        <arXiv xmlns="http://arxiv.org/OAI/arXiv/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://arxiv.org/OAI/arXiv/ https://oaipmh.arxiv.org/OAI/arXiv.xsd">
+        <id>2606.10062</id>
+        <created>2026-07-09</created>
+            <updated>2026-07-10</updated>
+        <authors>
+                <author>
+                    <keyname>Lei</keyname>
+                </author>
+                <author>
+                    <keyname>Chen</keyname>
+                </author>
+                <author>
+                    <keyname>Zhang</keyname>
+                        <forenames>Guilin</forenames>
+                </author>
+                <author>
+                    <keyname>Zhao</keyname>
+                        <forenames>Kai</forenames>
+                </author>
+                <author>
+                    <keyname>Cirne</keyname>
+                        <forenames>Dalmo</forenames>
+                </author>
+                <author>
+                    <keyname>Olsen</keyname>
+                        <forenames>Andy</forenames>
+                </author>
+                <author>
+                    <keyname>Chu</keyname>
+                        <forenames>Xu</forenames>
+                </author>
+                <author>
+                    <keyname>Miller</keyname>
+                        <forenames>Zeke</forenames>
+                </author>
+                <author>
+                    <keyname>Blanken</keyname>
+                        <forenames>Alet</forenames>
+                </author>
+                <author>
+                    <keyname>Anoun</keyname>
+                        <forenames>Amine</forenames>
+                </author>
+                <author>
+                    <keyname>Ting</keyname>
+                        <forenames>Jerry</forenames>
+                </author>
+        </authors>
+        <title>Deployment-Time Memorization in Foundation-Model Agents</title>
+            <categories>cs.AI cs.MA</categories>
+            <comments>4 pages, ICML MemFM 2026 Workshop</comments>
+            <license>http://creativecommons.org/licenses/by/4.0/</license>
+            <abstract>Foundation-model agents are increasingly long-lived systems that remember users across interactions, making memorization an explicit deployment-time function rather than solely a property of model weights. Existing work addresses parametric memorization or audits fixed memory configurations, but does not characterize how memory-design choices jointly shape personalization utility, extraction risk, and deletion fidelity. We study this surface as deployment-time memorization, formulating agent memory as a privacy-utility frontier measured by Personalization Recall (PR) and Adversarial Extraction Rate (AER), and sweeping three memory-design knobs: summarization aggressiveness, retrieval breadth (k), and deletion mode. We further introduce the Forgetting Residue Score (FRS) to quantify whether deleted information remains recoverable from derived memory tiers. On LongMemEval, key-fact summarization reduces canary extraction by 76% on Gemma 3 12B and 64% on GPT-4o-mini while preserving nearly all personalization recall; critically, once content is compressed away, increasing k no longer restores leakage. The same compression, however, induces a deletion-fidelity failure: raw-only deletion leaves derived summary copies recoverable in approximately 20% of instances, and only full-pipeline purge or tombstone redaction drives worst-tier residue to zero. Together, these results establish that persistent agent memory must be evaluated as a first-class memorization mechanism -- assessed by what it helps agents recall, what it makes extractable, and what it can truly erase.</abstract>
+    </arXiv>
+
+            </metadata>
+        </record>
+                    <record>
+                <header status="deleted">
+        <identifier>oai:arXiv.org:2401.00000</identifier>
+        <datestamp>2026-07-10</datestamp>
+            <setSpec>cs:cs:LG</setSpec>
+    </header>
+        </record>
+        <resumptionToken cursor="0" completeListSize="809">6941976|1001</resumptionToken>
+    </ListRecords>
+</OAI-PMH>
