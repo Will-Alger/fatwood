@@ -73,7 +73,7 @@ param apiMinReplicas int = 0
 param apiMaxReplicas int = 2
 
 @description('vCPU per API replica, as a string for json() (e.g. \'0.5\', \'1\').')
-param apiCpu string = '0.5'
+param apiCpu string = '1'
 param apiMemory string = '2Gi'
 
 @allowed(['Basic', 'Standard', 'Premium'])
@@ -491,7 +491,7 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
           name: 'ingest-delta'
           image: containerImage
           args: ['ingest', 'delta']
-          resources: { cpu: json('0.5'), memory: '2Gi' }
+          resources: { cpu: json('1'), memory: '2Gi' }
           env: [
             { name: 'ConnectionStrings__Default', secretRef: 'db-connection' }
             { name: 'Database__MigrateOnStartup', value: 'false' }
