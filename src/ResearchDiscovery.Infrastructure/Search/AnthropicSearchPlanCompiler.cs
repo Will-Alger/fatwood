@@ -4,6 +4,7 @@ using Anthropic.Models.Beta.Messages;
 using Microsoft.Extensions.Logging;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
+using ResearchDiscovery.Infrastructure.Arxiv;
 
 namespace ResearchDiscovery.Infrastructure.Search;
 
@@ -63,12 +64,18 @@ public class AnthropicSearchPlanCompiler(
 
     private const string SystemPrompt =
         "You compile natural-language search intent into a structured plan for a research-paper " +
-        "discovery tool. The user browses recent arXiv papers looking for buildable portfolio " +
-        "projects. Your anchor_text drives an embedding similarity match against paper abstracts, " +
-        "so translate career goals and vague intent into the concrete research topics, methods, and " +
-        "problem domains that relevant abstracts would actually contain. Choose categories only " +
-        "from the provided known list. Do not narrow more than the query warrants: when in doubt, " +
-        "include more categories and leave filters null. Never invent filters the user didn't imply.";
+        "discovery tool. The user browses arXiv papers looking for buildable portfolio projects. " +
+        "Your anchor_text drives an embedding similarity match against paper abstracts, so " +
+        "translate career goals and vague intent into the concrete research topics, methods, and " +
+        "problem domains that relevant abstracts would actually contain. " +
+        "The corpus spans many fields, so category selection is how a search lands in the right " +
+        "FIELD: infer the field(s) from the user's intent and profile, not just from keywords — a " +
+        "pre-med student's 'resume projects' wants quantitative biology and medical imaging, an " +
+        "audio engineer's wants sound and speech processing, a backend engineer's wants distributed " +
+        "systems and databases. Choose categories only from the provided known list. Pick narrowly " +
+        "when the query names a field; include every plausibly relevant category when intent spans " +
+        "fields; and return an EMPTY list for genuinely cross-domain queries — empty deliberately " +
+        "searches everything and is often right. Never invent filters the user didn't imply.";
 
     public async Task<SearchPlan> CompileAsync(
         string query,
@@ -102,7 +109,8 @@ public class AnthropicSearchPlanCompiler(
                 {
                     Role = Role.User,
                     Content = $"""
-                        Known category codes (choose only from these): {string.Join(", ", knownCategories)}
+                        Known categories (choose only from these codes):
+                        {FormatKnownCategories(knownCategories)}
                         {profileBlock}
                         Search query:
                         {query}
@@ -130,6 +138,17 @@ public class AnthropicSearchPlanCompiler(
             "Compiled search via {Model}: {Interpretation}", model.Id, plan.Interpretation);
         return plan;
     }
+
+    /// <summary>
+    /// One "code - Display Name" line per known category, sorted, so the
+    /// model can infer FIELDS from intent instead of pattern-matching bare
+    /// codes. Unknown codes fall back to the code itself.
+    /// </summary>
+    internal static string FormatKnownCategories(IReadOnlyList<string> knownCategories) =>
+        string.Join("\n", knownCategories
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(c => c, StringComparer.Ordinal)
+            .Select(c => $"{c} - {ArxivCategoryNames.DisplayNameFor(c)}"));
 
     internal static SearchPlan ParsePlan(string json, IReadOnlyList<string> knownCategories)
     {
