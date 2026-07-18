@@ -48,19 +48,36 @@ public class ArxivOaiClient(
         {
             await PaceAsync(ct);
 
-            using var response = await httpClient.GetAsync(url, ct);
-            if (response.StatusCode == HttpStatusCode.ServiceUnavailable && attempt < MaxAttempts)
+            try
             {
-                var delay = RetryAfterDelay(response);
-                logger.LogWarning(
-                    "arXiv OAI returned 503; waiting {DelaySeconds}s before retry {Attempt}/{MaxAttempts}",
-                    delay.TotalSeconds, attempt, MaxAttempts - 1);
-                await Task.Delay(delay, ct);
-                continue;
-            }
+                using var response = await httpClient.GetAsync(url, ct);
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable && attempt < MaxAttempts)
+                {
+                    var delay = RetryAfterDelay(response);
+                    logger.LogWarning(
+                        "arXiv OAI returned 503; waiting {DelaySeconds}s before retry {Attempt}/{MaxAttempts}",
+                        delay.TotalSeconds, attempt, MaxAttempts - 1);
+                    await Task.Delay(delay, ct);
+                    continue;
+                }
 
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync(ct);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadAsStringAsync(ct);
+            }
+            catch (Exception ex) when (
+                attempt < MaxAttempts &&
+                !ct.IsCancellationRequested &&
+                ex is HttpRequestException or TaskCanceledException or IOException)
+            {
+                // Transport stalls happen on hour-long harvests (a single page
+                // exceeding HttpClient.Timeout killed a 63-minute run once) —
+                // treat them like flow control, not fatal errors. Real
+                // cancellation is excluded above and propagates.
+                logger.LogWarning(ex,
+                    "arXiv OAI request failed ({Kind}); waiting {DelaySeconds}s before retry {Attempt}/{MaxAttempts}",
+                    ex.GetType().Name, DefaultRetryAfter.TotalSeconds, attempt, MaxAttempts - 1);
+                await Task.Delay(DefaultRetryAfter, ct);
+            }
         }
     }
 
