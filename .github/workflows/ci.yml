@@ -66,7 +66,7 @@ jobs:
   eval-gate:
     runs-on: ubuntu-latest
     env:
-      EVAL_NDCG_FLOOR: "0.575"
+      EVAL_NDCG_FLOOR: "0.610"
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=researchdb;Username=research;Password=ci
       Database__MigrateOnStartup: "true"
     services:
