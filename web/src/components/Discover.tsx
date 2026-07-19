@@ -20,6 +20,7 @@ import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
 import { PaperCard } from './PaperCard'
 import { RecentSearches } from './RecentSearches'
 import { EmberDots, PaperSkeletons } from './Skeletons'
+import { categoryGloss } from '../data/categoryGloss'
 
 const SEARCH_STAGES = [
   'Sifting tens of thousands of papers…',
@@ -488,10 +489,15 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
           <p className="plan-interpretation">
             <strong>Searching for:</strong> {plan.interpretation}
           </p>
+          <p className="plan-chips-caption">
+            {plan.categories.length > 0
+              ? 'Limited to these fields (hover to see what each covers, × to drop one):'
+              : 'Searching every field — no category filter applied.'}
+          </p>
           <div className="plan-chips">
             {plan.categories.map((code) => (
-              <span key={code} className="chip">
-                {code}
+              <span key={code} className="chip chip-category" title={categoryGloss(code)}>
+                <span className="chip-code">{code}</span>
                 <button
                   type="button"
                   aria-label={`Remove ${code}`}
