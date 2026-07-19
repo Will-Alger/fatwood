@@ -275,6 +275,18 @@ The plumbing remains for the next candidate worth an online check.
 NOTE from the same bias report: wildcard slots showed 0 of expected ~70
 across those searches (0% yield vs 24.6% non-wildcard) — the wildcard
 selection path likely regressed during the search rework; investigate.
+Steward follow-up 2026-07-19: the selection code itself is correct — it is
+now pinned by WildcardSelectionTests (unit) and WildcardSearchApiTests
+(end-to-end incl. telemetry). Two findings from reproducing the symptom:
+(a) integration tests seeded embeddings under the retired
+"all-MiniLM-L6-v2" model version, so every integration-test search ran
+BM25-only against an EMPTY dense index — hybrid fusion masked it; seeds
+now follow the host's configured ModelVersion. (b) Wildcards are only
+selected when the searching user has a non-empty ExperienceSummary at
+search time — 0-of-70 shown means product searches resolved no profile
+(anonymous request, unclaimed legacy profile row, or empty summary).
+SearchService now logs which case each search hits; check API logs and
+SearchEvents.UserId in prod after the next deploy.
 
 4. **LTR** once labels cross ~200 (see §4).
 6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,

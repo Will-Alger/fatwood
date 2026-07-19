@@ -126,6 +126,19 @@ public class SearchService(
             var experienceVector = await embedder.EmbedAsync(profile!.ExperienceSummary, ct);
             experienceScores = await index.ScoreAsync(
                 pool.Select(s => s.Paper.PaperId), experienceVector, ct);
+            if (experienceScores.Count == 0)
+            {
+                logger.LogWarning(
+                    "Experience scoring found vectors for none of the {Pool} pool papers — " +
+                    "wildcard and proximity selection degrade to rank order (index out of sync with corpus?)",
+                    pool.Count);
+            }
+        }
+        else if (userId is not null)
+        {
+            logger.LogInformation(
+                "Search for user {UserId} has no experience profile — wildcard slots and proximity " +
+                "annotations are disabled", userId);
         }
 
         var variantByPaper = pool
