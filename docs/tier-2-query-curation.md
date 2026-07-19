@@ -18,10 +18,14 @@ a role change, not a new subsystem.
 
 ## Phases
 
-### A. Corpus substrate (in flight)
+### A. Corpus substrate (DONE 2026-07-19)
 22-category, 10-year corpus fully harvested, embedded (int8), snapshotted.
 This is the platform the rest builds on. Done when snapshots are in blob
 storage and prod serves the full corpus.
+*Landed: 714,811 papers embedded+quantized (0 failures); snapshots
+`embeddings-bge-small-en-v1.5.bin` (286 MB) + `lexical-v1.bin` (431 MB) in
+blob container `search-index`; snapshot cold-load verified end-to-end
+(714,811 vectors / 476,490 terms load in seconds).*
 
 ### B. Compiler-as-curator v1 (start now — works on today's corpus)
 1. **Taxonomy-aware compiler prompt.** Give the compile step the full known
@@ -38,12 +42,20 @@ storage and prod serves the full corpus.
    *Harness shipped 2026-07-18: 14 persona queries with
    `expectedCategories`/`acceptableCategories` in eval/queries.json (plan:
    null — invisible to `eval search`/CI until judged) + the `eval categories`
-   verb (fresh-compiles, scores P/R/F1, flags taxonomy-unreachable codes).
-   First scored run + downstream-nDCG half pending Phase A completion.*
+   verb (fresh-compiles, scores P/R/F1, flags taxonomy-unreachable codes).*
+   *BASELINE 2026-07-19 (full 715k corpus, haiku compiler): recall 1.00 on
+   all 14 queries — every must-have field found (q-bio.QM for pre-med,
+   physics.comp-ph for the physics undergrad, econ.EM, eess.SP, ...), zero
+   unreachable codes (cross-listings already seed the methods-corner
+   taxonomy), and the strict cross-domain control correctly emitted NO
+   filter. Mean precision 0.75; every miss is over-inclusion of adjacent
+   codes (the mild failure mode — ranking still filters), never a wrong
+   field. GATE: PASSED → Phase C proceeds. Downstream-nDCG half rolls into
+   the Phase D re-baseline.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
 
-### C. Methods-corner ingestion (Tier 1 increment, after A lands)
+### C. Methods-corner ingestion (STARTED 2026-07-19: categories configured, API+ingest job scaled to 2vCPU/4Gi, harvest round 3 launched)
 Add the computational corners of other fields: physics.comp-ph,
 physics.data-an, astro-ph.IM, math.OC, math.NA, q-bio.QM, q-bio.PE,
 q-bio.BM, eess.IV, eess.AS, eess.SP, eess.SY, stat.ML, stat.CO, econ.EM.

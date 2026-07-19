@@ -72,9 +72,9 @@ param pgDatabaseName string = 'researchdb'
 param apiMinReplicas int = 0
 param apiMaxReplicas int = 2
 
-@description('vCPU per API replica, as a string for json() (e.g. \'0.5\', \'1\').')
-param apiCpu string = '1'
-param apiMemory string = '2Gi'
+@description('vCPU per API replica, as a string for json() (e.g. \'0.5\', \'1\'). The packed search indexes over the ~1M-paper corpus need ~1.3 GB resident, so 4Gi is a functional floor, not a tuning knob.')
+param apiCpu string = '2'
+param apiMemory string = '4Gi'
 
 @allowed(['Basic', 'Standard', 'Premium'])
 param acrSku string = 'Basic'
@@ -491,7 +491,9 @@ resource ingestJob 'Microsoft.App/jobs@2024-03-01' = if (deployIngestJob) {
           name: 'ingest-delta'
           image: containerImage
           args: ['ingest', 'delta']
-          resources: { cpu: json('1'), memory: '2Gi' }
+          // The post-ingest embed step builds BOTH packed indexes in memory
+          // before snapshotting them - same ~1.3 GB residency as the API.
+          resources: { cpu: json('2'), memory: '4Gi' }
           env: [
             { name: 'ConnectionStrings__Default', secretRef: 'db-connection' }
             { name: 'Database__MigrateOnStartup', value: 'false' }
