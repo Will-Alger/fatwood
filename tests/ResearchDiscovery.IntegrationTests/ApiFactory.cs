@@ -135,6 +135,15 @@ public class ApiFactory : WebApplicationFactory<Program>
 
     // Schema creation happens in ConfigureServices (pre-start) — see above.
 
+    /// <summary>
+    /// The embedding model version the running host actually indexes. Seeded
+    /// vectors MUST carry this tag — rows under any other version are
+    /// invisible to the index and search silently degrades to lexical-only.
+    /// </summary>
+    public string ConfiguredModelVersion => Services
+        .GetRequiredService<Microsoft.Extensions.Options.IOptions<Application.Options.EmbeddingOptions>>()
+        .Value.ModelVersion;
+
     public async Task SeedAsync(Func<AppDbContext, Task> seed)
     {
         await using var scope = Services.CreateAsyncScope();

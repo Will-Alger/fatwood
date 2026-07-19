@@ -27,6 +27,7 @@ public class SearchApiTests
     /// <summary>Seeds papers plus stub-embedder vectors matching the configured model version.</summary>
     private static async Task SeedWithEmbeddingsAsync(ApiFactory factory)
     {
+        var modelVersion = factory.ConfiguredModelVersion;
         await factory.SeedAsync(TestData.SeedPapersAsync);
         await factory.SeedAsync(async db =>
         {
@@ -36,7 +37,7 @@ public class SearchApiTests
                 db.PaperEmbeddings.Add(new PaperEmbedding
                 {
                     PaperId = paper.Id,
-                    ModelVersion = "all-MiniLM-L6-v2",
+                    ModelVersion = modelVersion,
                     Vector = ToBytes(ApiFactory.StubTextEmbedder.Embed(
                         $"{paper.Title}. {paper.Abstract}")),
                     CreatedUtc = DateTimeOffset.UtcNow,

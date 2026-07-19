@@ -275,6 +275,24 @@ The plumbing remains for the next candidate worth an online check.
 NOTE from the same bias report: wildcard slots showed 0 of expected ~70
 across those searches (0% yield vs 24.6% non-wildcard) — the wildcard
 selection path likely regressed during the search rework; investigate.
+INVESTIGATED 2026-07-19 (steward): the analyzer's wildcard counter is
+all-time, not per-experiment — so this is "zero wildcards EVER logged
+since telemetry began 2026-07-10", not a rework regression. The selection
+code is sound: new end-to-end tests (`WildcardSelectionTests`) pin the
+contract — profile + pool deeper than the limit ⇒ exactly two wildcard
+slots, drawn from the least experience-similar cluster, faithfully logged
+to `SearchEventResults`. Writing them surfaced the one mechanism that CAN
+silently kill wildcards: embedding rows tagged with a model version the
+index doesn't serve make dense retrieval return nothing, and BM25 quietly
+carries the search — match% 0, no proximity, no wildcards, no errors. The
+integration-test seeds had exactly that bug (still tagged all-MiniLM-L6-v2
+after the bge switch; those tests were exercising lexical-only retrieval)
+— fixed. `SearchService` now logs a warning when dense retrieval is empty
+but BM25 matched, and an info line when a signed-in search has no
+experience summary. After this deploys, one of those two lines names the
+prod cause: an empty/orphaned profile row (info) or a broken index/model-
+version linkage (warning). Offline eval can never catch this — wildcards
+are excluded from scoring by design.
 
 4. **LTR** once labels cross ~200 (see §4).
 6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,

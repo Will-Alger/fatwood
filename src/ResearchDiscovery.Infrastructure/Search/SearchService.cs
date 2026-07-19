@@ -127,6 +127,15 @@ public class SearchService(
             experienceScores = await index.ScoreAsync(
                 pool.Select(s => s.Paper.PaperId), experienceVector, ct);
         }
+        else if (userId is not null)
+        {
+            // Wildcards and proximity silently vanish without an experience
+            // summary; say so, or a broken exploration guarantee looks like
+            // user behavior (bias report 2026-07-19: 0 wildcards ever shown).
+            logger.LogInformation(
+                "Search for user {UserId} has no experience summary — wildcard slots and proximity annotations are disabled",
+                userId);
+        }
 
         var variantByPaper = pool
             .Where(p => p.Variant is not null)
@@ -213,6 +222,15 @@ public class SearchService(
         {
             var lexical = await lexicalIndex.TopAsync(
                 plan.AnchorText, poolSize, candidateIds, ct, publishedAfter);
+            if (pool.Count == 0 && lexical.Count > 0)
+            {
+                // BM25 will carry the search, so nothing visibly fails — but
+                // match% reads 0 and wildcard/proximity annotations go dark.
+                logger.LogWarning(
+                    "Dense retrieval returned nothing (model {ModelVersion}) while BM25 matched {LexicalCount} papers — the embedding index has no vectors for this corpus/model; search is degraded to lexical-only",
+                    embeddingOptions.Value.ModelVersion, lexical.Count);
+            }
+
             pool = await FuseAsync(pool, lexical, anchorVectors, poolSize, ct);
         }
 
