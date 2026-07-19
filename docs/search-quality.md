@@ -267,12 +267,14 @@ recalibrated to 0.575.
 3. **Recency-normalized citations** (citations/day) as a blend feature.
 ~~CI regression gate~~ — LIVE 2026-07-12 (see §2).
 
-~~Interleaving in anger~~ — LIVE 2026-07-12: production searches now
-team-draft interleave the shipped stack (HyDE on) against the same stack
-with HyDE off (`Ranking:InterleaveCandidate` + `Candidate` in appsettings).
-Real clicks vote; check the scoreboard with `eval bias` against the PROD
-telemetry once >20 votes accumulate. Offline says +0.02 for HyDE — this is
-the free online confirmation. Turn it off (flag false) once decided.
+~~Interleaving in anger~~ — RETIRED 2026-07-19: final scoreboard was a
+dead tie (control 78 votes vs HyDE-off candidate 78, over 345 slots each,
+35 searches). Online users can't distinguish the stacks; offline says
++0.02 for HyDE, so HyDE stays shipped and `InterleaveCandidate` is false.
+The plumbing remains for the next candidate worth an online check.
+NOTE from the same bias report: wildcard slots showed 0 of expected ~70
+across those searches (0% yield vs 24.6% non-wildcard) — the wildcard
+selection path likely regressed during the search rework; investigate.
 
 4. **LTR** once labels cross ~200 (see §4).
 6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,

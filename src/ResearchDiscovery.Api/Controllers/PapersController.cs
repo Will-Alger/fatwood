@@ -34,12 +34,19 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         [FromQuery] int pageSize = DefaultPageSize,
         [FromQuery] string sort = "published_desc",
         [FromQuery] bool analyzedOnly = false,
+        [FromQuery] int? windowDays = null,
         CancellationToken ct = default)
     {
         if (page < 1)
         {
             return Problem(statusCode: StatusCodes.Status400BadRequest,
                 detail: "page must be >= 1.");
+        }
+
+        if (windowDays is < 1)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                detail: "windowDays must be >= 1 when provided.");
         }
 
         PaperSortOrder? sortOrder = sort switch
@@ -66,7 +73,7 @@ public class PapersController(IPaperQueryService queryService) : ControllerBase
         var result = await queryService.GetPapersAsync(
             new PaperListQuery(
                 codes, page, Math.Clamp(pageSize, 1, MaxPageSize), sortOrder.Value,
-                analyzedOnly, bookmarkedOnly, HttpContext.GetAppUser()?.Id),
+                analyzedOnly, bookmarkedOnly, HttpContext.GetAppUser()?.Id, windowDays),
             ct);
 
         return Ok(result);

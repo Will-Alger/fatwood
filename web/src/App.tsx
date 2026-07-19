@@ -38,6 +38,7 @@ export default function App() {
   const [sort, setSort] = useState<SortOrder>('published_desc')
   const [analyzedOnly, setAnalyzedOnly] = useState(false)
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false)
+  const [windowDays, setWindowDays] = useState<number | null>(null)
 
   const { me, ready, signedOut, refresh } = useMe()
   const { categories, error: categoriesError } = useCategories()
@@ -48,6 +49,7 @@ export default function App() {
     sort,
     analyzedOnly,
     bookmarkedOnly,
+    windowDays,
   )
   // Analyzing a browsed paper refreshes the page in place so its card updates,
   // and the account so the budget chip reflects the spend.
@@ -245,6 +247,25 @@ export default function App() {
                 <option value="published_desc">Newest first</option>
                 <option value="published_asc">Oldest first</option>
                 <option value="score_desc">Best project score</option>
+              </select>
+            </label>
+            <label>
+              Published{' '}
+              <select
+                value={windowDays ?? ''}
+                onChange={(e) => {
+                  setWindowDays(e.target.value === '' ? null : Number(e.target.value))
+                  setPage(1)
+                }}
+              >
+                <option value="">any time</option>
+                <option value="7">last week</option>
+                <option value="30">last month</option>
+                <option value="90">last 90 days</option>
+                <option value="365">last year</option>
+                <option value="1095">last 3 years</option>
+                <option value="1825">last 5 years</option>
+                <option value="3650">last 10 years</option>
               </select>
             </label>
             <label className="toolbar-toggle">

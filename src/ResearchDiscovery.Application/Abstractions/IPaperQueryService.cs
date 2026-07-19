@@ -13,6 +13,8 @@ public enum PaperSortOrder
 
 /// <param name="UserId">Whose bookmarks/analyses to surface; null (anonymous)
 /// sees corpus data only.</param>
+/// <param name="WindowDays">Restrict to papers published in the last N days;
+/// null = the whole corpus.</param>
 public sealed record PaperListQuery(
     IReadOnlyList<string> CategoryCodes,
     int Page,
@@ -20,7 +22,8 @@ public sealed record PaperListQuery(
     PaperSortOrder Sort,
     bool AnalyzedOnly = false,
     bool BookmarkedOnly = false,
-    long? UserId = null);
+    long? UserId = null,
+    int? WindowDays = null);
 
 /// <summary>Read-only browse queries. Serves exclusively from the database; never touches arXiv.</summary>
 public interface IPaperQueryService

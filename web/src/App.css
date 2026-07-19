@@ -1458,6 +1458,25 @@ select {
   color: var(--faint);
 }
 
+.search-box .time-gate {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--faint);
+}
+
+.search-box .time-gate select {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
 .search-box textarea:focus {
   border-color: var(--ember);
   outline: none;

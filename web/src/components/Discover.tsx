@@ -79,6 +79,10 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
   const [activeSearchId, setActiveSearchId] = useState<number | null>(null)
   // arXiv ids whose analysis just landed — drives the one-shot "ignite" glow.
   const [glowIds, setGlowIds] = useState<ReadonlySet<string>>(new Set())
+  // Standing time-gate preference for NEW searches: 'auto' defers to the
+  // compiler's inference, null forces any-time, a number forces last-N-days.
+  // The per-search chip still edits the current plan independently.
+  const [presetWindow, setPresetWindow] = useState<'auto' | number | null>('auto')
 
   // Funnel-stage copy that steps forward while the first search runs; the
   // ambient ember field (App-level) provides the visual feedback.
@@ -228,6 +232,11 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     }
   }
 
+  /** The user's standing time-gate choice beats the compiler's inference. */
+  function applyPresetWindow(p: SearchPlan): SearchPlan {
+    return presetWindow === 'auto' ? p : { ...p, dateWindowDays: presetWindow }
+  }
+
   async function handleSearch(overrideQuery?: string) {
     const trimmed = (overrideQuery ?? query).trim()
     if (!trimmed) return
@@ -235,7 +244,9 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     // Re-running the same text re-executes the existing plan — deterministic
     // and free. Only genuinely new text goes back through the LLM compiler.
     if (trimmed === lastCompiledQuery && planRef.current) {
-      await executePlan(planRef.current)
+      const next = applyPresetWindow(planRef.current)
+      setPlan(next)
+      await executePlan(next)
       return
     }
 
@@ -243,7 +254,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     setError(null)
     setNotice(null)
     try {
-      const compiled = await compileSearch(trimmed)
+      const compiled = applyPresetWindow(await compileSearch(trimmed))
       refreshMe() // compilation spent tokens — update the budget chip
       setLastCompiledQuery(trimmed)
       queryTextRef.current = trimmed
@@ -415,6 +426,33 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
           rows={2}
           aria-label="Describe what you want to build"
         />
+        <label className="time-gate">
+          <span>time</span>
+          <select
+            value={presetWindow === 'auto' ? 'auto' : (presetWindow ?? '')}
+            onChange={(e) =>
+              setPresetWindow(
+                e.target.value === 'auto'
+                  ? 'auto'
+                  : e.target.value === ''
+                    ? null
+                    : Number(e.target.value),
+              )
+            }
+            aria-label="Time window for new searches"
+            title="Restrict new searches to a publication window — auto lets the search planner decide"
+          >
+            <option value="auto">auto</option>
+            <option value="">any time</option>
+            <option value="7">last week</option>
+            <option value="30">last month</option>
+            <option value="90">last 90 days</option>
+            <option value="365">last year</option>
+            <option value="1095">last 3 years</option>
+            <option value="1825">last 5 years</option>
+            <option value="3650">last 10 years</option>
+          </select>
+        </label>
         <button
           type="button"
           className="primary-button"

@@ -17,6 +17,7 @@ export function usePapers(
   sort: SortOrder,
   analyzedOnly: boolean,
   bookmarkedOnly: boolean,
+  windowDays: number | null,
 ): UsePapersState {
   const [state, setState] = useState<Omit<UsePapersState, 'refetch'>>({
     data: null,
@@ -40,6 +41,7 @@ export function usePapers(
         sort,
         analyzedOnly,
         bookmarkedOnly,
+        windowDays,
       },
       controller.signal,
     )
@@ -54,7 +56,7 @@ export function usePapers(
       })
 
     return () => controller.abort()
-  }, [categoriesKey, page, pageSize, sort, analyzedOnly, bookmarkedOnly, reloadKey])
+  }, [categoriesKey, page, pageSize, sort, analyzedOnly, bookmarkedOnly, windowDays, reloadKey])
 
   return { ...state, refetch: () => setReloadKey((k) => k + 1) }
 }

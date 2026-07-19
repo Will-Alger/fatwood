@@ -101,10 +101,12 @@ export interface GetPapersParams {
   sort: SortOrder
   analyzedOnly: boolean
   bookmarkedOnly: boolean
+  /** Only papers published in the last N days; null = whole corpus. */
+  windowDays: number | null
 }
 
 export function getPapers(
-  { categories, page, pageSize, sort, analyzedOnly, bookmarkedOnly }: GetPapersParams,
+  { categories, page, pageSize, sort, analyzedOnly, bookmarkedOnly, windowDays }: GetPapersParams,
   signal?: AbortSignal,
 ): Promise<PagedResult<PaperDto>> {
   const query = new URLSearchParams({
@@ -120,6 +122,9 @@ export function getPapers(
   }
   if (bookmarkedOnly) {
     query.set('bookmarkedOnly', 'true')
+  }
+  if (windowDays !== null) {
+    query.set('windowDays', String(windowDays))
   }
   return getJson(`/api/papers?${query.toString()}`, signal)
 }

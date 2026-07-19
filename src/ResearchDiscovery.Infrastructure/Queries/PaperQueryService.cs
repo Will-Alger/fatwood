@@ -36,6 +36,12 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
             papers = papers.Where(p => p.Bookmarks.Any(b => b.UserId == userId));
         }
 
+        if (query.WindowDays is { } windowDays)
+        {
+            var cutoff = DateTimeOffset.UtcNow.AddDays(-windowDays);
+            papers = papers.Where(p => p.PublishedUtc >= cutoff);
+        }
+
         var totalItems = await papers.CountAsync(ct);
 
         papers = query.Sort switch

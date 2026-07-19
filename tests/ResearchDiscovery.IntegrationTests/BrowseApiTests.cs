@@ -91,6 +91,26 @@ public class BrowseApiTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task GetPapers_WindowDays_ExcludesOlderPapers()
+    {
+        // Seeds publish at -1d, -5d, and -10d; a 7-day window keeps two.
+        var result = await _client.GetFromJsonAsync<PagedResult<PaperDto>>(
+            "/api/papers?windowDays=7");
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalItems);
+        Assert.DoesNotContain("2501.00002", result.Items.Select(p => p.ArxivId));
+    }
+
+    [Fact]
+    public async Task GetPapers_WindowDaysBelowOne_Returns400()
+    {
+        var response = await _client.GetAsync("/api/papers?windowDays=0");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task GetPapers_InvalidSort_Returns400()
     {
         var response = await _client.GetAsync("/api/papers?sort=title");

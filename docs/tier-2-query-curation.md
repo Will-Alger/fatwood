@@ -52,6 +52,15 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    codes (the mild failure mode — ranking still filters), never a wrong
    field. GATE: PASSED → Phase C proceeds. Downstream-nDCG half rolls into
    the Phase D re-baseline.*
+   *PARSIMONY NUDGE MEASURED AND REJECTED 2026-07-19: a "smallest
+   sufficient set / don't pad adjacent fields" prompt rewrite gained 0.01
+   precision but broke recall on quant-trading (missed BOTH must-have
+   q-fin codes) and flipped the cross-domain control from correctly-empty
+   to a guessed cs-list; mean F1 0.83 → 0.74. Reverted. Lesson: the
+   current prompt's over-inclusion is cheap (ranking filters); pushing
+   haiku toward parsimony trades it for under-inclusion, which is not.
+   Single-run haiku variance is real (±0.1 per-query precision) — any
+   future prompt comparison should average 3 runs.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
 
