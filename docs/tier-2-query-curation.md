@@ -55,7 +55,12 @@ blob container `search-index`; snapshot cold-load verified end-to-end
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
 
-### C. Methods-corner ingestion (STARTED 2026-07-19: categories configured, API+ingest job scaled to 2vCPU/4Gi, harvest round 3 launched)
+### C. Methods-corner ingestion (DONE 2026-07-19)
+*Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
+physics:physics/math added 195,922 papers → corpus 910,733 / 37
+categories; snapshots 364MB+537MB (551,388 terms) live; prod serving the
+full corpus at 2vCPU/4Gi. The 14 persona queries are compiled+judged and
+now score in `eval search` (their downstream-nDCG half is live).*
 Add the computational corners of other fields: physics.comp-ph,
 physics.data-an, astro-ph.IM, math.OC, math.NA, q-bio.QM, q-bio.PE,
 q-bio.BM, eess.IV, eess.AS, eess.SP, eess.SY, stat.ML, stat.CO, econ.EM.

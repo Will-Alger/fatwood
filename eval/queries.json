@@ -22,7 +22,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a scalable end-to-end system for real-time financial data ingestion, processing, and algorithmic decision-making. Our architecture combines distributed computing with machine learning pipelines to predict short-term price movements and optimize portfolio rebalancing decisions. We validate the framework on historical market data across multiple asset classes, demonstrating 15-30% improvement in risk-adjusted returns compared to baseline strategies. The system achieves sub-millisecond latency for order execution and handles datasets at petabyte scale. Code and benchmarks are available for reproducibility.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "fraud-detection",
@@ -41,7 +43,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We propose a machine learning approach for detecting fraudulent payment transactions in real-time financial systems. Our method combines supervised classification with anomaly detection to identify fraudulent activity while minimizing false positives on legitimate transactions. We evaluate our approach on a large-scale payment dataset, achieving 0.94 AUC-ROC on held-out test transactions. We demonstrate implementation considerations including handling severe class imbalance, latency constraints, and feature engineering from transaction metadata. Our results show significant improvements over baseline fraud detection systems and provide practical guidance for production deployment.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "rl-trading",
@@ -60,7 +64,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a reinforcement learning framework for automated intraday trading strategy development. The approach employs a deep Q-network agent trained on open-source market data to learn optimal buy-sell decisions from raw OHLCV candlestick sequences. The agent is trained using experience replay and target networks on publicly available historical price feeds without requiring proprietary data. Backtesting on held-out periods demonstrates consistent Sharpe ratio improvements over baseline strategies with modest computational requirements suitable for commodity hardware. We provide open-source code and detailed reproduction instructions using standard Python libraries.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "market-microstructure",
@@ -79,7 +85,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a stochastic model of limit order book dynamics incorporating realistic order arrival and cancellation patterns. The model captures the joint evolution of bid-ask spreads, order queue positions, and price impact through coupled differential equations with empirical parameters extracted from high-frequency market data. We demonstrate that the model accurately reproduces stylized facts of financial microstructure including mean-reverting spreads, non-linear price impact, and the heavy-tailed distribution of order lifetimes. Simulation experiments validate the framework for studying execution algorithms and measuring market resilience under various order flow regimes. The approach enables efficient pricing of latency-sensitive strategies and prediction of short-term price movements from order flow imbalance.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "portfolio-optimization",
@@ -99,7 +107,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We propose a robust portfolio optimization framework that extends classical mean-variance analysis by incorporating higher-order moments and tail risk constraints through a multi-objective optimization formulation. Using convex optimization techniques, we simultaneously optimize Sharpe ratio and maximum drawdown across a universe of liquid assets while enforcing diversification constraints. We provide a fully reproducible implementation in Python with backtesting on fifteen years of historical market data, demonstrating significant out-of-sample performance improvements and reduced drawdowns compared to equal-weight and traditional mean-variance benchmarks across multiple market regimes.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "credit-risk-explainable",
@@ -118,7 +128,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Credit risk assessment and loan default prediction require models that satisfy regulatory scrutiny while maintaining predictive accuracy. We propose a framework combining gradient boosting with inherently interpretable feature engineering and SHAP-based local explanations to quantify individual feature contributions to default predictions. Our approach is validated on large-scale credit datasets, demonstrating comparable performance to black-box alternatives while providing audit trails suitable for regulatory examination. We show that interpretability constraints need not substantially compromise predictive power in loan default classification, and we provide post-hoc explanation methods for existing production models that enable compliance auditing.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "timeseries-forecasting",
@@ -137,7 +149,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "This paper presents a comprehensive empirical study comparing transformer-based architectures with classical time series forecasting methods on financial datasets. We evaluate self-attention mechanisms, multi-head attention, and positional encodings against ARIMA, exponential smoothing, and LSTM baselines across multiple financial instruments including stock indices and exchange rates. Our transformer model incorporates temporal feature embeddings and achieves state-of-the-art performance on standard benchmarks, with detailed ablation studies isolating the contribution of attention components. We provide extensive comparisons on metric dimensions including directional accuracy, mean absolute percentage error, and Sharpe ratio for trading signals, offering practitioners guidance on method selection and computational trade-offs.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "crypto-defi",
@@ -156,7 +170,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a comprehensive analysis of decentralized exchange (DEX) mechanics on Ethereum, examining how automated market maker (AMM) designs affect price discovery, slippage, and user outcomes. Using on-chain transaction data spanning six months, we characterize liquidity provision patterns, measure maximal extractable value (MEV) across protocol variants, and evaluate incentive structures that drive capital formation. Our findings reveal substantial inefficiencies in current pool designs and propose modifications to smart contract mechanics that improve execution quality for traders while maintaining incentive compatibility for liquidity providers. Code and datasets are released for reproducibility.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "quant-risk",
@@ -176,7 +192,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We propose a novel machine learning approach to value-at-risk estimation that combines extreme value theory with deep neural networks to better capture tail behavior in high-dimensional financial portfolios. Our method addresses limitations of traditional parametric and historical simulation approaches by adaptively learning nonlinear relationships between risk factors and extreme losses. We demonstrate superior out-of-sample performance on equity and fixed-income portfolios across multiple market regimes, with particular improvements in tail quantile forecasting during crisis periods. Backtesting results show our approach reduces both Type I and Type II errors compared to standard unconditional and conditional VaR models.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "llm-agents-swe",
@@ -194,7 +212,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We propose an end-to-end framework leveraging large language models to automate software engineering tasks including code review, bug detection, and test generation. Our approach fine-tunes transformer-based models on domain-specific software repositories and employs few-shot prompting strategies to generate contextually appropriate code reviews, identify potential defects, and synthesize unit tests. Experimental evaluation on open-source projects demonstrates that our LLM agent achieves 78% precision in bug detection and generates functionally correct test cases for 65% of target functions, significantly outperforming rule-based baselines while reducing manual effort in the software development lifecycle.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "rag-retrieval",
@@ -212,7 +232,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Retrieval-augmented generation systems rely critically on the quality of retrieved documents to ground language model outputs. We propose a framework for improving embedding-based retrieval by optimizing the alignment between query and document representations through contrastive learning objectives. We introduce novel evaluation metrics tailored to RAG performance and demonstrate that explicit relevance ranking supervision significantly improves downstream generation quality. Experiments on multiple retrieval benchmarks show our approach achieves state-of-the-art performance while maintaining computational efficiency for production deployment.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "vuln-detection",
@@ -230,7 +252,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a deep learning framework for detecting security vulnerabilities in source code by learning rich semantic representations of program structure. Our approach combines graph neural networks over abstract syntax trees and data dependency graphs with transformer-based encoders to capture both local code patterns and long-range semantic dependencies indicative of common vulnerability classes. We evaluate on large-scale datasets including CWE-annotated real-world code and synthetic vulnerability benchmarks, achieving state-of-the-art precision and recall on buffer overflows, SQL injection, use-after-free, and path traversal vulnerabilities. Our method generalizes across programming languages and outperforms traditional static analysis tools on novel vulnerability variants not seen during training.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "adversarial-ml-security",
@@ -249,7 +273,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We study the vulnerability of deep neural networks to adversarial perturbations, where small imperceptible changes to inputs can cause misclassification. We propose a defense mechanism based on adversarial training that robustly increases model resilience against both white-box and black-box attacks. Additionally, we investigate data poisoning attacks where an adversary injects malicious samples during training, and model extraction attacks where attackers query the model to reverse-engineer its weights. We evaluate our approach against multiple attack vectors on image classification benchmarks and provide empirical evidence of improved robustness without significant accuracy loss.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "privacy-preserving-ml",
@@ -267,7 +293,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Federated learning enables distributed training without centralizing sensitive data, but privacy remains a critical concern. We present a practical framework combining federated averaging with per-sample differential privacy noise injection, providing formal privacy guarantees while maintaining model utility. Our approach employs privacy budget allocation strategies and adaptive noise scheduling to balance convergence speed and privacy loss. We demonstrate the method on healthcare datasets with implementation details and code, showing that modest privacy budgets achieve competitive accuracy on realistic tasks. We provide empirical analysis of privacy-utility tradeoffs and discuss deployment considerations for resource-constrained devices.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "anomaly-detection-ops",
@@ -287,7 +315,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a practical anomaly detection framework for high-dimensional system telemetry combining unsupervised learning with statistical baselines. Our approach integrates time-series preprocessing, feature extraction from logs and metrics, and ensemble anomaly scoring to identify both point and collective anomalies in operational data. We evaluate on real production datasets spanning application metrics, system logs, and infrastructure telemetry, demonstrating detection rates above 85% with minimal false positives. The system handles concept drift and seasonal patterns common in operational environments, with latency suitable for real-time monitoring pipelines.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "testing-research",
@@ -303,7 +333,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Automated software testing remains a challenge in continuous integration pipelines, particularly in detecting and resolving flaky tests that fail intermittently regardless of code changes. We propose a novel approach combining fuzzing-guided test generation with machine learning-based flakiness prediction to identify tests prone to non-deterministic failures. Our method analyzes execution traces, timing characteristics, and environmental dependencies across multiple test runs, achieving 87% precision in flaky test detection on real-world projects. We demonstrate the approach on three large open-source repositories, showing that our tooling reduces false failures by 73% and accelerates CI/CD cycles by 41%.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "recommender-systems",
@@ -322,7 +354,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a lightweight recommender system designed for e-commerce platforms with limited user-item interaction data and sparse user histories. Our approach combines content-based item similarity with adaptive exploration strategies to address the cold-start problem for new users and items. We propose a scalable ranking mechanism that leverages item embeddings and lightweight collaborative signals to balance personalization with coverage. Experiments on small-scale datasets demonstrate competitive performance against heavier baselines while maintaining low computational overhead suitable for resource-constrained deployments. Our method achieves improved ranking quality and cold-start performance with minimal training data.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "vague-career-pivot",
@@ -343,7 +377,9 @@
         "requireNoCode": true,
         "hypotheticalAbstract": "We present a lightweight, production-ready inference system for deploying pre-trained neural networks at scale with minimal latency overhead. The system combines efficient model serving, adaptive batching, and intelligent caching to enable real-time predictions across distributed backend services. We evaluate on standard benchmarks, demonstrating sub-100ms latency inference with \u003C5% throughput overhead compared to naive approaches. Our implementation provides clear APIs for feature engineering and model management, making it practical for developers to integrate state-of-the-art models into existing backend systems without deep ML expertise. Code and documentation are publicly available.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "reproduction-gap",
@@ -368,7 +404,9 @@
         "requireNoCode": true,
         "hypotheticalAbstract": "We present a novel approach to [problem domain] that achieves state-of-the-art results through [methodological contribution]. Our method combines [technical components] to address [specific challenges], demonstrating improvements on [benchmark datasets/tasks]. While prior work has explored [related approaches], our framework uniquely [key differentiator], enabling [practical benefit]. Experimental validation on [evaluation setting] shows [quantitative results] compared to baselines. Code and datasets are made available to support reproducibility.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "hft-execution",
@@ -388,7 +426,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We propose a deep reinforcement learning framework for optimal trade execution that minimizes expected transaction costs while accounting for market impact and adverse selection. Our approach models the limit order book dynamics and uses a recurrent neural network to predict short-term price movements and liquidity conditions. We evaluate the algorithm on intraday equity data, demonstrating 15-20% reduction in implementation shortfall compared to classical VWAP and TWAP benchmarks. We further extend the framework to multi-asset execution with portfolio-level constraints and show that accounting for cross-asset correlations yields significant additional cost savings.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "adopted-agentic-llm-systems-for-automating-financial",
@@ -407,7 +447,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present an agentic framework for automated financial document analysis that integrates large language models with document retrieval, entity extraction, and reasoning modules. The system processes diverse financial documents including SEC filings, earnings reports, and regulatory submissions, extracting key entities, relationships, and compliance-relevant information through multi-step reasoning with tool access. We demonstrate the approach on document classification, cross-document question answering, and risk signal extraction from unstructured text. Empirical results show significant improvements over baseline LLM approaches in accuracy and interpretability, with application to financial due diligence and compliance workflows.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "mamba-timeseries",
@@ -425,7 +467,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We propose a systematic study of state space model architectures for long-range sequence modeling, comparing linear recurrent and semi-structured state space methods against transformer attention. Our key contribution is a unified framework analyzing how selective gating and parameterized state transitions enable effective context compression without quadratic attention complexity. We evaluate on long-context language modeling, time series forecasting, and synthetic tasks requiring 4K-16K token dependencies. Results demonstrate that properly designed SSM variants match or exceed transformer performance while maintaining linear or subquadratic complexity. We further provide ablations isolating the role of attention mechanisms, showing that structured state transitions and gating often subsume attention benefits. Code and benchmarks released for reproducibility.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "dpo-alignment",
@@ -443,7 +487,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Aligning large language models with human preferences typically requires computationally expensive reinforcement learning from human feedback (RLHF) with separate reward models. We propose and evaluate direct preference optimization (DPO), a simpler approach that extracts preference information directly from preference pairs without explicit reward modeling or reinforcement learning. We compare DPO against standard RLHF on open-source models up to 7B parameters, demonstrating comparable or superior alignment quality with significantly reduced training compute and memory requirements. Our results show DPO achieves comparable downstream task performance while being tractable on consumer-grade hardware, making preference-based alignment accessible for practitioners fine-tuning smaller open models.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "speculative-decoding",
@@ -461,7 +507,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a practical framework for accelerating large language model inference through speculative decoding, a technique that generates multiple candidate tokens in parallel and verifies them against the model in a single forward pass. Our method reduces per-token latency by leveraging lightweight drafting models to predict probable continuations, then validates predictions using cached key-value tensors to amortize compute cost. We demonstrate speedups of 1.5\u20132.5\u00D7 on various model sizes (7B\u201370B parameters) running on single-GPU hardware, with analysis of memory bandwidth trade-offs and draft model scaling. Experiments on standard benchmarks show consistent improvements across different sampling strategies and show negligible impact on output quality.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "kv-cache-serving",
@@ -480,7 +528,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "The key-value cache in transformer-based language models becomes a significant memory and latency bottleneck during long-context inference. We propose a multi-stage KV cache compression pipeline combining selective token pruning, post-training quantization to 4-bit precision, and learned low-rank decomposition of cache matrices. Our method maintains generation quality on long-context benchmarks while reducing cache memory by 6.5\u00D7 and improving throughput by 3.2\u00D7 on commodity GPUs. We demonstrate the approach on models up to 70B parameters and show compatibility with existing speculative decoding optimizations, achieving practical speedups on real serving workloads.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "hallucination-plain",
@@ -498,7 +548,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Large language models frequently generate plausible-sounding but factually incorrect statements with high confidence. We present a framework for detecting hallucinated outputs by combining uncertainty quantification from transformer hidden states with external knowledge verification. We evaluate our approach on multiple QA and dialogue benchmarks, achieving 78% hallucination detection accuracy while maintaining 92% recall on factual outputs. We additionally propose a training-time intervention using contrastive learning to reduce model confidence on out-of-distribution and unseen facts. Human evaluation confirms our method identifies problematic outputs before deployment in conversational agents.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "model-shrinking",
@@ -517,7 +569,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Deep neural networks achieve state-of-the-art accuracy but remain computationally expensive for deployment on mobile and edge devices. We propose a unified compression framework combining structured pruning, post-training quantization, and knowledge distillation to reduce model size and inference latency while maintaining task performance. Experiments on ImageNet and mobile vision tasks demonstrate 8-10\u00D7 compression and 4-6\u00D7 speedup with \u003C2% accuracy drop compared to full-precision baselines. The compressed models run efficiently on ARM processors without specialized hardware, enabling real-time inference on smartphones. Code and pre-compressed models are released for practitioners.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "ai-text-detection",
@@ -536,7 +590,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Detecting machine-generated text has become increasingly critical as large language models produce increasingly human-like outputs. We present a comprehensive analysis of linguistic signatures that distinguish text written by modern language models from human-authored content, including syntactic patterns, semantic coherence markers, and statistical distributional properties. We evaluate detection methods across multiple architectures (GPT-2, GPT-3, BERT-based generators) and datasets, achieving 87% F1-score on out-of-distribution test sets. Our findings reveal that detectors relying on single statistical features are vulnerable to adversarial paraphrasing, while ensemble approaches combining syntax, perplexity, and token-level confidence scores show robust generalization. We release an open-source detector and discuss implications for academic integrity and content authenticity verification.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "learn-from-few",
@@ -554,7 +610,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We address the challenge of training high-performance machine learning models when labeled data is severely limited. We propose a practical framework combining semi-supervised learning with self-supervised pretraining and active learning strategies to maximize model performance given a fixed annotation budget. Our method leverages unlabeled data through consistency regularization and pseudo-labeling while strategically selecting the most informative samples for manual labeling. Experiments on image and text classification tasks demonstrate that our approach achieves 85-92% of fully-supervised performance while requiring only 5-10% of the labeled data, making it suitable for resource-constrained production settings.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "llm-security",
@@ -573,7 +631,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We investigate prompt injection and jailbreak vulnerabilities in large language models, where carefully crafted inputs circumvent intended constraints to elicit harmful or unintended behaviors. We present a taxonomy of attack techniques spanning direct instruction override, context confusion, and constraint relaxation. We evaluate these attacks across multiple LLM architectures and propose practical defense mechanisms including input sanitization, prompt anchoring, and constraint verification. Our evaluation demonstrates that combining syntactic and semantic defenses reduces attack success rates by up to 85% while maintaining utility. We provide open-source tooling for security auditing and defense validation.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "ml-for-databases",
@@ -590,7 +650,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Accurate cardinality estimation is critical for query optimization, yet traditional statistical models struggle with complex predicates and correlated attributes. We propose a machine learning-based cardinality estimator that leverages deep neural networks to learn complex patterns in table statistics and query predicates, trained end-to-end on a workload of historical queries. Experiments on benchmark TPC-H and real OLTP workloads show 2-3\u00D7 improvements in query plan quality compared to PostgreSQL\u0027s default statistics-based estimator, with learned models that adapt dynamically to data distribution shifts. Our approach integrates seamlessly with existing query optimizers through a drop-in replacement for the selectivity computation layer, enabling immediate deployment in production databases.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "privacy-finance",
@@ -610,7 +672,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a framework for training machine learning models on sensitive financial transaction data while satisfying differential privacy guarantees required by regulatory compliance. The method combines federated learning with local differential privacy mechanisms to enable secure aggregation of transaction features across distributed payment systems without centralizing raw data. We demonstrate the approach on transaction classification and anomaly detection tasks, showing that privacy budgets compatible with GDPR Article 32 and PCI-DSS requirements can be achieved with acceptable utility-privacy tradeoffs. Our implementation uses secure multi-party computation primitives to protect intermediate model updates, and we validate compliance through formal privacy audits on real payment network data.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "graph-fraud-rings",
@@ -629,7 +693,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a graph neural network framework for detecting organized fraud rings and money laundering networks in financial transaction data. Our approach represents accounts as nodes and transactions as directed edges with attributes, applying graph convolutional layers to learn node embeddings that capture network structure and temporal patterns. We introduce a novel loss function combining graph-level anomaly scoring with local subgraph pattern detection to identify coordinated illicit behavior. Evaluated on synthetic and real financial networks, our method achieves 87% precision in detecting fraud rings while maintaining low false positive rates compared to transaction-level baselines, and demonstrates interpretability through subgraph visualization of detected criminal networks.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "laptop-llm",
@@ -646,7 +712,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a practical framework for pretraining and fine-tuning language models on resource-constrained consumer devices. We demonstrate that aggressive parameter reduction, quantization, and gradient checkpointing enable full model training on a single CPU or low-power GPU. We validate our approach by successfully pretraining a 100M-parameter transformer on commodity hardware and fine-tuning it on diverse downstream tasks, achieving comparable performance to standard training while reducing memory footprint by 80% and computational cost by 60%. Our implementation is open-source and targets practitioners without datacenter access.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "weekend-cv",
@@ -663,7 +731,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a lightweight real-time vision system for webcam-based human activity recognition using a single RGB camera. Our approach leverages pre-trained convolutional neural networks with transfer learning to detect and classify hand gestures and body poses from live video streams without specialized hardware. We demonstrate efficient inference on commodity laptop GPUs, achieving 30\u002B fps on standard webcam resolution with \u003C5% latency overhead. We provide an end-to-end implementation pipeline with minimal preprocessing and pre-trained weights suitable for deployment on consumer devices, evaluated on standard benchmark datasets.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "agent-eval-solo",
@@ -681,7 +751,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a lightweight, reproducible evaluation framework for large language model agents that enables individual researchers to systematically assess agent behavior across diverse tasks. Our approach combines task-level benchmarking with interpretable metrics for measuring decision-making quality, plan coherence, and task completion rates. We demonstrate the framework on 50\u002B autonomous agent workflows spanning reasoning, tool use, and multi-step planning, showing significant variance in performance across agent architectures. The framework requires minimal computational overhead and provides detailed diagnostic outputs suitable for single-researcher reproducibility without proprietary infrastructure.",
         "intent": "mixed"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "vague-ai-transition",
@@ -701,7 +773,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present an accessible introduction to practical machine learning workflows for systems professionals transitioning from infrastructure and scripting backgrounds. We demonstrate end-to-end implementation of supervised learning models for common system-administration problems including anomaly detection, resource prediction, and automated classification, using standard Python libraries and publicly available datasets. Our approach emphasizes minimal mathematical prerequisite and maximum code-along reproducibility, showing how fundamental concepts like feature engineering, model selection, and evaluation directly apply to buildable projects. We provide annotated implementations and discuss practical considerations for deploying trained models in production environments, enabling practitioners to iteratively improve and adapt models for their specific domains without requiring advanced mathematical expertise.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "vague-standout-backend",
@@ -722,7 +796,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a novel distributed system architecture addressing fundamental challenges in fault-tolerant consensus and strong consistency under network partitions. Our system implements a new protocol combining Byzantine fault tolerance with efficient state machine replication, achieving lower latency and higher throughput than prior work while maintaining strict safety guarantees. We prove correctness using formal methods and evaluate performance across large-scale deployments with realistic failure scenarios. Experimental results demonstrate 3\u00D7 improvement in tail latency and support for 100k\u002B concurrent operations with sub-second recovery times during Byzantine node failures.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "robot-sim2real",
@@ -740,7 +816,9 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "Sim-to-real transfer for robot manipulation remains challenging due to the reality gap between simulated and physical environments. We propose a domain randomization approach combined with adaptive control policies that enable manipulation skills trained in physics simulators to transfer effectively to low-cost robotic arm hardware. Through systematic exploration of visual and dynamics randomization parameters, our method achieves robust grasping and placement tasks on commodity manipulators without expensive real-world data collection. We demonstrate generalization across multiple hardware platforms and manipulation primitives, providing practical guidance for practitioners deploying learning-based control on resource-constrained robotic systems.",
         "intent": "precise"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "audio-events",
@@ -759,13 +837,32 @@
         "requireNoCode": null,
         "hypotheticalAbstract": "We present a deep learning framework for environmental sound event detection that achieves robust classification of non-speech acoustic phenomena including traffic, machinery, animal calls, and weather sounds. Our approach combines convolutional neural networks with temporal modeling to capture both spectral patterns and temporal dynamics in mel-spectrograms, addressing the challenge of limited labeled audio data through semi-supervised learning and data augmentation techniques. Evaluated on multiple environmental sound datasets, our method outperforms baseline approaches and demonstrates strong transfer learning capabilities across diverse acoustic scenes. We demonstrate practical deployment considerations for embedded audio processing and provide analysis of failure modes in noisy urban environments.",
         "intent": "exploratory"
-      }
+      },
+      "expectedCategories": null,
+      "acceptableCategories": null
     },
     {
       "id": "premed-resume",
       "persona": "Pre-med junior with a CS minor, comfortable in Python. Goal: research-flavored projects that stand out on a medical school application.",
       "query": "projects to make my med school application stand out - something science-y, I know some python",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for research-oriented CS projects with medical or biological applications that demonstrate scientific depth for a medical school portfolio\u2014papers on biomedical signal processing, medical imaging, computational biology, or healthcare AI that have buildable components and could motivate an impressive implementation project.",
+        "anchorText": "medical image analysis, disease detection, diagnostic classification, biomedical signal processing, EEG ECG EMG analysis, computational biology, protein structure prediction, drug discovery, genomics bioinformatics, clinical decision support, health monitoring systems, neural networks medical, deep learning diagnosis, computer-aided diagnosis, patient data analysis, public health data science",
+        "categories": [
+          "q-bio.QM",
+          "q-bio.BM",
+          "cs.CV",
+          "cs.LG",
+          "eess.SP",
+          "physics.med-ph",
+          "stat.ML",
+          "eess.IV"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "Medical diagnosis and prognosis require rapid, accurate analysis of complex patient data. We present a convolutional neural network framework for automated disease classification from multimodal clinical signals including imaging and biomarkers. Our method outperforms traditional diagnostic thresholds on a large retrospective patient cohort, achieving 94% sensitivity and 89% specificity. We validate generalization across two independent health systems and release code and preprocessed datasets to enable clinical translation and reproducibility.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "q-bio.QM",
         "eess.IV"
@@ -782,7 +879,21 @@
       "id": "med-imaging-reconstruction",
       "persona": "Radiology technologist studying computer science part-time; strong imaging domain knowledge, intermediate Python.",
       "query": "deep learning projects for CT or MRI reconstruction and segmentation",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for buildable deep learning projects in medical imaging, specifically CT and MRI reconstruction and segmentation tasks\u2014papers that combine imaging physics with neural network methods and have concrete implementation paths.",
+        "anchorText": "CT reconstruction, MRI reconstruction, image segmentation, deep neural networks, convolutional neural networks, U-Net, artifact reduction, image quality, inverse problems, compressed sensing, iterative reconstruction, tissue classification, organ segmentation, medical image analysis, learned image priors",
+        "categories": [
+          "cs.CV",
+          "cs.AI",
+          "cs.LG",
+          "eess.IV",
+          "physics.med-ph"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "Medical image reconstruction from undersampled or sparse data remains a computational bottleneck in clinical practice. We propose a deep learning architecture that learns to invert the forward imaging model, reconstructing high-fidelity CT and MRI volumes from reduced-dose acquisitions and undersampled k-space data respectively. Our method combines unrolled optimization steps with convolutional feature extraction to enforce both data consistency and learned image priors. On benchmark CT and multi-contrast MRI datasets, our approach outperforms classical iterative methods in reconstruction speed and quality, while enabling end-to-end segmentation of anatomical structures. We validate on clinical data and demonstrate clinically viable inference times.",
+        "intent": "precise"
+      },
       "expectedCategories": [
         "eess.IV"
       ],
@@ -794,9 +905,22 @@
     },
     {
       "id": "physics-gradschool-sim",
-      "persona": "Physics undergraduate who codes in Python and C++; applying to computational physics grad programs.",
+      "persona": "Physics undergraduate who codes in Python and C\u002B\u002B; applying to computational physics grad programs.",
       "query": "I want to build a simulation project that would impress physics grad programs",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for computational physics projects\u2014simulations of physical systems that demonstrate both physics understanding and coding ability for grad school applications. I\u0027m searching computational physics methods, numerical simulation techniques, and classic physics problem domains that have portfolio-buildable implementations.",
+        "anchorText": "particle simulation, molecular dynamics, N-body simulation, finite element method, computational fluid dynamics, Monte Carlo simulation, lattice Boltzmann method, numerical integration, physics engine, electromagnetic simulation, quantum mechanical solver, differential equation solver, visualization, benchmarking",
+        "categories": [
+          "physics.comp-ph",
+          "cs.NA",
+          "math.NA",
+          "nlin.CD"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present a high-performance particle simulation framework for classical many-body systems with applications to molecular dynamics and astrophysical N-body problems. The implementation leverages spatial decomposition and adaptive time-stepping to achieve accuracy and computational efficiency across a range of interaction potentials. We demonstrate strong scaling on multi-core architectures and validate against known analytical solutions for benchmark systems. The framework supports visualization and analysis pipelines suitable for educational and research applications.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "physics.comp-ph"
       ],
@@ -812,7 +936,19 @@
       "id": "audio-career-dsp",
       "persona": "Live-sound audio engineer teaching themselves programming; goal is a junior audio software or DSP role.",
       "query": "portfolio projects for breaking into audio software development",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for buildable portfolio projects in audio software and DSP\u2014papers on real problems (noise reduction, synthesis, effects, spatial audio, real-time processing) where you can implement a concrete demo to show technical depth.",
+        "anchorText": "real-time audio processing, digital signal processing, audio effects, noise reduction, speech enhancement, source separation, audio synthesis, spatial audio, beamforming, time-frequency analysis, phase vocoder, audio codec, convolution, filter design, latency-constrained systems, embedded audio, low-latency implementation, audio feature extraction, acoustic modeling",
+        "categories": [
+          "cs.SD",
+          "eess.AS",
+          "eess.SP"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present a real-time audio signal processing system that addresses [specific acoustic problem: background noise, room acoustics, or synthesis quality]. Our approach combines [concrete DSP technique: spectral subtraction, neural network, physical modeling] with [implementation strategy: GPU acceleration, SIMD optimization, custom memory management] to achieve sub-millisecond latency on commodity hardware. We benchmark against industry baselines on [standard dataset or acoustic scenarios], achieving [quantitative improvement] while maintaining computational efficiency. We release reference implementations in C\u002B\u002B and provide plugin wrappers for DAW integration to enable reproduction and extension by practitioners.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "cs.SD",
         "eess.AS"
@@ -826,7 +962,20 @@
       "id": "backend-infra-interviews",
       "persona": "Backend engineer, 4 years of Go and Postgres; targeting infrastructure and platform teams at large tech companies.",
       "query": "something impressive to build for infra and platform engineering interviews",
-      "plan": null,
+      "plan": {
+        "interpretation": "You want buildable portfolio projects in infrastructure and platform engineering\u2014systems that solve real operational problems and showcase skills valued in infrastructure team interviews at large tech companies.",
+        "anchorText": "distributed systems, consensus algorithms, replication, fault tolerance, database architecture, transaction processing, query optimization, distributed consensus, Raft, Paxos, eventual consistency, strong consistency, write-ahead logging, system design, scalability, throughput, latency, monitoring, observability, load balancing, sharding, partitioning, network protocols, message queues, event streaming, cluster management, scheduling, resource allocation, container orchestration, storage engines, indexing, query execution, performance optimization, caching strategies, memory management, concurrency control, locking mechanisms, distributed tracing, metrics collection",
+        "categories": [
+          "cs.DC",
+          "cs.DB",
+          "cs.NI",
+          "cs.SY"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "Modern distributed systems require efficient coordination and fault tolerance across geographically distributed nodes. We present a system design approach to building a scalable distributed database with strong consistency guarantees using a Raft-based consensus protocol, write-ahead logging for durability, and efficient indexing strategies for query optimization. Our implementation demonstrates sub-millisecond latency for typical read workloads while maintaining ACID properties across multiple replicas under network partitions. We evaluate performance against production baselines and discuss engineering trade-offs in replication strategies, failure detection, and recovery mechanisms relevant to building reliable infrastructure systems.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "cs.DC",
         "cs.DB"
@@ -842,7 +991,23 @@
       "id": "wetlab-to-compbio",
       "persona": "Wet-lab molecular biologist learning Python; wants to move into computational biology.",
       "query": "how do I go from the bench to computational biology - what could I build?",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re a wet-lab biologist transitioning into computational biology and looking for concrete, buildable projects that bridge bench-level molecular biology and computational methods. I searched computational and quantitative biology (q-bio), bioinformatics methods, machine learning applied to biological data, and structural/sequence analysis\u2014the intersection where wet-lab intuition translates to code.",
+        "anchorText": "sequence alignment, protein structure prediction, genomic analysis, RNA secondary structure, molecular dynamics simulation, gene expression analysis, phylogenetic inference, genome assembly, variant calling, transcriptomics, single-cell RNA-seq analysis, BLAST, multiple sequence alignment, structure-function relationships, metabolic pathway analysis, drug discovery screening, bioinformatics pipeline, biological data parsing, mutation effect prediction, sequence homology",
+        "categories": [
+          "q-bio.BM",
+          "q-bio.GN",
+          "q-bio.QM",
+          "q-bio.NC",
+          "cs.LG",
+          "cs.AI",
+          "stat.AP"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "Computational biology bridges molecular insight and large-scale data analysis. We present methods for integrating wet-lab experimental outputs\u2014sequence data, structural measurements, expression profiles\u2014with machine learning and statistical inference to extract biological principles at scale. We demonstrate a pipeline for processing next-generation sequencing data, annotating variants, and predicting functional consequences using sequence homology and structure-based features. Results show how biologists without strong programming backgrounds can leverage established tools and frameworks to move from bench observations to genome-wide discovery. Code and tutorials are provided to enable other molecular biologists to adopt computational approaches.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "q-bio.QM",
         "q-bio.BM"
@@ -858,7 +1023,20 @@
       "id": "robotics-tinkerer",
       "persona": "Mechanical engineer who tinkers with Arduino and ROS on weekends; wants a robotics software portfolio.",
       "query": "robot arm or drone project ideas grounded in recent research",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for recent research papers on robot arm and drone projects that could become portfolio pieces\u2014I searched across Robotics, Control Systems, and related CS areas for concrete work on manipulation, flight control, and autonomous systems that would have buildable implementations.",
+        "anchorText": "robot arm control, drone flight dynamics, manipulator kinematics, aerial robotics, autonomous navigation, motion planning, gripper design, quadrotor control, trajectory optimization, reinforcement learning robotics, computer vision manipulation, sensor fusion, SLAM, path planning, inverse kinematics, visual servoing, cooperative manipulation, multi-robot systems",
+        "categories": [
+          "cs.RO",
+          "eess.SY",
+          "cs.CV",
+          "cs.AI"
+        ],
+        "dateWindowDays": 365,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present a framework for autonomous robotic manipulation combining learned visual perception with classical motion planning. Our system integrates CNN-based object detection, inverse kinematics solvers, and collision-aware trajectory optimization to enable a multi-DOF robotic arm to perform grasping and placement tasks in unstructured environments. We demonstrate our approach on a collaborative robot platform, achieving task success rates of 85% across diverse object geometries. The system runs on commodity hardware and is validated on both simulated and real-world benchmarks, with code released for reproducibility.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "cs.RO"
       ],
@@ -872,7 +1050,26 @@
       "id": "quant-trading-hopeful",
       "persona": "Mathematics undergraduate aiming for quantitative trading roles; strong probability, decent Python.",
       "query": "projects that would impress quant trading firms",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for publishable research projects in quantitative finance, mathematical finance, and algorithmic trading\u2014topics that demonstrate the quantitative rigor and coding ability valued by trading firms.",
+        "anchorText": "algorithmic trading, high-frequency trading, portfolio optimization, statistical arbitrage, option pricing, market microstructure, order flow prediction, machine learning for finance, risk management, volatility forecasting, execution algorithms, limit order book dynamics, market making, factor models, derivatives pricing, stochastic calculus applications",
+        "categories": [
+          "q-fin.CP",
+          "q-fin.MF",
+          "q-fin.PM",
+          "q-fin.PR",
+          "q-fin.RM",
+          "q-fin.ST",
+          "q-fin.TR",
+          "cs.LG",
+          "stat.ML",
+          "math.OC"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present a machine learning framework for predicting short-term asset price movements using order flow imbalance and limit order book features. Our approach combines convolutional neural networks with temporal point processes to capture market microstructure dynamics. We validate the method on high-frequency equity data and achieve significant excess returns after transaction costs. We demonstrate robustness across asset classes and market regimes, with analysis of feature importance revealing interpretable trading signals.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "q-fin.TR",
         "q-fin.CP"
@@ -891,7 +1088,21 @@
       "id": "econ-applied-metrics",
       "persona": "Economics masters student, comfortable in R and Python; building an applied econometrics portfolio for policy jobs.",
       "query": "data projects for economics grad school or policy work",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for buildable applied econometrics and data analysis projects suitable for an economics graduate student or early-career policy analyst\u2014papers demonstrating causal inference, policy evaluation, labor economics, public finance, or development economics with real datasets and reproducible analysis pipelines.",
+        "anchorText": "causal inference, difference-in-differences, instrumental variables, regression discontinuity, policy evaluation, treatment effects, labor economics, public finance, development economics, household surveys, administrative data, econometric methods, policy analysis, impact assessment, quasi-experimental design, heterogeneous treatment effects, machine learning econometrics",
+        "categories": [
+          "econ.EM",
+          "q-fin.GN",
+          "stat.ME",
+          "stat.AP",
+          "stat.ML"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We evaluate the causal impact of a recent education policy reform using administrative data and difference-in-differences estimation, exploiting spatial and temporal variation in implementation. We compare labor market outcomes and earnings trajectories for cohorts affected at different ages, documenting substantial heterogeneity by initial family background. Our analysis combines traditional econometric identification strategies with machine learning methods for flexible effect estimation across subgroups. We provide open-source code and processed datasets to support replication and extension by researchers and policymakers.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "econ.EM"
       ],
@@ -906,7 +1117,19 @@
       "id": "gamedev-graphics",
       "persona": "Self-taught game developer shipping small Unity games; wants deeper graphics and simulation chops.",
       "query": "graphics or physics engine projects to level up beyond engine tutorials",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for research papers on graphics rendering techniques and physics simulation methods that would make solid independent projects\u2014work beyond standard engine tutorials that could level up your game dev skills. I searched cs.GR (Graphics), cs.RO (Robotics, for physics simulation), and physics.comp-ph (Computational Physics) to find papers with implementable methods in rendering, collision detection, and dynamics.",
+        "anchorText": "real-time rendering, physically-based shading, ray tracing, rasterization, mesh processing, collision detection, rigid body dynamics, constraint solving, numerical integration, particle systems, cloth simulation, fluid dynamics, deformation, spatial data structures, shader optimization, GPU acceleration, graphics pipeline, SIMD, matrix transformations, scene graph, visibility culling",
+        "categories": [
+          "cs.GR",
+          "physics.comp-ph",
+          "cs.RO"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present a practical real-time physics engine combining efficient rigid body simulation with collision detection suitable for interactive applications. Our approach uses constraint-based dynamics with iterative solvers and broad-phase spatial partitioning to handle complex contact scenarios. We demonstrate integration with modern rendering pipelines and validate performance on typical game scenarios including dynamic destruction and multi-body interactions. The system achieves 60\u002B FPS on consumer hardware while maintaining stability and visual fidelity.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "cs.GR"
       ],
@@ -921,7 +1144,20 @@
       "id": "ux-to-code",
       "persona": "UX designer learning frontend engineering; wants research-grounded interactive prototypes.",
       "query": "interactive projects at the intersection of design and code",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for research papers on interactive systems and user interfaces that bridge design and engineering\u2014topics like gesture recognition, visualization techniques, real-time interaction, or human-computer interaction frameworks that could ground buildable prototypes.",
+        "anchorText": "interactive systems, user interface design, gesture recognition, real-time interaction, visualization techniques, human-computer interaction, input methods, responsive design, interaction patterns, prototyping frameworks, web interfaces, animation systems, accessibility, usability testing, design patterns, frontend engineering",
+        "categories": [
+          "cs.HC",
+          "cs.CV",
+          "cs.GR",
+          "cs.MM"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present an interactive visualization system that combines principled design patterns with efficient rendering to enable real-time user feedback. The system integrates gesture recognition and responsive layout techniques to support intuitive interaction across devices. We evaluate the approach through user studies measuring both usability and performance, demonstrating how design-driven interaction patterns can be implemented efficiently in modern frontend frameworks. Our framework reduces latency in gesture-to-visual feedback pipelines by 40% while maintaining accessibility standards.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [
         "cs.HC"
       ],
@@ -935,7 +1171,21 @@
       "id": "embedded-sensors",
       "persona": "Embedded firmware engineer writing C on STM32; interested in sensors and on-device signal processing.",
       "query": "sensor data and signal processing projects based on real research",
-      "plan": null,
+      "plan": {
+        "interpretation": "You want portfolio projects involving real sensor hardware and on-device signal processing, grounded in published research\u2014likely embedded systems, signal filtering, feature extraction, or DSP algorithms that you can implement on microcontrollers like STM32.",
+        "anchorText": "embedded signal processing, real-time filtering, sensor fusion, feature extraction, accelerometer, gyroscope, microcontroller implementation, time-series analysis, noise reduction, adaptive filtering, digital signal processing, on-device inference, low-power DSP, FFT, sensor calibration, sensor data fusion",
+        "categories": [
+          "eess.SP",
+          "eess.AS",
+          "cs.CL",
+          "cs.AR",
+          "physics.comp-ph"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "This paper presents a real-time signal processing pipeline for multi-sensor fusion on resource-constrained embedded platforms. We implement adaptive filtering and feature extraction algorithms optimized for low-power microcontroller deployment, achieving sub-100ms latency with minimal memory footprint. Sensor data from accelerometers, gyroscopes, and pressure sensors are preprocessed on-device using integer-only DSP operations, reducing transmission bandwidth and enabling responsive local decision-making. We validate the approach on three real-world applications and provide detailed firmware optimization techniques for STM32 architectures, demonstrating 40% energy reduction over naive implementations.",
+        "intent": "mixed"
+      },
       "expectedCategories": [
         "eess.SP"
       ],
@@ -952,7 +1202,21 @@
       "id": "data-journalist-broad",
       "persona": "Journalist learning data analysis in Python; wants portfolio pieces that tell a story with data.",
       "query": "impressive data analysis projects with a story behind them",
-      "plan": null,
+      "plan": {
+        "interpretation": "You\u0027re looking for data analysis projects that combine technical sophistication with narrative impact\u2014papers that tackle real-world problems (public health, economics, social phenomena, scientific discovery) where the analysis itself reveals something surprising or important that could become a compelling story.",
+        "anchorText": "exploratory data analysis, statistical inference, causal inference, time series analysis, regression analysis, public health epidemiology, economic trends, social networks, survey analysis, data visualization, reproducible analysis, real-world datasets, policy impact, anomaly detection, hypothesis testing, population statistics",
+        "categories": [
+          "stat.AP",
+          "cs.CY",
+          "physics.data-an",
+          "econ.EM",
+          "q-bio.QM"
+        ],
+        "dateWindowDays": null,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We present a comprehensive data-driven analysis of [real-world phenomenon] using [public or accessible dataset], employing statistical inference and visualization techniques to uncover previously overlooked patterns. Our methodology combines exploratory analysis with causal inference to isolate key drivers of observed variation. Results reveal [surprising finding] with direct implications for [policy/practice/understanding]. We provide open-source code and reproducible workflows enabling journalists and researchers to verify and extend our findings.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [],
       "acceptableCategories": [
         "stat.AP",
@@ -966,7 +1230,15 @@
       "id": "cs-senior-undecided",
       "persona": "CS senior with broad interests and no specialty yet; just wants to build something genuinely cool.",
       "query": "show me the coolest recent papers I could actually build something from",
-      "plan": null,
+      "plan": {
+        "interpretation": "You want recent, buildable research papers across computer science that describe novel systems or methods you could realistically implement as a portfolio project\u2014I\u0027m searching broadly across CS without narrowing by field, since your interests are still open.",
+        "anchorText": "neural network architecture, deep learning system, optimization algorithm, training method, inference acceleration, model compression, attention mechanism, transformer variant, graph neural network, reinforcement learning, computer vision application, natural language processing, generative model, diffusion process, efficient learning, scaling law, empirical study, benchmark dataset, reproducible implementation",
+        "categories": [],
+        "dateWindowDays": 180,
+        "requireNoCode": null,
+        "hypotheticalAbstract": "We introduce a novel approach to training and deploying neural networks that reduces computational cost while maintaining or improving performance. Our method combines architectural innovations with algorithmic improvements, demonstrated on standard benchmarks across vision and language tasks. We provide extensive empirical analysis of key design choices and release reference implementations, enabling practitioners to adopt our techniques in production systems. Ablation studies validate each component, and we discuss practical considerations for different deployment scenarios.",
+        "intent": "exploratory"
+      },
       "expectedCategories": [],
       "acceptableCategories": null
     }

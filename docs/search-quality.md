@@ -20,16 +20,18 @@ config flag):
 | 3 | Cross-encoder rerank, top-100 (`UseReranker`) | off (measured: a wash at L-6, a slight loss at L-12) |
 | — | Wildcard slots (2 least-experience-similar from the high-relevance pool) | contractual, never remove |
 
-**Score**: nDCG@10 = **0.650** on the 40-query eval set, rubric v2
-(2026-07-19, post-10-year-corpus re-baseline: 714,811 papers, +1,496 head
-judgments, 5,526-paper fixture, CI floor 0.610 from fixture mean 0.641).
-MRR 0.906; Recall@50 0.382 — the recall drop vs the 90-day era (0.673) is
-the judged-relevant base growing ~35x, not a retrieval regression; heads
-got RICHER (nDCG up from 0.607). Absolute numbers are NOT comparable
-across rubric versions, judgment growth, or corpus eras; only same-rubric,
-same-file, same-corpus comparisons are meaningful. All campaign tables
-below are rubric v1 on the 90-day corpus — their DELTAS remain valid,
-their absolute values do not.
+**Score**: nDCG@10 = **0.628** on the 54-query eval set, rubric v2
+(2026-07-19, post-Phase-C re-baseline: 910,733 papers / 37 categories,
++959 head judgments on top of the +1,496 from the 715k re-baseline, the
+14 Tier 2 persona queries now compiled+judged+scoring, 6,442-paper
+fixture, CI floor 0.590 from fixture mean 0.619). MRR 0.898. Waypoints
+the same day: 90-day-era 40q baseline 0.607 → 715k corpus 40q 0.650 →
+911k corpus 54q 0.628 (the dip is the new persona queries entering the
+mean, not a regression). Absolute numbers are NOT comparable across
+rubric versions, judgment growth, corpus eras, or eval-set growth; only
+same-everything comparisons are meaningful. All campaign tables below
+are rubric v1 on the 90-day corpus — their DELTAS remain valid, their
+absolute values do not.
 
 The 2026-07-10 selection campaign (21-query set, identical ground truth):
 
