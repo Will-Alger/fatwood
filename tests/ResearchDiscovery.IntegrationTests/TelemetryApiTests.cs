@@ -154,9 +154,12 @@ public class TelemetryApiTests
 
         // The interaction row is written before the 202 returns, but the
         // enqueued analysis job runs concurrently on the shared in-memory
-        // Sqlite — retry briefly so provider-level contention can't flake us.
+        // Sqlite — retry so provider-level contention can't flake us. The
+        // deadline is generous because a loaded CI runner can hold the shared
+        // connection far longer than 1s (observed on main, 2026-07-20).
+        const int maxAttempts = 50;
         InteractionEvent? interaction = null;
-        for (var attempt = 0; attempt < 10 && interaction is null; attempt++)
+        for (var attempt = 0; attempt < maxAttempts && interaction is null; attempt++)
         {
             try
             {
@@ -165,7 +168,7 @@ public class TelemetryApiTests
                 interaction = await db.InteractionEvents.SingleOrDefaultAsync(
                     i => i.Type == InteractionType.AnalyzedFromSearch);
             }
-            catch (Exception ex) when (attempt < 9 &&
+            catch (Exception ex) when (attempt < maxAttempts - 1 &&
                 ex is InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
             {
                 // "database is locked" / provider contention while the
