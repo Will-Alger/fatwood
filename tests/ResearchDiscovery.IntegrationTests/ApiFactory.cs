@@ -135,6 +135,16 @@ public class ApiFactory : WebApplicationFactory<Program>
 
     // Schema creation happens in ConfigureServices (pre-start) — see above.
 
+    /// <summary>
+    /// The embedding model version the hosted app is actually configured with.
+    /// Seeded PaperEmbedding rows MUST use this value: the in-memory index
+    /// filters on it, and a mismatch leaves the dense index silently empty
+    /// (searches then run BM25-only, which masks the problem).
+    /// </summary>
+    public string ConfiguredEmbeddingModelVersion =>
+        Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<
+            Application.Options.EmbeddingOptions>>().Value.ModelVersion;
+
     public async Task SeedAsync(Func<AppDbContext, Task> seed)
     {
         await using var scope = Services.CreateAsyncScope();
