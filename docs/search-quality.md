@@ -275,6 +275,21 @@ The plumbing remains for the next candidate worth an online check.
 NOTE from the same bias report: wildcard slots showed 0 of expected ~70
 across those searches (0% yield vs 24.6% non-wildcard) — the wildcard
 selection path likely regressed during the search rework; investigate.
+INVESTIGATED 2026-07-20 (repo side): the code path is correct and now
+test-pinned — unit tests on `SelectWithWildcards` guards plus an
+end-to-end integration test (profile → 2 wildcards in the final slots,
+logged to telemetry; no profile → 0, by design). Investigation found and
+fixed a separate test-infra bug: integration tests seeded embeddings as
+`all-MiniLM-L6-v2` while the host config says `bge-small-en-v1.5`, so
+the dense index had been EMPTY in tests since the bge swap — search
+tests were passing on BM25 alone and `ScoreAsync` returned an empty
+dict (seeders now use `ApiFactory.EmbeddingModelVersion`). Since
+`IsWildcard` is only ever false when the profile is null/empty (an
+empty score dict still flags slots), the remaining prod suspects are
+data-side: searches executed without a resolved user, or the owner's
+per-user profile row carrying an empty ExperienceSummary since the
+2026-07-12 PerUserData migration. Check `SELECT ExperienceSummary FROM
+UserProfiles` and `SearchEvents.UserId` for the affected window.
 
 4. **LTR** once labels cross ~200 (see §4).
 6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,

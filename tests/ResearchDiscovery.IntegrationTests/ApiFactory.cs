@@ -99,6 +99,16 @@ public class ApiFactory : WebApplicationFactory<Program>
         });
     }
 
+    /// <summary>
+    /// The host's configured embedding model version. Seed PaperEmbeddings
+    /// rows with THIS — a hardcoded string silently empties the dense index
+    /// when the configured model changes (it filters by ModelVersion), and
+    /// search then limps along on BM25 alone without failing anything.
+    /// </summary>
+    public string EmbeddingModelVersion =>
+        Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<
+            Application.Options.EmbeddingOptions>>().Value.ModelVersion;
+
     /// <summary>Deterministic plan for compile-endpoint tests.</summary>
     public Func<string, SearchPlan> CompilePlan { get; set; } = query =>
         new SearchPlan($"Stub interpretation of: {query}", query, [], null, null);

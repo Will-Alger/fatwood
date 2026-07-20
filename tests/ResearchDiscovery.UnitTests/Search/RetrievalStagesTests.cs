@@ -46,6 +46,66 @@ public class RetrievalStagesTests
     }
 
     [Fact]
+    public void SelectWithWildcards_ReservesFinalSlotsForLeastExperienceSimilar()
+    {
+        List<ScoredPaper> pool =
+            [new(1, 0.9f), new(2, 0.8f), new(3, 0.7f), new(4, 0.6f), new(5, 0.5f), new(6, 0.4f)];
+        var experience = new Dictionary<long, float>
+        {
+            [1] = 0.9f, [2] = 0.8f, [3] = 0.7f, [4] = 0.05f, [5] = 0.6f, [6] = 0.1f,
+        };
+
+        var selection = SearchService.SelectWithWildcards(pool, limit: 4, experience);
+
+        Assert.Equal(4, selection.Count);
+        // Top slots stay pure relevance order, never reordered by experience.
+        Assert.Equal([1L, 2L], selection.Take(2).Select(s => s.Paper.PaperId));
+        Assert.All(selection.Take(2), s => Assert.False(s.IsWildcard));
+        // Final slots: the least experience-similar of the rest of the pool.
+        Assert.Equal([4L, 6L], selection.Skip(2).Select(s => s.Paper.PaperId));
+        Assert.All(selection.Skip(2), s => Assert.True(s.IsWildcard));
+    }
+
+    [Fact]
+    public void SelectWithWildcards_NoExperienceScores_ReturnsPlainTopN()
+    {
+        List<ScoredPaper> pool =
+            [new(1, 0.9f), new(2, 0.8f), new(3, 0.7f), new(4, 0.6f), new(5, 0.5f)];
+
+        var selection = SearchService.SelectWithWildcards(pool, limit: 4, experienceScores: null);
+
+        Assert.Equal([1L, 2L, 3L, 4L], selection.Select(s => s.Paper.PaperId));
+        Assert.All(selection, s => Assert.False(s.IsWildcard));
+    }
+
+    [Fact]
+    public void SelectWithWildcards_PoolNoBiggerThanLimit_HasNoWildcards()
+    {
+        List<ScoredPaper> pool = [new(1, 0.9f), new(2, 0.8f), new(3, 0.7f), new(4, 0.6f)];
+        var experience = new Dictionary<long, float> { [1] = 0.9f, [2] = 0.1f, [3] = 0.2f, [4] = 0.3f };
+
+        var selection = SearchService.SelectWithWildcards(pool, limit: 4, experience);
+
+        Assert.Equal(4, selection.Count);
+        Assert.All(selection, s => Assert.False(s.IsWildcard));
+    }
+
+    [Fact]
+    public void SelectWithWildcards_UnscoredPapersAreLastPickWildcards()
+    {
+        List<ScoredPaper> pool =
+            [new(1, 0.9f), new(2, 0.8f), new(3, 0.7f), new(4, 0.6f), new(5, 0.5f), new(6, 0.4f)];
+        // Papers 5 and 6 have no experience score (e.g. missing vectors):
+        // they must sort AFTER scored papers, not win the wildcard slots.
+        var experience = new Dictionary<long, float> { [3] = 0.3f, [4] = 0.2f };
+
+        var selection = SearchService.SelectWithWildcards(pool, limit: 4, experience);
+
+        Assert.Equal([4L, 3L], selection.Skip(2).Select(s => s.Paper.PaperId));
+        Assert.All(selection.Skip(2), s => Assert.True(s.IsWildcard));
+    }
+
+    [Fact]
     public void Tokenize_LowercasesAndDropsShortTokens()
     {
         var tokens = InMemoryLexicalIndex.Tokenize("Limit Order-Book (LOB) dynamics, a 2-step model!")

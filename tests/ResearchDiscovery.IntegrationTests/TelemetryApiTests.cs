@@ -32,7 +32,7 @@ public class TelemetryApiTests
                 db.PaperEmbeddings.Add(new PaperEmbedding
                 {
                     PaperId = paper.Id,
-                    ModelVersion = "all-MiniLM-L6-v2",
+                    ModelVersion = factory.EmbeddingModelVersion,
                     Vector = ToBytes(ApiFactory.StubTextEmbedder.Embed(
                         $"{paper.Title}. {paper.Abstract}")),
                     CreatedUtc = DateTimeOffset.UtcNow,
