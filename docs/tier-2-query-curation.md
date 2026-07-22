@@ -60,7 +60,8 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    current prompt's over-inclusion is cheap (ranking filters); pushing
    haiku toward parsimony trades it for under-inclusion, which is not.
    Single-run haiku variance is real (±0.1 per-query precision) — any
-   future prompt comparison should average 3 runs.*
+   future prompt comparison should average 3 runs
+   (`eval categories --runs 3` does this in one command since 2026-07-22).*
    *METHODS-CORNER EXPANSION 2026-07-23: +8 persona queries (astronomy
    pipelines, logistics OR, CFD/PDE, epidemiology, computational neuro,
    MPC control, Bayesian computation, climate ML) whose must-have codes —

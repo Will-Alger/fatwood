@@ -23,13 +23,13 @@ public static class EvalCommandRunner
     {
         if (!TryParseArguments(args, out var verb, out var queriesPath, out var judgmentsPath,
                 out var pool, out var randomSample, out var calibrationPath, out var sample, out var model,
-                out var corpusPath, out var minNdcg))
+                out var corpusPath, out var minNdcg, out var runs))
         {
             Console.Error.WriteLine(
                 "Usage: eval compile   [--queries <path>]\n" +
                 "       eval judge     [--queries <path>] [--judgments <path>] [--pool <N>] [--random <N>]\n" +
                 "       eval search    [--queries <path>] [--judgments <path>]\n" +
-                "       eval categories [--queries <path>]   (fresh-compiles; costs tokens)\n" +
+                "       eval categories [--queries <path>] [--runs <N>]   (fresh-compiles; costs tokens; use --runs 3 for prompt comparisons)\n" +
                 "       eval bias\n" +
                 "       eval adopt     [--queries <path>]\n" +
                 "       eval tune      [--queries <path>] [--judgments <path>]\n" +
@@ -98,7 +98,7 @@ public static class EvalCommandRunner
                     return ExitOk;
 
                 case "categories":
-                    var inference = await runner.ScoreCategoriesAsync(queriesPath, cts.Token);
+                    var inference = await runner.ScoreCategoriesAsync(queriesPath, runs, cts.Token);
                     PrintCategoryInference(inference);
                     return inference.Queries.Count > 0 ? ExitOk : ExitRunFailed;
 
@@ -201,22 +201,35 @@ public static class EvalCommandRunner
             return;
         }
 
+        var multi = report.Runs > 1;
         Console.WriteLine();
+        if (multi)
+        {
+            Console.WriteLine(
+                $"Averaged over {report.Runs} fresh compiles per query; " +
+                "category(n/N) = emitted in n of N runs.");
+        }
+
         Console.WriteLine($"{"query",-26} {"prec",6} {"recall",7} {"reach-R",8} {"F1",6}  emitted");
         Console.WriteLine(new string('-', 100));
         foreach (var q in report.Queries)
         {
             Console.WriteLine(
-                $"{q.QueryId,-26} {q.Precision,6:0.00} {q.Recall,7:0.00} {q.ReachableRecall,8:0.00} " +
-                $"{q.F1,6:0.00}  [{string.Join(", ", q.Emitted)}]");
+                $"{q.QueryId,-26} {q.MeanPrecision,6:0.00} {q.MeanRecall,7:0.00} {q.MeanReachableRecall,8:0.00} " +
+                $"{q.MeanF1,6:0.00}  [{FmtRunCounts(q.Emitted, report.Runs)}]");
+            if (multi && q.MaxF1 - q.MinF1 > 0.005)
+            {
+                Console.WriteLine($"{string.Empty,-26} F1 spread: {q.MinF1:0.00}–{q.MaxF1:0.00}");
+            }
+
             if (q.ExpectedMissed.Count > 0)
             {
-                Console.WriteLine($"{string.Empty,-26} missed: {string.Join(", ", q.ExpectedMissed)}");
+                Console.WriteLine($"{string.Empty,-26} missed: {FmtRunCounts(q.ExpectedMissed, report.Runs)}");
             }
 
             if (q.Unexpected.Count > 0)
             {
-                Console.WriteLine($"{string.Empty,-26} off-target: {string.Join(", ", q.Unexpected)}");
+                Console.WriteLine($"{string.Empty,-26} off-target: {FmtRunCounts(q.Unexpected, report.Runs)}");
             }
         }
 
@@ -224,6 +237,11 @@ public static class EvalCommandRunner
         Console.WriteLine(
             $"{"MEAN",-26} {report.MeanPrecision,6:0.00} {report.MeanRecall,7:0.00} " +
             $"{report.MeanReachableRecall,8:0.00} {report.MeanF1,6:0.00}");
+        if (multi)
+        {
+            Console.WriteLine(
+                $"per-run mean F1: {string.Join(", ", report.RunMeanF1.Select(f => f.ToString("0.000")))}");
+        }
 
         var unreachable = report.Queries
             .SelectMany(q => q.UnreachableExpected)
@@ -329,6 +347,10 @@ public static class EvalCommandRunner
 
     private static string Fmt(double? value) => value?.ToString("0.000") ?? "n/a";
 
+    private static string FmtRunCounts(IReadOnlyList<CategoryRunCount> items, int totalRuns) =>
+        string.Join(", ", items.Select(i =>
+            totalRuns > 1 ? $"{i.Category}({i.Runs}/{totalRuns})" : i.Category));
+
     private static bool TryParseArguments(
         string[] args,
         out string verb,
@@ -340,7 +362,8 @@ public static class EvalCommandRunner
         out int sample,
         out string model,
         out string corpusPath,
-        out double? minNdcg)
+        out double? minNdcg,
+        out int runs)
     {
         verb = string.Empty;
         queriesPath = DefaultQueriesPath;
@@ -352,6 +375,7 @@ public static class EvalCommandRunner
         model = "claude-sonnet-5";
         corpusPath = "eval/corpus.json.gz";
         minNdcg = null;
+        runs = 1;
 
         if (args.Length < 2)
         {
@@ -395,6 +419,10 @@ public static class EvalCommandRunner
                     break;
                 case "--corpus" when i + 1 < args.Length:
                     corpusPath = args[++i];
+                    break;
+                case "--runs" when i + 1 < args.Length && int.TryParse(args[i + 1], out var n) && n is >= 1 and <= 10:
+                    runs = n;
+                    i++;
                     break;
                 case "--min-ndcg" when i + 1 < args.Length
                     && double.TryParse(args[i + 1], System.Globalization.CultureInfo.InvariantCulture, out var floor)
