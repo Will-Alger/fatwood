@@ -61,6 +61,17 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    haiku toward parsimony trades it for under-inclusion, which is not.
    Single-run haiku variance is real (±0.1 per-query precision) — any
    future prompt comparison should average 3 runs.*
+   *METHODS-CORNER EXPANSION 2026-07-23: +8 persona queries (astronomy
+   pipelines, logistics OR, CFD/PDE, epidemiology, computational neuro,
+   MPC control, Bayesian computation, climate ML) whose must-have codes —
+   astro-ph.IM, math.OC, math.NA, q-bio.PE, q-bio.NC, eess.SY, stat.CO,
+   physics.ao-ph — were never before must-haves in the eval (only
+   acceptable or absent), i.e. the 2026-07-19 recall-1.00 baseline never
+   tested routing INTO the Phase C corners. Shipped with plan: null
+   (invisible to `eval search`/CI until compiled+judged). Not yet
+   baselined: run `eval categories` (ideally `--runs 3` once the
+   multi-run averaging lands) to measure, then compile+judge to fold
+   their downstream-nDCG half into the next re-baseline.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
 
