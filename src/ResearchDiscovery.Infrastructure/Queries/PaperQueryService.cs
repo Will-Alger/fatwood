@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Dtos;
+using ResearchDiscovery.Infrastructure.Arxiv;
 using ResearchDiscovery.Infrastructure.Persistence;
 
 namespace ResearchDiscovery.Infrastructure.Queries;
@@ -185,10 +186,21 @@ public class PaperQueryService(AppDbContext db) : IPaperQueryService
         }
     }
 
-    public async Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync(CancellationToken ct) =>
-        await db.Categories
+    public async Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync(CancellationToken ct)
+    {
+        var rows = await db.Categories
             .AsNoTracking()
             .OrderBy(c => c.Code)
-            .Select(c => new CategoryDto(c.Code, c.Name, c.PaperCategories.Count))
+            .Select(c => new { c.Code, c.Name, Count = c.PaperCategories.Count })
             .ToListAsync(ct);
+
+        // Rows are named once at creation; rows created before their taxonomy
+        // entry existed carry the bare code, so re-resolve those at read time.
+        return rows
+            .Select(r => new CategoryDto(
+                r.Code,
+                r.Name == r.Code ? ArxivCategoryNames.DisplayNameFor(r.Code) : r.Name,
+                r.Count))
+            .ToList();
+    }
 }

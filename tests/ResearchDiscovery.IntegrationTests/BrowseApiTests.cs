@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ResearchDiscovery.Application.Dtos;
+using ResearchDiscovery.Domain.Entities;
 using Xunit;
 
 namespace ResearchDiscovery.IntegrationTests;
@@ -145,5 +146,27 @@ public class BrowseApiTests : IClassFixture<ApiFactory>
         Assert.Equal(2, csLg.PaperCount);
         var csCr = Assert.Single(categories, c => c.Code == "cs.CR");
         Assert.Equal(2, csCr.PaperCount);
+    }
+
+    [Fact]
+    public async Task GetCategories_RowNamedByBareCode_ResolvesTaxonomyName()
+    {
+        // Rows created before their taxonomy entry existed carry Name == Code.
+        await _factory.SeedAsync(async db =>
+        {
+            if (!db.Categories.Any(c => c.Code == "q-bio.NC"))
+            {
+                db.Categories.Add(new Category { Code = "q-bio.NC", Name = "q-bio.NC" });
+                await db.SaveChangesAsync();
+            }
+        });
+
+        var categories = await _client.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+
+        Assert.NotNull(categories);
+        var stale = Assert.Single(categories, c => c.Code == "q-bio.NC");
+        Assert.Equal("Neurons and Cognition", stale.Name);
+        var named = Assert.Single(categories, c => c.Code == "cs.LG");
+        Assert.Equal("Machine Learning", named.Name);
     }
 }

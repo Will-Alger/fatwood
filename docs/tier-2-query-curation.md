@@ -63,6 +63,12 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    future prompt comparison should average 3 runs.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
+   *Taxonomy naming caught up with the corpus 2026-07-23:
+   `ArxivCategoryNames` grew 51 → 155 entries so every live corpus code
+   (cross-listings included) gets a real name in the compiler's known-category
+   list and the UI; `/api/categories` now re-resolves rows whose stored name
+   is still the bare code (rows are named once at creation and were never
+   refreshed).*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
