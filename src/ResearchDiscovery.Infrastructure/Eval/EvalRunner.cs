@@ -90,16 +90,19 @@ public class EvalRunner(
     /// against the authored expectations. Fresh compiles are deliberate —
     /// this measures the CURRENT compiler prompt (frozen plans stay the
     /// untouched nDCG baseline) — and are never persisted into the artifact.
-    /// Costs one compiler call per target query (pennies at haiku tier).
+    /// Costs one compiler call per target query per run (pennies at haiku
+    /// tier). Compiler sampling makes single runs noisy (±0.1 per-query
+    /// precision measured 2026-07-19), so prompt comparisons should use
+    /// runs >= 3; metrics are averaged per query across runs.
     /// </summary>
     public async Task<CategoryInferenceReport> ScoreCategoriesAsync(
-        string queriesPath, CancellationToken ct)
+        string queriesPath, int runs, CancellationToken ct)
     {
         var set = EvalFileStore.LoadQueries(queriesPath);
         var targets = set.Queries.Where(q => q.ExpectedCategories is not null).ToList();
         if (targets.Count == 0)
         {
-            return new CategoryInferenceReport([], null, null, null, null);
+            return new CategoryInferenceReport(runs, [], [], null, null, null, null);
         }
 
         await using var db = await dbFactory.CreateDbContextAsync(ct);
@@ -109,25 +112,39 @@ public class EvalRunner(
             .Select(c => c.Code)
             .ToListAsync(ct);
 
-        var scores = new List<CategoryInferenceScore>();
-        foreach (var q in targets)
+        var perQuery = targets.ToDictionary(
+            q => q.Id, _ => new List<CategoryInferenceScore>(), StringComparer.Ordinal);
+        var runMeanF1 = new List<double>();
+        for (var run = 1; run <= runs; run++)
         {
-            ct.ThrowIfCancellationRequested();
-            var plan = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
-            var score = CategoryInferenceMetrics.Score(
-                q.Id, plan.Categories, q.ExpectedCategories!, q.AcceptableCategories, knownCategories);
-            scores.Add(score);
-            logger.LogInformation(
-                "Category inference {Id}: emitted [{Emitted}] P={Precision:0.00} R={Recall:0.00}",
-                q.Id, string.Join(", ", score.Emitted), score.Precision, score.Recall);
+            var runScores = new List<CategoryInferenceScore>();
+            foreach (var q in targets)
+            {
+                ct.ThrowIfCancellationRequested();
+                var plan = await compiler.CompileAsync(q.Query, q.Persona, knownCategories, ct);
+                var score = CategoryInferenceMetrics.Score(
+                    q.Id, plan.Categories, q.ExpectedCategories!, q.AcceptableCategories, knownCategories);
+                perQuery[q.Id].Add(score);
+                runScores.Add(score);
+                logger.LogInformation(
+                    "Category inference {Id} (run {Run}/{Runs}): emitted [{Emitted}] P={Precision:0.00} R={Recall:0.00}",
+                    q.Id, run, runs, string.Join(", ", score.Emitted), score.Precision, score.Recall);
+            }
+
+            runMeanF1.Add(runScores.Average(s => s.F1));
         }
 
+        var aggregates = targets
+            .Select(q => CategoryInferenceMetrics.Aggregate(perQuery[q.Id]))
+            .ToList();
         return new CategoryInferenceReport(
-            scores,
-            scores.Average(s => s.Precision),
-            scores.Average(s => s.Recall),
-            scores.Average(s => s.ReachableRecall),
-            scores.Average(s => s.F1));
+            runs,
+            aggregates,
+            runMeanF1,
+            aggregates.Average(a => a.MeanPrecision),
+            aggregates.Average(a => a.MeanRecall),
+            aggregates.Average(a => a.MeanReachableRecall),
+            aggregates.Average(a => a.MeanF1));
     }
 
     public sealed record CorpusFixturePaper(

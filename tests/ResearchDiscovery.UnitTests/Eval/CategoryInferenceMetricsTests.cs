@@ -115,4 +115,67 @@ public class CategoryInferenceMetricsTests
         Assert.Equal(0.0, s.Recall);
         Assert.Equal(1.0, s.ReachableRecall);
     }
+
+    [Fact]
+    public void Aggregate_SingleRun_PassesMetricsThrough()
+    {
+        var s = CategoryInferenceMetrics.Score(
+            "q", ["cs.SD"], ["cs.SD", "eess.AS"], null, Known);
+        var a = CategoryInferenceMetrics.Aggregate([s]);
+
+        Assert.Equal(1, a.Runs);
+        Assert.Equal(s.Precision, a.MeanPrecision);
+        Assert.Equal(s.Recall, a.MeanRecall);
+        Assert.Equal(s.F1, a.MeanF1);
+        Assert.Equal(s.F1, a.MinF1);
+        Assert.Equal(s.F1, a.MaxF1);
+        Assert.Equal([new CategoryRunCount("cs.SD", 1)], a.Emitted);
+        Assert.Equal([new CategoryRunCount("eess.AS", 1)], a.ExpectedMissed);
+    }
+
+    [Fact]
+    public void Aggregate_AveragesMetrics_AndTracksSpread()
+    {
+        // Run 1 hits both expected codes; run 2 misses one and adds an
+        // off-target extra — the classic unstable-compile shape.
+        var run1 = CategoryInferenceMetrics.Score(
+            "q", ["cs.SD", "eess.AS"], ["cs.SD", "eess.AS"], null, Known);
+        var run2 = CategoryInferenceMetrics.Score(
+            "q", ["cs.SD", "cs.DB"], ["cs.SD", "eess.AS"], null, Known);
+        var a = CategoryInferenceMetrics.Aggregate([run1, run2]);
+
+        Assert.Equal(2, a.Runs);
+        Assert.Equal((run1.Precision + run2.Precision) / 2, a.MeanPrecision, 10);
+        Assert.Equal((run1.Recall + run2.Recall) / 2, a.MeanRecall, 10);
+        Assert.Equal(run2.F1, a.MinF1);
+        Assert.Equal(run1.F1, a.MaxF1);
+        // Stable emission counted twice, unstable ones once; ordered by
+        // count desc then name.
+        Assert.Equal(
+            [new CategoryRunCount("cs.SD", 2), new CategoryRunCount("cs.DB", 1), new CategoryRunCount("eess.AS", 1)],
+            a.Emitted);
+        Assert.Equal([new CategoryRunCount("eess.AS", 1)], a.ExpectedMissed);
+        Assert.Equal([new CategoryRunCount("cs.DB", 1)], a.Unexpected);
+    }
+
+    [Fact]
+    public void Aggregate_MergesEmissionsCaseInsensitively()
+    {
+        var run1 = CategoryInferenceMetrics.Score("q", ["CS.sd"], ["cs.SD"], null, Known);
+        var run2 = CategoryInferenceMetrics.Score("q", ["cs.SD"], ["cs.SD"], null, Known);
+        var a = CategoryInferenceMetrics.Aggregate([run1, run2]);
+
+        var only = Assert.Single(a.Emitted);
+        Assert.Equal(2, only.Runs);
+    }
+
+    [Fact]
+    public void Aggregate_RejectsEmptyAndMixedQueries()
+    {
+        var s1 = CategoryInferenceMetrics.Score("a", [], [], null, Known);
+        var s2 = CategoryInferenceMetrics.Score("b", [], [], null, Known);
+
+        Assert.Throws<ArgumentException>(() => CategoryInferenceMetrics.Aggregate([]));
+        Assert.Throws<ArgumentException>(() => CategoryInferenceMetrics.Aggregate([s1, s2]));
+    }
 }

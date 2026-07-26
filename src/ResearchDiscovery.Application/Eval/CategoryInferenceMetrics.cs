@@ -19,8 +19,33 @@ public sealed record CategoryInferenceScore(
     double ReachableRecall,
     double F1);
 
+/// <summary>A category with the number of runs in which it appeared.</summary>
+public sealed record CategoryRunCount(string Category, int Runs);
+
+/// <summary>
+/// One query's scores aggregated over N fresh compiles. Metrics are means
+/// across runs; the category lists carry per-run occurrence counts so an
+/// unstable emission (picked in 1 of 3 runs) is visible, not averaged away.
+/// MinF1/MaxF1 bound the single-run spread the compiler's sampling produces.
+/// </summary>
+public sealed record CategoryInferenceQueryAggregate(
+    string QueryId,
+    int Runs,
+    IReadOnlyList<CategoryRunCount> Emitted,
+    IReadOnlyList<CategoryRunCount> ExpectedMissed,
+    IReadOnlyList<CategoryRunCount> Unexpected,
+    IReadOnlyList<string> UnreachableExpected,
+    double MeanPrecision,
+    double MeanRecall,
+    double MeanReachableRecall,
+    double MeanF1,
+    double MinF1,
+    double MaxF1);
+
 public sealed record CategoryInferenceReport(
-    IReadOnlyList<CategoryInferenceScore> Queries,
+    int Runs,
+    IReadOnlyList<CategoryInferenceQueryAggregate> Queries,
+    IReadOnlyList<double> RunMeanF1,
     double? MeanPrecision,
     double? MeanRecall,
     double? MeanReachableRecall,
@@ -73,5 +98,54 @@ public static class CategoryInferenceMetrics
         return new CategoryInferenceScore(
             queryId, emittedSet, hit, missed, unexpected, unreachable,
             precision, recall, reachableRecall, f1);
+    }
+
+    /// <summary>
+    /// Aggregates one query's scores across N runs (compiler sampling makes
+    /// single runs noisy — see the Tier 2 B.2 parsimony note). All runs must
+    /// score the same query.
+    /// </summary>
+    public static CategoryInferenceQueryAggregate Aggregate(
+        IReadOnlyList<CategoryInferenceScore> runs)
+    {
+        if (runs.Count == 0)
+        {
+            throw new ArgumentException("At least one run is required.", nameof(runs));
+        }
+
+        if (runs.Select(r => r.QueryId).Distinct(StringComparer.Ordinal).Count() > 1)
+        {
+            throw new ArgumentException("All runs must belong to the same query.", nameof(runs));
+        }
+
+        return new CategoryInferenceQueryAggregate(
+            runs[0].QueryId,
+            runs.Count,
+            CountAcrossRuns(runs, r => r.Emitted),
+            CountAcrossRuns(runs, r => r.ExpectedMissed),
+            CountAcrossRuns(runs, r => r.Unexpected),
+            runs.SelectMany(r => r.UnreachableExpected)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(c => c, StringComparer.Ordinal)
+                .ToList(),
+            runs.Average(r => r.Precision),
+            runs.Average(r => r.Recall),
+            runs.Average(r => r.ReachableRecall),
+            runs.Average(r => r.F1),
+            runs.Min(r => r.F1),
+            runs.Max(r => r.F1));
+    }
+
+    private static List<CategoryRunCount> CountAcrossRuns(
+        IReadOnlyList<CategoryInferenceScore> runs,
+        Func<CategoryInferenceScore, IReadOnlyList<string>> select)
+    {
+        return runs
+            .SelectMany(select)
+            .GroupBy(c => c, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new CategoryRunCount(g.First(), g.Count()))
+            .OrderByDescending(c => c.Runs)
+            .ThenBy(c => c.Category, StringComparer.Ordinal)
+            .ToList();
     }
 }
