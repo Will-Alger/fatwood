@@ -1241,6 +1241,140 @@
       },
       "expectedCategories": [],
       "acceptableCategories": null
+    },
+    {
+      "id": "astro-imaging-pipeline",
+      "persona": "Astronomy undergrad who does the coding for their research group; comfortable with Python and FITS files. Goal: an instrumentation or data-pipeline project impressive enough for REU applications.",
+      "query": "projects working with real telescope images or survey data - source detection pipelines, calibration, that kind of thing",
+      "plan": null,
+      "expectedCategories": [
+        "astro-ph.IM"
+      ],
+      "acceptableCategories": [
+        "physics.data-an",
+        "cs.CV",
+        "astro-ph.GA",
+        "astro-ph.EP",
+        "astro-ph.SR",
+        "stat.AP",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "logistics-optimization",
+      "persona": "Industrial engineering grad working as a supply chain analyst; strong spreadsheets, learning Python. Goal: an optimization side project to move into operations research tooling.",
+      "query": "vehicle routing, warehouse scheduling, supply chain optimization - something with real solvers I can implement",
+      "plan": null,
+      "expectedCategories": [
+        "math.OC"
+      ],
+      "acceptableCategories": [
+        "cs.DM",
+        "cs.AI",
+        "cs.DS",
+        "cs.LG",
+        "eess.SY",
+        "stat.AP",
+        "cs.CE"
+      ]
+    },
+    {
+      "id": "cfd-solver-portfolio",
+      "persona": "Mechanical engineering masters student pivoting to scientific software; knows MATLAB, learning C++. Goal: a from-scratch PDE or fluid solver for a computational science portfolio.",
+      "query": "papers I could turn into a small CFD or PDE solver project - finite volume, spectral methods, anything numerical",
+      "plan": null,
+      "expectedCategories": [
+        "math.NA"
+      ],
+      "acceptableCategories": [
+        "cs.NA",
+        "physics.flu-dyn",
+        "physics.comp-ph",
+        "cs.CE",
+        "math.AP",
+        "cs.MS"
+      ]
+    },
+    {
+      "id": "epidemic-modeling",
+      "persona": "Public health masters student with R experience and a little Python. Goal: an infectious-disease modeling project for a computational epidemiology internship.",
+      "query": "disease outbreak simulation - SIR models, contact networks, forecasting an epidemic from case data",
+      "plan": null,
+      "expectedCategories": [
+        "q-bio.PE"
+      ],
+      "acceptableCategories": [
+        "q-bio.QM",
+        "physics.soc-ph",
+        "cs.SI",
+        "stat.AP",
+        "stat.ME",
+        "nlin.AO"
+      ]
+    },
+    {
+      "id": "neuro-spikes",
+      "persona": "Neuroscience PhD student drowning in electrophysiology data; decent Python. Goal: a computational neuroscience project - neural data analysis or simulation - to strengthen a fellowship application.",
+      "query": "spiking neuron models and analyzing neural recordings - spike sorting, neural decoding, population dynamics",
+      "plan": null,
+      "expectedCategories": [
+        "q-bio.NC"
+      ],
+      "acceptableCategories": [
+        "cs.NE",
+        "eess.SP",
+        "cs.LG",
+        "stat.ML",
+        "q-bio.QM",
+        "physics.bio-ph"
+      ]
+    },
+    {
+      "id": "drone-mpc-control",
+      "persona": "Embedded software engineer who flies FPV drones on weekends; strong C, some Python. Goal: implement a real control-theory project - beyond PID - for a flight controller.",
+      "query": "model predictive control or other modern controllers for quadrotor stabilization and trajectory tracking",
+      "plan": null,
+      "expectedCategories": [
+        "eess.SY"
+      ],
+      "acceptableCategories": [
+        "cs.SY",
+        "cs.RO",
+        "math.OC",
+        "eess.SP"
+      ]
+    },
+    {
+      "id": "bayesian-mcmc-tooling",
+      "persona": "Statistics PhD student who mostly derives things on paper; wants to get serious about implementation. Goal: build a sampler or inference library component worth linking on a CV.",
+      "query": "MCMC and variational inference algorithms I could implement myself - HMC variants, normalizing flow posteriors, probabilistic programming internals",
+      "plan": null,
+      "expectedCategories": [
+        "stat.CO"
+      ],
+      "acceptableCategories": [
+        "stat.ME",
+        "stat.ML",
+        "math.ST",
+        "cs.LG",
+        "stat.AP"
+      ]
+    },
+    {
+      "id": "climate-ml-pivot",
+      "persona": "Data scientist at an insurance company with a solid ML background. Goal: a weather or climate modeling project to pivot toward climate-risk analytics.",
+      "query": "machine learning for weather forecasting or climate downscaling - emulating physical simulations, extreme event prediction",
+      "plan": null,
+      "expectedCategories": [
+        "physics.ao-ph"
+      ],
+      "acceptableCategories": [
+        "physics.geo-ph",
+        "physics.flu-dyn",
+        "cs.LG",
+        "stat.AP",
+        "physics.comp-ph"
+      ]
     }
   ]
 }
