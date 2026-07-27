@@ -1,18 +1,20 @@
 flowchart TD
     subgraph corpus["Corpus (built ahead of time, ops-only)"]
-        arxiv["arXiv Atom API"] -->|"1 req/3s, retries,<br/>per-category high-water mark"| upsert["Idempotent upsert"]
-        upsert --> pg[("PostgreSQL<br/>~21k real papers")]
+        arxiv["arXiv Atom API<br/>(daily delta + short backfills)"] -->|"1 req/3s, retries,<br/>per-category high-water mark"| upsert["Idempotent upsert"]
+        oai["arXiv OAI-PMH<br/>(ingest bulk — decade history)"] -->|"add-only, resumable"| upsert
+        upsert --> pg[("PostgreSQL<br/>~910k real papers · 37 categories")]
         pg --> embedder["Local ONNX embedder<br/>bge-small-en-v1.5, 384d<br/>(title + abstract)"]
-        embedder --> vecs[("Paper vectors<br/>float32, provider-portable")]
+        embedder --> vecs[("Paper vectors — int8 quantized<br/>provider-portable, no pgvector")]
+        vecs --> snap[("Blob snapshots<br/>vectors + BM25 postings<br/>cold start loads in seconds")]
     end
 
     subgraph search["Search (per query)"]
         user(["Natural-language intent<br/>+ saved profile"]) --> compiler["Query compiler — LLM call #35;1<br/>intent → concrete research topics"]
-        compiler --> plan["SearchPlan (editable chips)<br/>anchor topics · categories ·<br/>date window · code filter"]
+        compiler --> plan["SearchPlan (editable chips)<br/>anchor topics · HyDE anchor ·<br/>categories · date window · code filter"]
         plan -->|"edits re-run token-free"| filters
-        filters["Stage 0 — SQL filters<br/>categories · date · has-code"] --> rank
+        filters["Stage 0 — filters<br/>date pushed into the index scan;<br/>categories · has-code"] --> rank
         pg --> filters
-        vecs -.->|"in-memory cosine index"| rank["Stage 1 — dense retrieval<br/>whole-intent + best-topic blend<br/>(multi-anchor)"]
+        snap -.->|"int8 in-memory index<br/>SIMD dot, bounded top-K heap"| rank["Stage 1 — dense retrieval<br/>whole-intent + best-topic + HyDE<br/>(multi-anchor)"]
         rank --> fuse["Stage 1b — BM25 lexical index<br/>fused via Reciprocal Rank Fusion<br/>(exact terminology dense search blurs)"]
         fuse --> blend["Stage 2 — signal blend (config)<br/>recency · has-code · citations"]
         blend --> rerank["Stage 3 — cross-encoder rerank<br/>(flag, local ONNX; off by default —<br/>measured as a wash here)"]

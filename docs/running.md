@@ -31,6 +31,21 @@ dotnet run --project src/ResearchDiscovery.Api -- ingest backfill --days 7 --max
 The high-water-mark design self-heals: if a capped backfill stops early, the
 next `ingest delta` continues from where it left off.
 
+To load real history rather than a recent window, use the OAI-PMH bulk
+harvester (this is how the ~910k-paper decade corpus was built):
+
+```bash
+dotnet run --project src/ResearchDiscovery.Api -- ingest bulk --from 2016-07-17
+```
+
+### Sign-in during local dev
+
+`Auth:Authority` is empty by default, so the API skips Entra JWT validation
+and a `DevAuthHandler` signs every request in as `local-dev` / `dev@localhost`.
+That identity is bootstrapped as an **Owner**, so admin routes and the
+Settings UI work out of the box — no tenant, no tokens, no invite code. Set
+`Auth:Authority` + `Auth:Audience` to turn real authentication on.
+
 ## Run the packaged app (single container)
 
 ```bash
@@ -48,14 +63,21 @@ Everything is configurable via `appsettings.json` or environment variables
 | Setting | Default | Purpose |
 |---|---|---|
 | `ConnectionStrings:Default` | local dev Postgres | database |
-| `Arxiv:Categories` | `cs.LG, cs.AI, cs.CR, cs.SE, q-fin.CP, q-fin.TR` | target categories |
+| `Arxiv:Categories` | 37 codes (cs.*, q-fin.*, eess.*, stat.*, q-bio.*, math.OC/NA, astro-ph.IM, physics.*, econ.EM) | target categories |
 | `Arxiv:PageSize` | 100 | arXiv page size (`max_results`) |
 | `Arxiv:MinRequestIntervalSeconds` | 3 | rate-limit spacing (arXiv etiquette) |
 | `Ingestion:Backfill:WindowDays` | 90 | backfill window |
 | `Ingestion:Backfill:MaxPapersPerCategory` | 10000 | backfill safety cap |
 | `Ingestion:Schedule:Enabled` / `TimeUtc` | `true` / `06:30` | daily delta job |
 | `Database:MigrateOnStartup` | `true` | apply migrations at boot |
-| `Admin:ApiKey` | *(empty = admin disabled)* | admin endpoint key |
+| `Auth:Authority` / `Auth:Audience` | *(empty = auth off)* | Entra External ID JWT validation; empty runs the API open (local dev only) |
+| `Accounts:RequireInviteCode` | `false` | invite gate for new signups |
+| `Accounts:StarterGrantMicros` | 1000000 ($1.00) | starting budget per new account |
+| `Accounts:DailyCallCap` | 200 | per-user daily LLM call ceiling |
+| `Accounts:BootstrapAdminEmails` | *(empty)* | emails promoted to Admin on first sign-in |
+| `Email` / `AuthEvents` | *(optional)* | ACS branded OTP email; Entra custom-extension callback |
+| `AnalysisQueue:UseStorageQueue` | `false` | `true` in cloud: durable queue + KEDA worker instead of in-process |
+| `SearchIndex:AccountUrl` (env `SearchIndex__AccountUrl`) | *(empty)* | blob account for index snapshots; empty = always rebuild from DB |
 | `Llm:Models` | haiku 4.5 / sonnet 5 / opus 4.8 | model registry (allowlist + $/MTok pricing) |
 | `Llm:Defaults` | haiku for all steps | default model per step (UI can override per step) |
 | `Embeddings:ModelVersion` | `bge-small-en-v1.5` | local embedding model (vectors keyed by version) |
@@ -112,8 +134,9 @@ dotnet test
   cover the pure retrieval logic (anchor splitting, interleaving, BM25
   tokenization).
 - Integration tests host the real API over in-memory Sqlite and cover browse
-  filtering/sorting/paging/validation, admin auth (404/401/202), double-run
+  filtering/sorting/paging/validation, role-based authorization (anonymous vs
+  `ActiveUser` vs `Owner`), accounts and budget enforcement, double-run
   upsert idempotency, search ranking with a stub embedder, telemetry logging,
   and the analysis layer (run idempotency, paper caps, decline handling,
-  score sorting). The arXiv client and the LLM are stubbed in tests so they
-  never leave the process.
+  score sorting). The arXiv client, the LLM, and the embedder are stubbed in
+  tests so they never leave the process or download a model.

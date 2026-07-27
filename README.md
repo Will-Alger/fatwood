@@ -6,8 +6,10 @@ Fatwood is the resin-saturated heart of a pine — the wood that catches fire
 from a single spark. This app is that, for engineers: it finds the research
 papers that will actually ignite your next project.
 
-arXiv publishes ~300 papers a day in machine learning, security, software
-engineering, and quantitative finance alone. Somewhere in this week's batch
+arXiv publishes hundreds of papers a day across machine learning, security,
+robotics, signal processing, computational biology, and quantitative finance.
+Fatwood indexes a decade of them — **~910,000 papers across 37 categories**.
+Somewhere in there
 is a paper that would make a fantastic project for *you specifically* — the
 right topic for where your career is going, the right scope for a solo
 build, maybe a result nobody has reproduced in public yet. The problem is
@@ -33,10 +35,11 @@ already know.
 Principles set at the start; each is enforced somewhere concrete in the code.
 
 - **Search quality must be measurable — or none of this means anything.**
-  An evaluation harness turns "are the results good?" into a number (nDCG
-  over ~4,900 graded relevance judgments across 40 frozen queries). No
-  ranking change ships unless the number goes up; several "obviously good"
-  ideas died in measurement, and that's the system working.
+  An evaluation harness turns "are the results good?" into a number (nDCG@10
+  = 0.628 over ~7,400 graded relevance judgments across 54 frozen queries,
+  with a CI gate that fails any PR dropping below 0.590). No ranking change
+  ships unless the number goes up; several "obviously good" ideas died in
+  measurement, and that's the system working.
 - **Exploration is protected, structurally.** A great project must never be
   missed over a skill you could learn in a weekend. Experience similarity
   annotates results but never ranks or gates them; wildcard slots are a
@@ -57,7 +60,7 @@ Principles set at the start; each is enforced somewhere concrete in the code.
   rate limiting and bot protection at every layer, and cost alarms above it
   all — shareable without fearing the bill.
 - **Production-grade, portable engineering.** Provider-swappable database,
-  89 tests, infrastructure as code, CI/CD — built to hold up under review.
+  140 tests, infrastructure as code, CI/CD — built to hold up under review.
 
 ## How a sentence becomes insights
 
@@ -65,7 +68,9 @@ Principles set at the start; each is enforced somewhere concrete in the code.
    concrete research topics, category filters, a date window, shown as chips.
    Editing a chip re-runs the search free: only compilation and opt-in
    analysis ever spend tokens.
-2. **SQL filters** narrow ~28k papers to your candidates in milliseconds.
+2. **Date and category filters** narrow ~910k papers — a decade of arXiv
+   across 37 categories — to your candidates in milliseconds, pushed into
+   the index scan itself rather than a full-corpus query.
 3. **Meaning does the ranking**: every abstract is a point in a
    384-dimensional space (local embeddings — bge-small via ONNX, no API);
    relevance is geometric closeness to your intent *and* your best-matching
@@ -91,14 +96,14 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 |---|---|
 | Backend | .NET 10 / ASP.NET Core, layered (Domain / Application / Infrastructure / Api), dual web + CLI entry point |
 | Data | PostgreSQL via EF Core — provider-swappable to SQL Server by design (no raw SQL, no pg-only types) |
-| Search | Local ONNX embeddings (bge-small-en-v1.5) + in-memory BM25, Reciprocal Rank Fusion, optional cross-encoder |
+| Search | Local ONNX embeddings (bge-small-en-v1.5), int8-quantized in-memory vector index + packed BM25 postings, Reciprocal Rank Fusion, optional cross-encoder; indexes snapshot to blob storage for seconds-fast cold start |
 | LLM | Anthropic API (structured outputs), config-driven model registry with per-step selection and pricing |
 | Frontend | React + TypeScript (Vite), no UI framework |
 | Accounts | Entra External ID with native (in-app) auth, per-user budget ledger, BYO API keys (encrypted, write-only), branded email via Azure Communication Services |
 | Edge | Cloudflare (DDoS/bot protection, strict TLS), ASP.NET rate limiting, CSP/HSTS |
 | Quality | Offline IR eval harness (nDCG/Recall/MRR vs LLM-judged ground truth), search telemetry, interleaving experiments |
 | Delivery | Docker single-image (API + SPA), Bicep IaC, GitHub Actions CI/CD (OIDC, no cloud secrets), Azure Container Apps + cron jobs, Key Vault |
-| Tests | 89 xUnit tests: unit (real fixtures, pinned metrics) + integration (full API over in-memory Sqlite) |
+| Tests | 140 xUnit tests: unit (real fixtures, pinned metrics) + integration (full API over in-memory Sqlite) |
 
 ## Documentation
 
@@ -110,6 +115,8 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 | [docs/search-quality.md](docs/search-quality.md) | The eval harness, measurement protocol, ranking campaign results, improvement roadmap |
 | [docs/design-decisions.md](docs/design-decisions.md) | Every explicit trade-off, from arXiv API choice to exploration guardrails |
 | [DEPLOY.md](DEPLOY.md) | Azure deployment: Bicep, OIDC CI/CD, Key Vault, migration bundles |
+| [docs/app-handbook.html](docs/app-handbook.html) | Rendered walkthrough of the app — open in a browser |
+| [docs/phase-2-redesign.md](docs/phase-2-redesign.md) | *Historical:* the original personalized-discovery design brief, kept for provenance |
 
 *Architecture diagram source: [docs/architecture.mmd](docs/architecture.mmd) —
 re-render with `npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.svg -b transparent`.*

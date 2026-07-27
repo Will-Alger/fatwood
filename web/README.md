@@ -1,32 +1,47 @@
-# React + TypeScript + Vite
+# Fatwood — web client
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript (Vite) SPA for [Fatwood](../README.md). No UI framework, no
+CSS framework, and plain `fetch` rather than a query library — the app has a
+handful of endpoints and doesn't justify the dependency.
 
-Currently, two official plugins are available:
+In production this is built and served as static files by the ASP.NET Core API
+from the same container (see the repo `Dockerfile`, frontend build stage), so
+there is no CORS configuration and no second origin.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Dev loop
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # http://localhost:5173; proxies /api → http://localhost:5080
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The API must be running separately — see [docs/running.md](../docs/running.md).
+With `Auth:Authority` unset the API auto-signs you in as a local dev **Owner**,
+so the whole UI (including Settings and admin panels) works with no tenant
+setup, no tokens, and no invite code.
+
+To point the dev server at the packaged container instead of `dotnet run`:
+
+```bash
+VITE_API_PROXY=http://localhost:8080 npm run dev
+```
+
+Other scripts:
+
+```bash
+npm run build    # tsc -b (type-check) + production bundle into dist/
+npm run lint     # oxlint
+npm run preview  # serve the built bundle locally
+```
+
+## Layout
+
+| Path | What |
+|---|---|
+| `src/api/` | Typed client + DTOs mirroring the server contracts |
+| `src/components/` | Discover (search), Browse, paper cards, settings/admin panels |
+| `src/hooks/` | Data-fetching hooks (abortable, primitive-keyed effects) |
+| `src/App.tsx` | Tab shell, theme, auth-aware layout |
+
+`src/api/types.ts` is hand-written, not generated — server DTO changes must be
+mirrored there by hand.
