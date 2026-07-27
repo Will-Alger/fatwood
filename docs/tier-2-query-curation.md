@@ -81,6 +81,14 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    list and the UI; `/api/categories` now re-resolves rows whose stored name
    is still the bare code (rows are named once at creation and were never
    refreshed).*
+   *Client glosses caught up 2026-07-27: `web/src/data/categoryGloss.ts` grew
+   66 → 147 exact codes so all 155 live corpus categories now render a
+   plain-English "what that actually means" line instead of an archive-level
+   placeholder ("Physics.", "Mathematics."). The bland lines were both a
+   transparency gap on the search-plan chips and a search gap — CategoryFilter
+   matches on gloss text, so e.g. cs.SY (41k papers), cs.NA (38k), math.IT
+   (17k), q-bio.PE, physics.flu-dyn were unfindable by what they are about.
+   Fallbacks stay for codes that arrive later via cross-listing.*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
