@@ -225,6 +225,7 @@ export default function App() {
           signedOut={signedOut}
           onSignIn={() => setAuthOpen(true)}
           refreshMe={refresh}
+          categories={categories}
         />
       </div>
       {tab === 'admin' && me && me.role !== 'Member' && (

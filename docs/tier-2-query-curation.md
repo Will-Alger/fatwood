@@ -89,6 +89,16 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    matches on gloss text, so e.g. cs.SY (41k papers), cs.NA (38k), math.IT
    (17k), q-bio.PE, physics.flu-dyn were unfindable by what they are about.
    Fallbacks stay for codes that arrive later via cross-listing.*
+   *Chips became self-explanatory 2026-07-28: the plan chips rendered a bare
+   arXiv code (`q-bio.QM`) with the explanation only in a `title` tooltip —
+   unreachable on touch, which is where the non-expert personas B.2 targets
+   actually are. Chips now carry the field's real name from the live
+   `/api/categories` list (passed down from `App`, not re-fetched), and
+   dropping a chip is reversible: `Discover` remembers the category set the
+   planner chose at compile/replay time and offers "Restore the original
+   fields" once the user has edited it. Correction was one-way before —
+   the only way back was spending another compile. Together with the gloss
+   pass above: the chip now names the field, the tooltip explains it.*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
