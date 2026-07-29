@@ -1375,6 +1375,138 @@
         "stat.AP",
         "physics.comp-ph"
       ]
+    },
+    {
+      "id": "ctf-to-security-portfolio",
+      "persona": "CS sophomore who plays CTFs on weekends; comfortable in C and Python, no crypto theory background. Goal: a security project with real depth for an internship application, not another wargame writeup.",
+      "query": "security projects I can actually build - fuzzing, binary analysis, protocol attacks, something with more depth than CTF writeups",
+      "plan": null,
+      "expectedCategories": [
+        "cs.CR"
+      ],
+      "acceptableCategories": [
+        "cs.SE",
+        "cs.PL",
+        "cs.NI",
+        "cs.DC",
+        "cs.IT",
+        "cs.LO"
+      ]
+    },
+    {
+      "id": "search-engine-from-scratch",
+      "persona": "Backend developer who shipped one feature on top of a managed vector database and realized they do not understand retrieval. Goal: build a search stack end to end and be able to defend its ranking choices.",
+      "query": "how ranking and retrieval actually work - inverted indexes, learning to rank, evaluating search quality - I want to build a search engine, not call an API",
+      "plan": null,
+      "expectedCategories": [
+        "cs.IR"
+      ],
+      "acceptableCategories": [
+        "cs.CL",
+        "cs.DB",
+        "cs.LG",
+        "cs.DS",
+        "cs.AI"
+      ]
+    },
+    {
+      "id": "testing-tools-sdet",
+      "persona": "QA engineer moving toward developer tooling; writes a lot of Python and CI config. Goal: a project that improves how software gets tested, not another CRUD app.",
+      "query": "automated test generation, flaky test detection, static analysis, CI tooling - research I could turn into a developer tool",
+      "plan": null,
+      "expectedCategories": [
+        "cs.SE"
+      ],
+      "acceptableCategories": [
+        "cs.PL",
+        "cs.LO",
+        "cs.CR",
+        "cs.AI",
+        "cs.DC"
+      ]
+    },
+    {
+      "id": "homelab-networking",
+      "persona": "Network engineer with a homelab rack; strong at Linux and packet captures, lighter on the math. Goal: a systems project that shows networking depth for a move into platform engineering.",
+      "query": "congestion control, programmable data planes, measuring real network performance - projects I can run on hardware I already own",
+      "plan": null,
+      "expectedCategories": [
+        "cs.NI"
+      ],
+      "acceptableCategories": [
+        "cs.DC",
+        "cs.PF",
+        "cs.OS",
+        "cs.CR",
+        "cs.IT",
+        "eess.SY"
+      ]
+    },
+    {
+      "id": "compilers-and-languages",
+      "persona": "Self-taught engineer who worked through Crafting Interpreters and wants to go deeper; comfortable in Rust. Goal: a language-implementation project that is more than a toy.",
+      "query": "compiler and interpreter research I could implement - type systems, program analysis, JIT and optimization passes",
+      "plan": null,
+      "expectedCategories": [
+        "cs.PL"
+      ],
+      "acceptableCategories": [
+        "cs.LO",
+        "cs.SE",
+        "cs.FL",
+        "cs.DS",
+        "cs.AR"
+      ]
+    },
+    {
+      "id": "fpga-accelerator-student",
+      "persona": "Computer engineering junior with FPGA lab experience and Verilog basics; has never written a paper. Goal: a hardware-flavored project - an accelerator or an architecture simulation - for a chip-company internship.",
+      "query": "hardware accelerator and computer architecture projects - FPGA designs, cache and memory hierarchy simulation, dataflow for ML inference",
+      "plan": null,
+      "expectedCategories": [
+        "cs.AR"
+      ],
+      "acceptableCategories": [
+        "cs.DC",
+        "cs.ET",
+        "cs.PF",
+        "cs.LG",
+        "eess.SP"
+      ]
+    },
+    {
+      "id": "policy-data-newsroom",
+      "persona": "Public-policy master's student who codes in R and some Python, embedded with a small newsroom's data team. Goal: a computational-social-science project that stands up to editorial scrutiny.",
+      "query": "measuring how misinformation spreads, platform moderation effects, algorithmic bias in public services - analysis I could publish with real data",
+      "plan": null,
+      "expectedCategories": [
+        "cs.SI",
+        "cs.CY"
+      ],
+      "acceptableCategories": [
+        "cs.CL",
+        "cs.HC",
+        "stat.AP",
+        "physics.soc-ph",
+        "econ.GN",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "quantum-curious-engineer",
+      "persona": "Working software engineer with a linear-algebra refresher behind them and no physics degree. Goal: a quantum-computing project - simulate or benchmark something real - to test whether the field is worth a career move.",
+      "query": "quantum computing projects I can actually run - simulating circuits, error correction basics, benchmarking algorithms at small qubit counts",
+      "plan": null,
+      "expectedCategories": [
+        "quant-ph"
+      ],
+      "acceptableCategories": [
+        "cs.ET",
+        "cs.CC",
+        "cs.IT",
+        "cs.DS",
+        "physics.comp-ph"
+      ]
     }
   ]
 }
