@@ -119,7 +119,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-top">
           <div className="app-brand">
-            <Logo size={36} />
+            <Logo size={34} />
             <div>
               <h1>Fatwood</h1>
               <p>Kindling for your next build.</p>
@@ -144,23 +144,28 @@ export default function App() {
                 Sign in
               </button>
             )}
+            {/* Header affordances are words, not glyphs: the label names the
+                theme you are in, the way the mock reads "Dark" / "Light". */}
             <button
               type="button"
               className="icon-button"
               onClick={toggleTheme}
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              /* The visible word names the theme you are in, so the accessible
+                 name has to contain it too (WCAG 2.5.3 Label in Name). */
+              aria-label={
+                theme === 'dark' ? 'Dark theme — switch to light' : 'Light theme — switch to dark'
+              }
             >
-              {theme === 'dark' ? '☀' : '☾'}
+              {theme === 'dark' ? 'Dark' : 'Light'}
             </button>
             <button
               type="button"
               className="icon-button"
               onClick={() => setSettingsOpen(true)}
               title="Settings"
-              aria-label="Settings"
             >
-              ⚙
+              Settings
             </button>
           </div>
         </div>
@@ -286,7 +291,7 @@ export default function App() {
                   setPage(1)
                 }}
               />{' '}
-              ★ Bookmarked
+              Bookmarked
             </label>
           </div>
           {categoriesError && (

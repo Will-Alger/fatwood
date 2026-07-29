@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { markNotInterested, setBookmark } from '../api/client'
 import type { PaperAnalysisDto, PaperDto, SearchContext } from '../api/types'
+import { EmberDots } from './Skeletons'
 
 const ABSTRACT_PREVIEW_LENGTH = 400
 
@@ -9,13 +10,6 @@ const EFFORT_LABELS: Record<string, string> = {
   one_to_two_weeks: '1–2 weeks',
   about_a_month: 'About a month',
   multi_month: 'Multi-month',
-}
-
-function scoreTier(score: number): string {
-  if (score >= 80) return 'score-exceptional'
-  if (score >= 60) return 'score-strong'
-  if (score >= 40) return 'score-workable'
-  return 'score-poor'
 }
 
 function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
@@ -69,7 +63,7 @@ function AnalysisPanel({ analysis }: { analysis: PaperAnalysisDto }) {
         </div>
       </dl>
       <p className="analysis-provenance">
-        Analyzed by {analysis.model} on{' '}
+        {analysis.model} ·{' '}
         {new Date(analysis.createdUtc).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'short',
@@ -97,7 +91,7 @@ export interface PaperCardProps {
   onAnalyze?: () => void
   /** True while this specific paper's analysis is queued/running. */
   analyzing?: boolean
-  /** Fires a one-shot "ignite" glow that races the card border when analysis just landed. */
+  /** Fires a one-shot ember line across the row when analysis just landed. */
   justAnalyzed?: boolean
   /** Bookmarks/feedback are per-account writes; false (signed out or gated) hides them. */
   canInteract?: boolean
@@ -110,11 +104,14 @@ export interface PaperCardProps {
  * never sit below a "good relevance" one. The raw semantic similarity still
  * appears in the tooltip for the curious.
  */
-function relevanceTier(rank: number, count: number): { label: string; level: 1 | 2 | 3 } {
+function relevanceTier(
+  rank: number,
+  count: number,
+): { label: string; word: string; level: 1 | 2 | 3 } {
   const frac = count > 1 ? (rank - 1) / count : 0
-  if (frac < 0.25) return { label: 'high relevance', level: 3 }
-  if (frac < 0.6) return { label: 'good relevance', level: 2 }
-  return { label: 'fair relevance', level: 1 }
+  if (frac < 0.25) return { label: 'high relevance', word: 'high', level: 3 }
+  if (frac < 0.6) return { label: 'good relevance', word: 'good', level: 2 }
+  return { label: 'fair relevance', word: 'fair', level: 1 }
 }
 
 export function PaperCard({
@@ -150,12 +147,20 @@ export function PaperCard({
   }
 
   const score = paper.analysis?.compositeScore ?? null
-
-  const published = new Date(paper.publishedUtc).toLocaleDateString(undefined, {
+  const publishedDate = new Date(paper.publishedUtc)
+  const published = publishedDate.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   })
+
+  // Ranked results lead with the rank numeral; the browse feed has no ranking,
+  // so its gutter carries the publication date instead.
+  const ranked = rank !== undefined
+  const tier =
+    ranked && rankedCount !== undefined && rankedCount > 0
+      ? relevanceTier(rank, rankedCount)
+      : null
 
   const needsClamp = paper.abstract.length > ABSTRACT_PREVIEW_LENGTH
   const abstract =
@@ -164,73 +169,35 @@ export function PaperCard({
       : `${paper.abstract.slice(0, ABSTRACT_PREVIEW_LENGTH).trimEnd()}…`
 
   return (
-    <article
-      className={
-        (isWildcard ? 'paper-card paper-card-wildcard' : 'paper-card') +
-        (justAnalyzed ? ' paper-card-ignite' : '')
-      }
-    >
+    <article className="paper-card">
       {justAnalyzed && <span className="ignite-trace" aria-hidden="true" />}
-      <div className="paper-title-row">
-        <h3>
-          <a href={paper.absUrl} target="_blank" rel="noreferrer">
-            {paper.title}
-          </a>
-        </h3>
-        {canInteract && (
-          <button
-            type="button"
-            className={bookmarked ? 'bookmark-button bookmark-on' : 'bookmark-button'}
-            disabled={bookmarkBusy}
-            onClick={() => void toggleBookmark()}
-            title={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
-            aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
-          >
-            {bookmarked ? '★' : '☆'}
-          </button>
-        )}
-        {canInteract && onNotInterested && (
-          <button
-            type="button"
-            className="bookmark-button"
-            onClick={() => {
-              onNotInterested()
-              void markNotInterested(paper.arxivId, searchContext).catch(() => {
-                /* telemetry write only — the card is already hidden */
-              })
-            }}
-            title="Not interested — hide and teach the ranker"
-            aria-label="Not interested"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-      <div className="paper-meta">
-        {rank !== undefined && !isWildcard && (
-          <span className="badge badge-rank" title="Overall relevance rank in these results">
-            #{rank}
-          </span>
+
+      <div className="paper-gutter">
+        {ranked && !isWildcard && (
+          <div className="paper-rank" title="Overall relevance rank in these results">
+            {String(rank).padStart(2, '0')}
+          </div>
         )}
         {isWildcard && (
-          <span
-            className="badge badge-wildcard"
+          <div
             title="Outside your usual territory but highly relevant to this search — deliberate serendipity"
           >
-            ✦ wildcard
-          </span>
+            <span className="wildcard-mark" aria-hidden="true" />
+            <div className="gutter-label wildcard-label">wildcard</div>
+          </div>
         )}
-        {score !== null && (
-          <span
-            className={`badge badge-score ${scoreTier(score)}`}
-            title="Personalized project-fit score (0–100)"
-          >
-            ★ {Math.round(score)}
-          </span>
+        {!ranked && (
+          <div className="paper-gutter-date" title={published}>
+            {publishedDate
+              .toLocaleDateString(undefined, { day: '2-digit', month: 'short' })
+              .toUpperCase()}
+            <br />
+            {publishedDate.getFullYear()}
+          </div>
         )}
-        {rank !== undefined && rankedCount !== undefined && rankedCount > 0 && (
+        {tier && (
           <span
-            className={`match-meter match-level-${relevanceTier(rank, rankedCount).level}`}
+            className={`match-meter match-level-${tier.level}`}
             title={
               `Ranked #${rank} of ${rankedCount} by overall relevance (meaning + exact keywords)` +
               (matchScore !== undefined
@@ -243,77 +210,156 @@ export function PaperCard({
               <span />
               <span />
             </span>
-            {relevanceTier(rank, rankedCount).label}
+            <span className="gutter-label">{tier.word}</span>
+            <span className="sr-only"> {tier.label}</span>
           </span>
         )}
-        {experienceProximity === 'close' && (
-          <span className="badge badge-close" title="Close to your existing experience">
-            close to home
-          </span>
-        )}
-        {experienceProximity === 'stretch' && (
-          <span className="badge badge-stretch" title="A stretch beyond your experience — bigger learning bridge">
-            stretch
-          </span>
-        )}
-        <span className="paper-date">{published}</span>
-        {paper.categories.map((code) => (
-          <span
-            key={code}
-            className={code === paper.primaryCategory ? 'badge badge-primary' : 'badge'}
-          >
-            {code}
-          </span>
-        ))}
-      </div>
-      <p className="paper-authors">{paper.authors.join(', ')}</p>
-      <p className="paper-abstract">
-        {abstract}{' '}
-        {needsClamp && (
-          <button type="button" className="link-button" onClick={() => setExpanded(!expanded)}>
-            {expanded ? 'Show less' : 'Show more'}
-          </button>
-        )}
-      </p>
-      <div className="paper-links">
-        <a href={paper.absUrl} target="_blank" rel="noreferrer">
-          arXiv:{paper.arxivId}
-        </a>
-        <a href={paper.pdfUrl} target="_blank" rel="noreferrer">
-          PDF
-        </a>
-        {paper.doi && (
-          <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
-            DOI
-          </a>
-        )}
-        {paper.codeUrl && (
-          <a href={paper.codeUrl} target="_blank" rel="noreferrer" title="Code advertised by the authors">
-            Code ↗
-          </a>
-        )}
-        {paper.analysis && (
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => setAnalysisOpen(!analysisOpen)}
-          >
-            {analysisOpen ? 'Hide project analysis' : 'Project analysis'}
-          </button>
-        )}
-        {canInteract && onAnalyze && !paper.analysis && (
-          <button
-            type="button"
-            className="link-button link-button-analyze"
-            disabled={analyzing}
-            onClick={onAnalyze}
-            title="Get a personalized feasibility read on this paper"
-          >
-            {analyzing ? 'Analyzing…' : 'Analyze this paper'}
-          </button>
+        {score !== null && (
+          <div title="Personalized project-fit score (0–100)">
+            <div className="gutter-figure">{Math.round(score)}</div>
+            <div className="gutter-label">fit</div>
+          </div>
         )}
       </div>
-      {analysisOpen && paper.analysis && <AnalysisPanel analysis={paper.analysis} />}
+
+      <div>
+        <div className="paper-title-row">
+          <h3>
+            <a href={paper.absUrl} target="_blank" rel="noreferrer">
+              {paper.title}
+            </a>
+          </h3>
+          {canInteract && (
+            <div className="paper-row-actions">
+              <button
+                type="button"
+                className={bookmarked ? 'bookmark-button bookmark-on' : 'bookmark-button'}
+                disabled={bookmarkBusy}
+                onClick={() => void toggleBookmark()}
+                title={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
+                aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this paper'}
+              >
+                {bookmarked ? 'Saved' : 'Save'}
+              </button>
+              {onNotInterested && (
+                <button
+                  type="button"
+                  className="bookmark-button"
+                  onClick={() => {
+                    onNotInterested()
+                    void markNotInterested(paper.arxivId, searchContext).catch(() => {
+                      /* telemetry write only — the card is already hidden */
+                    })
+                  }}
+                  title="Not interested — hide and teach the ranker"
+                  aria-label="Not interested"
+                >
+                  Hide
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* One quiet line: who, when, where, and how far from home. */}
+        <p className="paper-meta">
+          {paper.authors.join(', ')}
+          {ranked && (
+            <>
+              <span className="paper-meta-sep">·</span>
+              {published}
+            </>
+          )}
+          {paper.categories.length > 0 && <span className="paper-meta-sep">·</span>}
+          {paper.categories.map((code) => (
+            <span
+              key={code}
+              className={code === paper.primaryCategory ? 'badge badge-primary' : 'badge'}
+            >
+              {code}{' '}
+            </span>
+          ))}
+          {experienceProximity === 'close' && (
+            <>
+              <span className="paper-meta-sep">·</span>
+              <span className="paper-proximity" title="Close to your existing experience">
+                close to home
+              </span>
+            </>
+          )}
+          {experienceProximity === 'stretch' && (
+            <>
+              <span className="paper-meta-sep">·</span>
+              <span
+                className="paper-proximity"
+                title="A stretch beyond your experience — bigger learning bridge"
+              >
+                a stretch
+              </span>
+            </>
+          )}
+        </p>
+
+        <p className="paper-abstract">
+          {abstract}{' '}
+          {needsClamp && (
+            <button type="button" className="link-button" onClick={() => setExpanded(!expanded)}>
+              {expanded ? 'less' : 'more'}
+            </button>
+          )}
+        </p>
+
+        <div className="paper-links">
+          <a href={paper.absUrl} target="_blank" rel="noreferrer">
+            arXiv:{paper.arxivId}
+          </a>
+          <a href={paper.pdfUrl} target="_blank" rel="noreferrer">
+            PDF
+          </a>
+          {paper.doi && (
+            <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
+              DOI
+            </a>
+          )}
+          {paper.codeUrl && (
+            <a
+              href={paper.codeUrl}
+              target="_blank"
+              rel="noreferrer"
+              title="Code advertised by the authors"
+            >
+              Code
+            </a>
+          )}
+          {paper.analysis && (
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setAnalysisOpen(!analysisOpen)}
+            >
+              {analysisOpen ? 'Hide project analysis' : 'Project analysis'}
+            </button>
+          )}
+          {canInteract && onAnalyze && !paper.analysis && !analyzing && (
+            <button
+              type="button"
+              className="link-button link-button-analyze"
+              onClick={onAnalyze}
+              title="Get a personalized feasibility read on this paper"
+            >
+              Analyze this paper
+            </button>
+          )}
+          {analyzing && (
+            <span className="paper-analyzing">
+              <EmberDots />
+              analyzing
+            </span>
+          )}
+        </div>
+
+        {analysisOpen && paper.analysis && <AnalysisPanel analysis={paper.analysis} />}
+      </div>
     </article>
   )
 }

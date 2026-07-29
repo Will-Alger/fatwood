@@ -98,6 +98,9 @@ export function Discover({
   // compiler's inference, null forces any-time, a number forces last-N-days.
   // The per-search chip still edits the current plan independently.
   const [presetWindow, setPresetWindow] = useState<'auto' | number | null>('auto')
+  // Bumped on every submit so the ember wipe element remounts and its
+  // animation restarts — re-adding a class alone would not replay it.
+  const [wipeKey, setWipeKey] = useState(0)
 
   // Funnel-stage copy that steps forward while the first search runs; the
   // ambient ember field (App-level) provides the visual feedback.
@@ -273,6 +276,7 @@ export function Discover({
   async function handleSearch(overrideQuery?: string) {
     const trimmed = (overrideQuery ?? query).trim()
     if (!trimmed) return
+    setWipeKey((k) => k + 1) // light the fuse across the field
 
     // Re-running the same text re-executes the existing plan — deterministic
     // and free. Only genuinely new text goes back through the LLM compiler.
@@ -432,6 +436,18 @@ export function Discover({
     return hits
   }, [result, sortBy, analyzedOnly, hiddenIds])
 
+  // How far the fuse has burned down the results gutter. While a batch is in
+  // flight it tracks that batch; otherwise it shows how much of what you are
+  // looking at has actually landed. Zero leaves the rule grey and unlit.
+  const fusePercent = useMemo(() => {
+    if (analyzing && analyzing.total > 0) {
+      return Math.round((analyzing.done / analyzing.total) * 100)
+    }
+    if (displayedHits.length === 0) return 0
+    const landed = displayedHits.filter((h) => h.paper.analysis !== null).length
+    return Math.round((landed / displayedHits.length) * 100)
+  }, [analyzing, displayedHits])
+
   // Offer 5/10/15/20/25, capped at how many results there are; when fewer
   // than 5 exist, the only choice is "all of them".
   const hitCount = result?.hits.length ?? 0
@@ -447,6 +463,9 @@ export function Discover({
     <div className="discover-layout">
       <div className="discover">
       <div className="search-box">
+        {/* On submit a 2px ember line races the length of the field once, then
+            goes out — the only place the metaphor shows before results land. */}
+        {wipeKey > 0 && <span key={wipeKey} className="search-wipe" aria-hidden="true" />}
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -628,46 +647,52 @@ export function Discover({
       )}
 
       {!result && busy === null && (
+        /* The fuse is present but unlit — a grey rule, waiting. */
         <div className="discover-intro">
-          <div className="discover-steps">
-            <div className="discover-step">
-              <span className="discover-step-number">1</span>
-              <h3>Describe the build</h3>
-              <p>
-                Plain language works — mention your experience, your goals, and how much time
-                you have.
-              </p>
+          <div className="fuse fuse-unlit" aria-hidden="true" />
+          <div>
+            <div className="discover-steps">
+              <div className="discover-step">
+                <span className="discover-step-number">01</span>
+                <h3>Describe the build</h3>
+                <p>
+                  Plain language works — mention your experience, your goals, and how much time
+                  you have.
+                </p>
+              </div>
+              <div className="discover-step">
+                <span className="discover-step-number">02</span>
+                <h3>We rank the corpus</h3>
+                <p>
+                  Tens of thousands of live arXiv papers, ranked by meaning and exact terms — with
+                  two deliberate wildcards from outside your comfort zone.
+                </p>
+              </div>
+              <div className="discover-step">
+                <span className="discover-step-number">03</span>
+                <h3>Analyze your picks</h3>
+                <p>
+                  For the papers you choose, get a personal feasibility read: what you'd learn,
+                  how long it takes, what it says on a resume.
+                </p>
+              </div>
             </div>
-            <div className="discover-step">
-              <span className="discover-step-number">2</span>
-              <h3>We rank the corpus</h3>
-              <p>
-                Tens of thousands of live arXiv papers, ranked by meaning and exact terms — with
-                two deliberate wildcards from outside your comfort zone.
-              </p>
+            <div className="discover-examples">
+              <div className="discover-examples-label">Try one</div>
+              <div className="discover-example-list">
+                {EXAMPLE_QUERIES.slice(0, 3).map((example) => (
+                  <button
+                    key={example}
+                    type="button"
+                    className="example-chip"
+                    disabled={!canSpend || busy !== null}
+                    onClick={() => tryExample(example)}
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="discover-step">
-              <span className="discover-step-number">3</span>
-              <h3>Analyze your picks</h3>
-              <p>
-                For the papers you choose, get a personal feasibility read: what you'd learn,
-                how long it takes, what it says on a resume.
-              </p>
-            </div>
-          </div>
-          <div className="discover-examples">
-            <span>Try one:</span>
-            {EXAMPLE_QUERIES.slice(0, 3).map((example) => (
-              <button
-                key={example}
-                type="button"
-                className="example-chip"
-                disabled={!canSpend || busy !== null}
-                onClick={() => tryExample(example)}
-              >
-                {example.length > 64 ? `${example.slice(0, 64)}…` : example}
-              </button>
-            ))}
           </div>
         </div>
       )}
@@ -675,9 +700,13 @@ export function Discover({
       {result && (
         <>
           <div className="results-header">
-            <span>
-              {displayedHits.length} of {result.totalCandidates.toLocaleString()} matching papers
-            </span>
+            <div>
+              <div className="results-count-value">
+                {displayedHits.length}
+                <span> / {result.totalCandidates.toLocaleString()}</span>
+              </div>
+              <div className="results-count-label">matching papers</div>
+            </div>
             <div className="results-controls">
               <label>
                 Sort{' '}
@@ -715,9 +744,11 @@ export function Discover({
                       </select>
                     </label>
                   )}
+                  {/* The outline sibling of Search: it spends, but Search is
+                      the page's verb and keeps the only solid slab. */}
                   <button
                     type="button"
-                    className="primary-button"
+                    className="ghost-button"
                     disabled={analyzing !== null}
                     onClick={() => void handleAnalyzeTop()}
                   >
@@ -733,30 +764,49 @@ export function Discover({
               relevance bar for its rank and semantic-similarity score.
             </p>
           )}
+          {/* The fuse runs down the results gutter and fills downward as
+              papers land: lit above the head, grey below. */}
           <div
-            className={busy === 'search' ? 'paper-list paper-list-refreshing' : 'paper-list'}
-            key={result.searchEventId}
+            className="results-fuse-grid"
+            style={{ '--fuse': `${fusePercent}%` } as React.CSSProperties}
           >
-            {displayedHits.map((hit, i) => (
-              <div className="ignite" style={{ '--i': i } as React.CSSProperties} key={hit.paper.arxivId}>
-                <PaperCard
-                  canInteract={canSpend}
-                  paper={hit.paper}
-                  matchScore={hit.matchScore}
-                  rank={hit.rank}
-                  rankedCount={result.hits.length}
-                  isWildcard={hit.isWildcard}
-                  experienceProximity={hit.experienceProximity}
-                  searchContext={{ searchEventId: result.searchEventId, rank: hit.rank }}
-                  onNotInterested={() =>
-                    setHiddenIds((prev) => new Set(prev).add(hit.paper.arxivId))
-                  }
-                  onAnalyze={() => void handleAnalyzeOne(hit.paper.arxivId)}
-                  analyzing={analyzingIds.has(hit.paper.arxivId)}
-                  justAnalyzed={glowIds.has(hit.paper.arxivId)}
-                />
-              </div>
-            ))}
+            <div className="fuse" aria-hidden="true">
+              <div className="fuse-lit" />
+              {fusePercent > 0 && <div className="fuse-head" />}
+            </div>
+            <div
+              className={
+                busy === 'search'
+                  ? 'paper-list paper-list-ranked paper-list-refreshing'
+                  : 'paper-list paper-list-ranked'
+              }
+              key={result.searchEventId}
+            >
+              {displayedHits.map((hit, i) => (
+                <div
+                  className="ignite"
+                  style={{ '--i': i } as React.CSSProperties}
+                  key={hit.paper.arxivId}
+                >
+                  <PaperCard
+                    canInteract={canSpend}
+                    paper={hit.paper}
+                    matchScore={hit.matchScore}
+                    rank={hit.rank}
+                    rankedCount={result.hits.length}
+                    isWildcard={hit.isWildcard}
+                    experienceProximity={hit.experienceProximity}
+                    searchContext={{ searchEventId: result.searchEventId, rank: hit.rank }}
+                    onNotInterested={() =>
+                      setHiddenIds((prev) => new Set(prev).add(hit.paper.arxivId))
+                    }
+                    onAnalyze={() => void handleAnalyzeOne(hit.paper.arxivId)}
+                    analyzing={analyzingIds.has(hit.paper.arxivId)}
+                    justAnalyzed={glowIds.has(hit.paper.arxivId)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           {displayedHits.length === 0 && analyzedOnly && result.hits.length > 0 && (
             <p className="status">
