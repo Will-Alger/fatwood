@@ -8,6 +8,7 @@ import {
   runSearch,
 } from '../api/client'
 import type {
+  CategoryDto,
   LlmSettingsView,
   MeView,
   PaperDto,
@@ -61,9 +62,22 @@ interface DiscoverProps {
   onSignIn: () => void
   /** Re-fetches the account so the budget chip reflects a just-spent query. */
   refreshMe: () => void
+  /**
+   * The live corpus categories, so plan chips can name the field the planner
+   * picked instead of showing a bare arXiv code. Passed down rather than
+   * re-fetched: App already holds this list for the browse filter.
+   */
+  categories: CategoryDto[]
 }
 
-export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: DiscoverProps) {
+export function Discover({
+  llmSettings,
+  me,
+  signedOut,
+  onSignIn,
+  refreshMe,
+  categories,
+}: DiscoverProps) {
   const [query, setQuery] = useState('')
   const [lastCompiledQuery, setLastCompiledQuery] = useState<string | null>(null)
   const [plan, setPlanState] = useState<SearchPlan | null>(null)
@@ -108,6 +122,23 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
     planRef.current = next
     setPlanState(next)
   }
+
+  // The category set the planner itself chose, so dropping a chip stays
+  // reversible. Only compile and replay set it — executePlan echoes the plan
+  // it was handed, so recording that too would overwrite the original with
+  // the user's edit and make "restore" a no-op.
+  const [plannerCategories, setPlannerCategories] = useState<string[] | null>(null)
+
+  const categoryNames = useMemo(
+    () => new Map(categories.map((c) => [c.code, c.name])),
+    [categories],
+  )
+
+  const categoriesEdited =
+    plan !== null &&
+    plannerCategories !== null &&
+    (plannerCategories.length !== plan.categories.length ||
+      plannerCategories.some((c) => !plan.categories.includes(c)))
 
   // The prose behind the current plan, read at execute time (a ref, not
   // state, so long-lived poll loops don't capture a stale value). Sent with
@@ -189,6 +220,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
       const replay = await replaySearch(searchEventId)
       setResult(replay)
       setPlan(replay.plan)
+      setPlannerCategories(replay.plan.categories)
       setHiddenIds(new Set())
       setSortBy('match')
       setActiveSearchId(searchEventId)
@@ -260,6 +292,7 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
       setLastCompiledQuery(trimmed)
       queryTextRef.current = trimmed
       setPlan(compiled)
+      setPlannerCategories(compiled.categories)
       await executePlan(compiled)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not compile the search')
@@ -491,13 +524,28 @@ export function Discover({ llmSettings, me, signedOut, onSignIn, refreshMe }: Di
           </p>
           <p className="plan-chips-caption">
             {plan.categories.length > 0
-              ? 'Limited to these fields (hover to see what each covers, × to drop one):'
+              ? 'Limited to these fields (hover for detail, × to drop one):'
               : 'Searching every field — no category filter applied.'}
+            {categoriesEdited && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => updatePlan({ categories: plannerCategories ?? [] })}
+                >
+                  Restore the original fields
+                </button>
+              </>
+            )}
           </p>
           <div className="plan-chips">
             {plan.categories.map((code) => (
               <span key={code} className="chip chip-category" title={categoryGloss(code)}>
                 <span className="chip-code">{code}</span>
+                {categoryNames.get(code) && (
+                  <span className="chip-category-name">{categoryNames.get(code)}</span>
+                )}
                 <button
                   type="button"
                   aria-label={`Remove ${code}`}

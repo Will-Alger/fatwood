@@ -1589,6 +1589,16 @@ select {
   text-underline-offset: 2px;
 }
 
+/* The field's real name, so the chip reads without a hover the planner's
+   target audience (a pre-med, an audio engineer) can't perform on touch. */
+.chip-category-name {
+  color: var(--muted);
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
