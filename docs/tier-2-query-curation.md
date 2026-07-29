@@ -73,6 +73,31 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    baselined: run `eval categories` (ideally `--runs 3` once the
    multi-run averaging lands) to measure, then compile+judge to fold
    their downstream-nDCG half into the next re-baseline.*
+   *WITHIN-CS EXPANSION 2026-07-29: the 22 category-eval queries tested one
+   axis — routing OUT of CS into the methods corners — and only six CS codes
+   were ever must-haves (cs.DB, cs.DC, cs.GR, cs.HC, cs.RO, cs.SD). Nothing
+   tested the opposite failure: the compiler defaulting to the corpus giants
+   (cs.LG 269k, cs.CV 193k, cs.AI 182k, cs.CL 110k) when the right slice is a
+   narrow CS subfield. +8 persona queries whose must-haves — cs.CR (45k live
+   papers), cs.SE (25k), cs.IR (23k), cs.NI (20k), quant-ph (10k), cs.SI+cs.CY
+   (10k+18k), cs.PL (7.7k), cs.AR (4.8k) — were never expected NOR acceptable
+   anywhere in the eval, i.e. nine of the largest live categories had no
+   ground truth at all. Their acceptable sets deliberately omit cs.LG/cs.AI
+   where those are not defensible for the intent (a CTF persona, a compilers
+   persona), so reflex ML picks score as precision errors — that is the whole
+   point of the slice, and it means this batch's precision is NOT comparable
+   with the permissive methods-corner batch. `policy-data-newsroom` is also a
+   deliberate contrast with the `data-journalist-broad` control: same
+   candidate codes (cs.SI/cs.CY/stat.AP/physics.soc-ph), but the specific
+   query should filter where the vague one should not. Shipped with
+   plan: null (invisible to `eval search`/CI until compiled+judged), so the
+   un-baselined backlog is now 16 queries — run `eval categories --runs 3`
+   over the 30 targets to baseline both batches in one pass. Codes verified
+   against the live `/api/categories` list and pinned by the new
+   `EvalQueryFixtureTests` (unknown code, duplicate id, expected∩acceptable
+   overlap, and plan-null-without-expectations now fail at PR time instead of
+   being silently reported as a corpus gap). Still no must-have anywhere:
+   cs.MA, cs.LO, cs.GT, math.PR, stat.ME, cond-mat.mtrl-sci, physics.optics.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
    *Taxonomy naming caught up with the corpus 2026-07-23:
