@@ -98,6 +98,31 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    overlap, and plan-null-without-expectations now fail at PR time instead of
    being silently reported as a corpus gap). Still no must-have anywhere:
    cs.MA, cs.LO, cs.GT, math.PR, stat.ME, cond-mat.mtrl-sci, physics.optics.*
+   *THEORY/PHYSICAL-SCIENCE EXPANSION 2026-07-30: +6 persona queries closing
+   exactly the seven-code list the previous note left open. Five of them —
+   cs.MA (9,454 live papers), math.PR (7,759), cs.GT (6,032),
+   cond-mat.mtrl-sci (6,123), physics.optics (3,963) — had NO ground truth
+   anywhere in the eval, expected or acceptable; the other two, stat.ME
+   (11,800) and cs.LO (5,692), were acceptable-only on three queries each and
+   so had never been a must-have. Must-have codes 32 → 39. The batch mixes
+   its ML posture deliberately, and per query rather than per batch:
+   `materials-simulation-switcher` keeps cs.LG acceptable (ML-for-materials is
+   a real cross-listed literature), while `applied-stats-methods` and
+   `verification-curious-dev` omit cs.LG/cs.AI/stat.ML entirely, so a reflex
+   ML pick scores as a precision error — the same convention as the within-CS
+   batch, and the same caveat: precision is not comparable across batches with
+   different permissiveness. `mechanism-design-simulation` is the one
+   two-code must-have (cs.GT + cs.MA) and tests whether strategic-behaviour
+   intent routes to game theory rather than to multi-agent RL. Shipped with
+   plan: null, so `eval search` and the CI gate still skip them
+   (`EvalRunner.ScoreAsync` filters `Plan is null`) and the nDCG floor is
+   untouched; the un-baselined backlog is now 22 queries across three batches
+   — one `eval categories --runs 3` over the 36 targets baselines all of them.
+   NEXT GAP, and it is the mirror of this one: cs.LG (269k), cs.CV (193k),
+   cs.AI (182k), cs.CL (110k), stat.ML (72k), cs.SY (41k) and cs.NA (38k) are
+   acceptable-only — nothing in the eval asserts that a corpus giant IS the
+   right slice, so over-routing away from ML would not be caught. 66 live
+   codes still have no ground truth at all, led by math.IT (17k).*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
    *Taxonomy naming caught up with the corpus 2026-07-23:
