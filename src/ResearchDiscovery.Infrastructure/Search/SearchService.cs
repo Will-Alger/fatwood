@@ -98,6 +98,20 @@ public class SearchService(
 
         var poolSize = Math.Max(limit * PoolMultiplier, limit + 50);
 
+        // The experience vector is only consumed after ranking; fetch the
+        // profile and embed its summary concurrently with the anchor embeds
+        // and index scans. The task touches only the singleton ProfileService
+        // (its own DbContext via the factory) and the thread-safe ONNX
+        // session — never this scope's DbContext.
+        var experienceTask = Task.Run(async () =>
+        {
+            var p = await profileService.GetAsync(userId, ct);
+            var vector = string.IsNullOrWhiteSpace(p?.ExperienceSummary)
+                ? null
+                : await embedder.EmbedAsync(p!.ExperienceSummary, ct);
+            return (Profile: p, Vector: vector);
+        }, ct);
+
         List<(ScoredPaper Paper, string? Variant)> pool;
         if (!isTuningRun && options.InterleaveCandidate && options.Candidate is not null)
         {
@@ -121,16 +135,19 @@ public class SearchService(
             logger.LogWarning(
                 "Search matched {Candidates} papers but none have embeddings — run `embed` first",
                 candidateCount);
+
+            // Observe the in-flight task so a fault never goes unobserved.
+            _ = experienceTask.ContinueWith(
+                t => _ = t.Exception, TaskScheduler.Default);
             return new SearchResult(plan, [], candidateCount);
         }
 
         // Experience annotation + wildcards need the profile's experience vector.
         var experienceStart = Stopwatch.GetTimestamp();
-        var profile = await profileService.GetAsync(userId, ct);
+        var (_, experienceVector) = await experienceTask;
         IReadOnlyDictionary<long, float>? experienceScores = null;
-        if (!string.IsNullOrWhiteSpace(profile?.ExperienceSummary))
+        if (experienceVector is not null)
         {
-            var experienceVector = await embedder.EmbedAsync(profile!.ExperienceSummary, ct);
             experienceScores = await index.ScoreAsync(
                 pool.Select(s => s.Paper.PaperId), experienceVector, ct);
             if (experienceScores.Count == 0)
@@ -224,20 +241,18 @@ public class SearchService(
     {
         // Stage 1: dense retrieval. Multi-anchor scores each paper as the
         // average of whole-intent similarity and its best single-topic match.
+        // All anchors embed in ONE batched forward pass — the sequential
+        // version paid up to ~22 batch-of-1 ONNX calls per search.
         var embedStart = Stopwatch.GetTimestamp();
         var queryPrefix = embeddingOptions.Value.QueryPrefix;
-        var primaryVector = await embedder.EmbedAsync(queryPrefix + plan.AnchorText, ct);
 
-        var topicVectors = new List<float[]>();
+        var texts = new List<string> { queryPrefix + plan.AnchorText };
         if (profile.UseMultiAnchor)
         {
             var topics = SplitAnchors(plan.AnchorText);
             if (topics.Count >= 2)
             {
-                foreach (var topic in topics)
-                {
-                    topicVectors.Add(await embedder.EmbedAsync(queryPrefix + topic, ct));
-                }
+                texts.AddRange(topics.Select(t => queryPrefix + t));
             }
         }
 
@@ -249,9 +264,22 @@ public class SearchService(
         // never single-handedly hijack a paper's score.
         var hydeGatedOff = profile.UseIntentProfiles
             && string.Equals(plan.Intent, "precise", StringComparison.OrdinalIgnoreCase);
-        if (profile.UseHyde && !hydeGatedOff && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract))
+        var useHyde = profile.UseHyde && !hydeGatedOff
+            && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract);
+        if (useHyde)
         {
-            var hydeVector = await embedder.EmbedAsync(plan.HypotheticalAbstract, ct);
+            texts.Add(plan.HypotheticalAbstract!);
+        }
+
+        var vectors = await embedder.EmbedBatchAsync(texts, ct);
+        var primaryVector = vectors[0];
+        var topicVectors = vectors
+            .Skip(1)
+            .Take(useHyde ? vectors.Count - 2 : vectors.Count - 1)
+            .ToList();
+        if (useHyde)
+        {
+            var hydeVector = vectors[^1];
             if (string.Equals(profile.HydeMode, "blend", StringComparison.OrdinalIgnoreCase))
             {
                 primaryVector = BlendUnit(primaryVector, hydeVector, profile.HydeBlendWeight);
