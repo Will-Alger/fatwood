@@ -22,4 +22,10 @@ public interface ICandidateSetCache
 
     /// <summary>Drop the snapshot; the next call reloads from the database.</summary>
     void Invalidate();
+
+    /// <summary>
+    /// Load the snapshot ahead of any search, so no user request pays the
+    /// multi-second database read inline (called by the startup warmer).
+    /// </summary>
+    Task WarmAsync(CancellationToken ct);
 }

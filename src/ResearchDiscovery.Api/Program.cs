@@ -179,6 +179,7 @@ builder.Services.AddHttpClient(NativeAuthProxy.HttpClientName, client =>
 builder.Services.AddSingleton<IngestionJobQueue>();
 builder.Services.AddHostedService<IngestionQueueHostedService>();
 builder.Services.AddHostedService<DailyIngestionHostedService>();
+builder.Services.AddHostedService<CandidateCacheWarmer>();
 // Category (bulk) analysis stays on the in-process serial queue — a rare
 // Owner op. User-facing SELECTION analysis goes through IAnalysisQueue
 // (registered in AddInfrastructure: durable Storage queue in cloud, in-process

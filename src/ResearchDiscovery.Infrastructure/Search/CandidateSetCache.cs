@@ -26,6 +26,7 @@ public class CandidateSetCache(
 {
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private volatile Payload? _data;
+    private int _refreshing;
 
     public async Task<IReadOnlySet<long>> GetAsync(
         IReadOnlyList<string> categories,
@@ -79,6 +80,15 @@ public class CandidateSetCache(
 
     public void Invalidate() => _data = null;
 
+    public Task WarmAsync(CancellationToken ct) => GetDataAsync(ct);
+
+    /// <summary>
+    /// Stale-while-revalidate: a TTL-expired snapshot is served immediately
+    /// while ONE background reload replaces it — the multi-second database
+    /// read (~25s at the 916k corpus on the prod tier) must never sit on a
+    /// user request. Only a truly empty cache (fresh process before the
+    /// warmer finishes, or an explicit in-process Invalidate) loads inline.
+    /// </summary>
     private async Task<Payload> GetDataAsync(CancellationToken ct)
     {
         var cached = _data;
@@ -87,10 +97,39 @@ public class CandidateSetCache(
             return cached!;
         }
 
+        if (cached is not null)
+        {
+            if (Interlocked.CompareExchange(ref _refreshing, 1, 0) == 0)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await LoadAsync(CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Candidate-set cache background refresh failed");
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _refreshing, 0);
+                    }
+                });
+            }
+
+            return cached;
+        }
+
+        return await LoadAsync(ct);
+    }
+
+    private async Task<Payload> LoadAsync(CancellationToken ct)
+    {
         await _loadLock.WaitAsync(ct);
         try
         {
-            cached = _data;
+            var cached = _data;
             if (IsFresh(cached))
             {
                 return cached!;
