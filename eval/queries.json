@@ -1507,6 +1507,109 @@
         "cs.DS",
         "physics.comp-ph"
       ]
+    },
+    {
+      "id": "mechanism-design-simulation",
+      "persona": "Economics and CS double major, comfortable in Python, took a game theory course and liked it. Goal: an agent-based simulation project about strategic behaviour, not another predictive model.",
+      "query": "simulating markets where the agents strategize - auction designs, matching algorithms, what happens to incentives when everyone optimizes",
+      "plan": null,
+      "expectedCategories": [
+        "cs.GT",
+        "cs.MA"
+      ],
+      "acceptableCategories": [
+        "econ.TH",
+        "econ.GN",
+        "cs.AI",
+        "physics.soc-ph",
+        "math.OC"
+      ]
+    },
+    {
+      "id": "verification-curious-dev",
+      "persona": "Backend developer who got interested in formal methods after a production outage traced to an unhandled protocol state. Goal: a verification project small enough to finish and concrete enough to show a hiring manager.",
+      "query": "formal verification I could actually use - proving a small system correct, model checking a protocol, learning a proof assistant on a real example",
+      "plan": null,
+      "expectedCategories": [
+        "cs.LO"
+      ],
+      "acceptableCategories": [
+        "cs.PL",
+        "cs.SE",
+        "cs.FL",
+        "cs.CR",
+        "cs.DC"
+      ]
+    },
+    {
+      "id": "applied-stats-methods",
+      "persona": "Biostatistics master's student fluent in R and Stan. Goal: a methodology project - a better estimator or design, validated on real data - rather than another prediction model.",
+      "query": "statistical methodology projects - causal inference from observational data, handling missing data properly, designing experiments that answer the question",
+      "plan": null,
+      "expectedCategories": [
+        "stat.ME"
+      ],
+      "acceptableCategories": [
+        "stat.AP",
+        "stat.CO",
+        "math.ST",
+        "stat.TH",
+        "econ.EM",
+        "q-bio.QM"
+      ]
+    },
+    {
+      "id": "stochastic-processes-undergrad",
+      "persona": "Maths undergraduate heading toward a probability-flavoured career, stronger at simulation than at proofs. Goal: build something that exercises real probability theory and can be checked against a known result.",
+      "query": "projects built on probability theory - random graphs, queueing systems, stochastic processes I can simulate and check against the theory",
+      "plan": null,
+      "expectedCategories": [
+        "math.PR"
+      ],
+      "acceptableCategories": [
+        "stat.CO",
+        "math.ST",
+        "stat.TH",
+        "cs.PF",
+        "cs.DM",
+        "math.DS",
+        "cond-mat.stat-mech",
+        "math.NA"
+      ]
+    },
+    {
+      "id": "materials-simulation-switcher",
+      "persona": "Materials engineering senior who taught themselves Python and has no HPC allocation. Goal: a computational-materials project runnable on a laptop or a free cloud tier.",
+      "query": "computational materials projects - screening crystal structures, predicting material properties from simulation or from published datasets",
+      "plan": null,
+      "expectedCategories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "acceptableCategories": [
+        "physics.comp-ph",
+        "physics.chem-ph",
+        "cond-mat.mes-hall",
+        "cond-mat.soft",
+        "physics.app-ph",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "photonics-sim-student",
+      "persona": "Electrical engineering senior specializing in photonics, good with MATLAB and learning Python. Goal: an optics simulation project for a graduate application portfolio.",
+      "query": "optics simulation projects - modelling waveguides and lenses, running FDTD on my laptop, designing a metasurface or an imaging system",
+      "plan": null,
+      "expectedCategories": [
+        "physics.optics"
+      ],
+      "acceptableCategories": [
+        "physics.app-ph",
+        "physics.comp-ph",
+        "eess.IV",
+        "physics.ins-det",
+        "cond-mat.mes-hall",
+        "math.NA"
+      ]
     }
   ]
 }
