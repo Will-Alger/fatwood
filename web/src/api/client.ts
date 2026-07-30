@@ -172,9 +172,14 @@ export function runSearch(
   plan: SearchPlan,
   limit: number,
   queryText?: string | null,
-  signal?: AbortSignal,
+  options?: { provisional?: boolean; signal?: AbortSignal },
 ): Promise<SearchResult> {
-  return sendJson('POST', '/api/search', { plan, limit, queryText }, { signal })
+  return sendJson(
+    'POST',
+    '/api/search',
+    { plan, limit, queryText, provisional: options?.provisional ?? false },
+    { signal: options?.signal },
+  )
 }
 
 // --- Analysis ---

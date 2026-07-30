@@ -81,8 +81,12 @@ export interface SearchHit {
 }
 
 export interface SearchResult {
-  /** Telemetry id for this executed search; bookmark/analyze actions carry it as context. */
-  searchEventId: number
+  /**
+   * Telemetry id for this executed search; bookmark/analyze actions carry it
+   * as context. Null for provisional quick-pass results, which are never
+   * logged — interactions on them carry no search context.
+   */
+  searchEventId: number | null
   plan: SearchPlan
   hits: SearchHit[]
   totalCandidates: number

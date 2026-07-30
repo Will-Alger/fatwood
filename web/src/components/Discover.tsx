@@ -101,6 +101,14 @@ export function Discover({
   // Bumped on every submit so the ember wipe element remounts and its
   // animation restarts — re-adding a class alone would not replay it.
   const [wipeKey, setWipeKey] = useState(0)
+  // Quick-pass state: while the compiler works, the raw prose runs as a
+  // provisional (never-logged) search so results appear in under a second.
+  // The sequence ref drops stale responses from superseded submissions; the
+  // landed ref guarantees compiled results are never overwritten by a
+  // provisional response that loses the race.
+  const [isProvisional, setIsProvisional] = useState(false)
+  const searchSeqRef = useRef(0)
+  const fullLandedRef = useRef(false)
 
   // Funnel-stage copy that steps forward while the first search runs; the
   // ambient ember field (App-level) provides the visual feedback.
@@ -206,7 +214,7 @@ export function Discover({
   const { analyzingIds, analyzeOne } = useAnalyze(() => refreshMe())
 
   async function handleAnalyzeOne(arxivId: string) {
-    const err = await analyzeOne(arxivId, result?.searchEventId)
+    const err = await analyzeOne(arxivId, result?.searchEventId ?? undefined)
     if (err) {
       setError(err)
       return
@@ -256,6 +264,8 @@ export function Discover({
     setError(null)
     try {
       const searchResult = await runSearch(nextPlan, RESULT_LIMIT, queryTextRef.current)
+      fullLandedRef.current = true
+      setIsProvisional(false)
       setResult(searchResult)
       setPlan(searchResult.plan)
       setHiddenIds(new Set())
@@ -290,6 +300,31 @@ export function Discover({
     setBusy('compile')
     setError(null)
     setNotice(null)
+
+    // Quick pass: fire the raw prose as a provisional search alongside the
+    // compile. It shows within ~a second and is swapped out the moment the
+    // compiled plan's results land; a response that loses the race (or
+    // belongs to a superseded submission) is dropped. Best-effort — a failed
+    // quick pass just leaves the skeletons up.
+    const seq = ++searchSeqRef.current
+    fullLandedRef.current = false
+    const provisionalPlan: SearchPlan = {
+      interpretation: '',
+      anchorText: trimmed,
+      categories: [],
+      dateWindowDays: presetWindow === 'auto' ? 365 : presetWindow,
+      requireNoCode: null,
+    }
+    void runSearch(provisionalPlan, RESULT_LIMIT, null, { provisional: true })
+      .then((quick) => {
+        if (seq !== searchSeqRef.current || fullLandedRef.current) return
+        setResult(quick)
+        setIsProvisional(true)
+        setHiddenIds(new Set())
+        setActiveSearchId(null)
+      })
+      .catch(() => {})
+
     try {
       const compiled = applyPresetWindow(await compileSearch(trimmed))
       refreshMe() // compilation spent tokens — update the budget chip
@@ -322,7 +357,7 @@ export function Discover({
     setError(null)
     setNotice(null)
     try {
-      await analyzeSelection(ids, result.searchEventId)
+      await analyzeSelection(ids, result.searchEventId ?? undefined)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not queue analysis')
       return
@@ -758,6 +793,12 @@ export function Discover({
               )}
             </div>
           </div>
+          {isProvisional && (
+            <p className="status status-notice">
+              Quick pass — a fast keyword-and-meaning match on your words while the
+              full plan compiles…
+            </p>
+          )}
           {sortBy === 'match' && (
             <p className="results-note">
               Ranked by overall relevance — meaning plus exact keywords. Hover a paper&apos;s
@@ -780,7 +821,7 @@ export function Discover({
                   ? 'paper-list paper-list-ranked paper-list-refreshing'
                   : 'paper-list paper-list-ranked'
               }
-              key={result.searchEventId}
+              key={result.searchEventId ?? `provisional-${wipeKey}`}
             >
               {displayedHits.map((hit, i) => (
                 <div
@@ -796,7 +837,11 @@ export function Discover({
                     rankedCount={result.hits.length}
                     isWildcard={hit.isWildcard}
                     experienceProximity={hit.experienceProximity}
-                    searchContext={{ searchEventId: result.searchEventId, rank: hit.rank }}
+                    searchContext={
+                      result.searchEventId === null
+                        ? undefined
+                        : { searchEventId: result.searchEventId, rank: hit.rank }
+                    }
                     onNotInterested={() =>
                       setHiddenIds((prev) => new Set(prev).add(hit.paper.arxivId))
                     }

@@ -100,6 +100,38 @@ public class SearchApiTests
     }
 
     [Fact]
+    public async Task Search_Provisional_SkipsTelemetryAndReturnsNullEventId()
+    {
+        using var factory = new ApiFactory();
+        await SeedWithEmbeddingsAsync(factory);
+        using var client = factory.CreateClient();
+
+        var body = new
+        {
+            plan = new
+            {
+                interpretation = "quick pass",
+                anchorText = "paper",
+                categories = Array.Empty<string>(),
+                dateWindowDays = (int?)null,
+                requireNoCode = (bool?)null,
+            },
+            limit = 10,
+            provisional = true,
+        };
+        var response = await client.PostAsJsonAsync("/api/search", body);
+        response.EnsureSuccessStatusCode();
+
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(JsonValueKind.Null, doc.RootElement.GetProperty("searchEventId").ValueKind);
+        Assert.True(doc.RootElement.GetProperty("hits").GetArrayLength() > 0);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(0, await db.SearchEvents.CountAsync());
+    }
+
+    [Fact]
     public async Task Search_MissingAnchor_Returns400()
     {
         using var factory = new ApiFactory();

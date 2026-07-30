@@ -76,7 +76,12 @@ public class SearchController(
     /// <param name="QueryText">The original prose the plan was compiled from,
     /// when known — captured into telemetry so `eval adopt` can turn real
     /// searches into eval queries.</param>
-    public sealed record SearchRequest(SearchPlan Plan, int? Limit, string? QueryText);
+    /// <param name="Provisional">A quick-pass search the client fires while
+    /// the real plan compiles. Never logged to telemetry — quick passes are a
+    /// latency mask, not a ranking claim, and logging them would distort the
+    /// bias reports and recent-searches rail.</param>
+    public sealed record SearchRequest(
+        SearchPlan Plan, int? Limit, string? QueryText, bool? Provisional = null);
 
     [HttpPost]
     public async Task<IActionResult> Search(
@@ -98,9 +103,12 @@ public class SearchController(
         // Product searches are logged (the eval CLI calls ISearchService
         // directly and never lands here). The event id goes back to the client
         // so bookmark/analyze actions can carry their search context.
+        // Provisional quick passes are the exception: no event, null id.
         var telemetryStart = Stopwatch.GetTimestamp();
-        var searchEventId = await telemetry.LogSearchAsync(
-            userId, request.QueryText, request.Plan, result, ct);
+        long? searchEventId = request.Provisional == true
+            ? null
+            : await telemetry.LogSearchAsync(
+                userId, request.QueryText, request.Plan, result, ct);
         var telemetryMs = Stopwatch.GetElapsedTime(telemetryStart).TotalMilliseconds;
 
         logger.LogInformation(
