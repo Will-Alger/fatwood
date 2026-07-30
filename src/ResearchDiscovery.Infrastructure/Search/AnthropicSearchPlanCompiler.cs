@@ -3,6 +3,7 @@ using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Beta.Messages;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ResearchDiscovery.Application.Abstractions;
 using ResearchDiscovery.Application.Options;
 using ResearchDiscovery.Infrastructure.Arxiv;
@@ -19,11 +20,19 @@ namespace ResearchDiscovery.Infrastructure.Search;
 public class AnthropicSearchPlanCompiler(
     Llm.AnthropicCallFactory callFactory,
     ILlmUsageRecorder usage,
+    IOptions<SearchCompilerOptions> compilerOptions,
     ILogger<AnthropicSearchPlanCompiler> logger) : ISearchPlanCompiler
 {
     private const int MaxOutputTokens = 2048;
 
-    private const string SchemaJson = """
+    /// <summary>
+    /// The structured-output schema, with the topic-count and abstract-length
+    /// ranges taken from config. With default options the output is
+    /// character-identical to the shipped prompt (pinned by
+    /// SearchPlanCompilerFormatTests) — the knobs exist for measured
+    /// output-diet experiments, not silent drift.
+    /// </summary>
+    internal static string BuildSchemaJson(SearchCompilerOptions options) => $$"""
     {
       "type": "object",
       "additionalProperties": false,
@@ -35,7 +44,7 @@ public class AnthropicSearchPlanCompiler(
         },
         "anchor_text": {
           "type": "string",
-          "description": "A dense comma-separated list of 8-15 concrete research topics, methods, and problem domains that papers matching this search would discuss in their abstracts. This is embedded and cosine-matched against paper abstracts - write abstract-vocabulary, not career-vocabulary. Expand career goals into the research areas that serve them."
+          "description": "A dense comma-separated list of {{options.MinTopics}}-{{options.MaxTopics}} concrete research topics, methods, and problem domains that papers matching this search would discuss in their abstracts. This is embedded and cosine-matched against paper abstracts - write abstract-vocabulary, not career-vocabulary. Expand career goals into the research areas that serve them."
         },
         "categories": {
           "type": "array",
@@ -52,7 +61,7 @@ public class AnthropicSearchPlanCompiler(
         },
         "hypothetical_abstract": {
           "type": "string",
-          "description": "The abstract of the hypothetical IDEAL paper for this search, 4-6 sentences, written exactly like a real arXiv abstract: the problem, the proposed method, key results. Dense and technical, no meta-commentary, no mention of the user. This is embedded and matched against real abstracts (abstracts match abstracts far better than topic lists do)."
+          "description": "The abstract of the hypothetical IDEAL paper for this search, {{options.HydeMinSentences}}-{{options.HydeMaxSentences}} sentences, written exactly like a real arXiv abstract: the problem, the proposed method, key results. Dense and technical, no meta-commentary, no mention of the user. This is embedded and matched against real abstracts (abstracts match abstracts far better than topic lists do)."
         },
         "query_style": {
           "type": "string",
@@ -85,7 +94,8 @@ public class AnthropicSearchPlanCompiler(
         CancellationToken ct)
     {
         var (client, model) = await callFactory.ResolveAsync(LlmOptions.StepQueryCompiler, ct);
-        var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(SchemaJson)!;
+        var schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+            BuildSchemaJson(compilerOptions.Value))!;
 
         var profileBlock = string.IsNullOrWhiteSpace(profile)
             ? string.Empty

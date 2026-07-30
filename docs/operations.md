@@ -81,6 +81,18 @@ database rebuild is the fallback if snapshots are missing. Snapshot codecs
 stream through a temp-file spool in both directions, so building or loading
 never holds two full copies in memory.
 
+**Search execution tuning** (`Search` config section; results are identical
+at any setting — these trade CPU/memory for latency, never quality):
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `Search:MaxScanParallelism` | 0 (= core count) | Threads for the dense scan; `1` restores the sequential scan |
+| `Search:UseCandidateSetCache` | `true` | Serve category/no-code candidate sets from memory; `false` falls back to per-search SQL |
+| `Search:CandidateScanDivisor` | 8 | Candidate sets smaller than corpus÷divisor score by id-iteration instead of a full sweep |
+| `Search:CandidateCacheTtlMinutes` | 360 | Staleness backstop for the candidate cache (invalidated explicitly on ingest) |
+| `Search:Compiler:MinTopics`/`MaxTopics` | 8 / 15 | Anchor-topic range in the compile schema — a *ranking* knob; change only via the eval protocol |
+| `Search:Compiler:HydeMinSentences`/`HydeMaxSentences` | 4 / 6 | HyDE abstract length — same rule |
+
 ## Profile
 
 Experience and goals live in a per-user versioned profile

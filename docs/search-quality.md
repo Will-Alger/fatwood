@@ -289,6 +289,14 @@ SearchService now logs which case each search hits; check API logs and
 SearchEvents.UserId in prod after the next deploy.
 
 4. **LTR** once labels cross ~200 (see §4).
+~~Compile prompt caching~~ — KILLED 2026-07-30: the compile call's stable
+prefix (system prompt ~300 tok + structured-output schema ~700 tok + the
+155-line category block ~1.6k tok) totals roughly 2.6k tokens, under
+haiku's 4096-token minimum cacheable prefix — `cache_control` would be a
+silent no-op, and caching never cuts generation time (compile latency is
+output-token-bound) anyway. The compile timing log line (WI-1, logs
+`InputTokens` per compile) will confirm the exact number; only revisit if
+it ever reads ≥ 4096.
 6. **Full-text ingestion** (arXiv LaTeX) → section-aware embeddings,
    has-experiments/dataset flags. Big lift, big analysis payoff.
 
