@@ -22,9 +22,15 @@ namespace ResearchDiscovery.Infrastructure.Embeddings;
 public class InMemoryEmbeddingIndex(
     IDbContextFactory<AppDbContext> dbFactory,
     IOptions<EmbeddingOptions> options,
+    IOptions<SearchOptions> searchOptions,
     SearchIndexSnapshotStore snapshots,
     ILogger<InMemoryEmbeddingIndex> logger) : IEmbeddingIndex
 {
+    /// <summary>Below this the partitioning overhead beats the win.</summary>
+    private const int ParallelScanThreshold = 64_000;
+
+    private static readonly ScoreKeyComparer KeyComparer = new();
+
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private volatile PackedVectors? _data;
 
@@ -57,13 +63,169 @@ public class InMemoryEmbeddingIndex(
         }
 
         var cutoff = ToEpochDay(publishedAfter);
-
-        // Bounded min-heap: O(N log K) beats sorting the whole corpus.
-        var heap = new PriorityQueue<long, float>(n + 1);
-        var dims = data.Dims;
-        for (var i = 0; i < data.Count; i++)
+        var configured = searchOptions.Value.MaxScanParallelism;
+        var parallelism = Math.Clamp(
+            configured <= 0 ? Environment.ProcessorCount : configured,
+            1, Environment.ProcessorCount);
+        if (data.Count < ParallelScanThreshold)
         {
-            if (cutoff is { } day && data.EpochDays[i] < day)
+            parallelism = 1;
+        }
+
+        return await TopMultiCoreAsync(
+            data, primaryQ, primaryScale, topicQ, n, restrictTo, cutoff, parallelism,
+            searchOptions.Value.CandidateScanDivisor);
+    }
+
+    /// <summary>
+    /// Scan driver. Results are deterministic for any parallelism: per-paper
+    /// scores are independent, and the canonical ScoreKey order (score desc,
+    /// then LOWER paper id wins exact float ties) makes heap contents and
+    /// final ordering a pure function of the data.
+    /// </summary>
+    internal static async Task<IReadOnlyList<ScoredPaper>> TopMultiCoreAsync(
+        PackedVectors data,
+        sbyte[] primaryQ,
+        float primaryScale,
+        (sbyte[] Q, float Scale)[] topicQ,
+        int n,
+        IReadOnlySet<long>? restrictTo,
+        int? cutoff,
+        int parallelism,
+        int candidateScanDivisor = 8)
+    {
+        PriorityQueue<long, ScoreKey> final;
+        if (restrictTo is not null
+            && restrictTo.Count < data.Count / Math.Max(2, candidateScanDivisor))
+        {
+            // Narrow candidate set: O(|candidates| · (log N + dims)) binary
+            // searches beat sweeping the whole corpus. Same kernel math and
+            // heap semantics; the canonical comparer makes the hash-set
+            // iteration order irrelevant to the result.
+            final = new PriorityQueue<long, ScoreKey>(n + 1, KeyComparer);
+            ScanCandidates(data, primaryQ, primaryScale, topicQ, cutoff, restrictTo, n, final);
+        }
+        else if (parallelism <= 1)
+        {
+            final = new PriorityQueue<long, ScoreKey>(n + 1, KeyComparer);
+            ScanRange(data, 0, data.Count, primaryQ, primaryScale, topicQ, cutoff, restrictTo, n, final);
+        }
+        else
+        {
+            // Contiguous partitions with per-partition bounded heaps; the
+            // request thread takes the last partition, then a sequential
+            // merge pass reduces ≤ parallelism·n survivors to the top n.
+            var heaps = new PriorityQueue<long, ScoreKey>[parallelism];
+            for (var p = 0; p < parallelism; p++)
+            {
+                heaps[p] = new PriorityQueue<long, ScoreKey>(n + 1, KeyComparer);
+            }
+
+            var chunk = data.Count / parallelism;
+            var tasks = new Task[parallelism - 1];
+            for (var p = 0; p < parallelism - 1; p++)
+            {
+                var start = p * chunk;
+                var end = start + chunk;
+                var heap = heaps[p];
+                tasks[p] = Task.Run(() => ScanRange(
+                    data, start, end, primaryQ, primaryScale, topicQ, cutoff, restrictTo, n, heap));
+            }
+
+            ScanRange(
+                data, (parallelism - 1) * chunk, data.Count,
+                primaryQ, primaryScale, topicQ, cutoff, restrictTo, n, heaps[^1]);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+
+            final = new PriorityQueue<long, ScoreKey>(n + 1, KeyComparer);
+            foreach (var heap in heaps)
+            {
+                while (heap.TryDequeue(out var paperId, out var key))
+                {
+                    Push(final, paperId, key, n);
+                }
+            }
+        }
+
+        var result = new List<ScoredPaper>(final.Count);
+        while (final.TryDequeue(out var paperId, out var key))
+        {
+            result.Add(new ScoredPaper(paperId, key.Score));
+        }
+
+        result.Reverse(); // heap drains worst-first
+        return result;
+    }
+
+    /// <summary>
+    /// Candidate-iteration kernel: scores exactly the restrictTo ids that
+    /// exist in the index (and pass the date gate) via binary search, instead
+    /// of sweeping every packed entry.
+    /// </summary>
+    private static void ScanCandidates(
+        PackedVectors data,
+        sbyte[] primaryQ,
+        float primaryScale,
+        (sbyte[] Q, float Scale)[] topicQ,
+        int? cutoffDay,
+        IReadOnlySet<long> restrictTo,
+        int n,
+        PriorityQueue<long, ScoreKey> heap)
+    {
+        var dims = data.Dims;
+        foreach (var id in restrictTo)
+        {
+            var i = Array.BinarySearch(data.PaperIds, id);
+            if (i < 0)
+            {
+                continue;
+            }
+
+            if (cutoffDay is { } day && data.EpochDays[i] < day)
+            {
+                continue;
+            }
+
+            var vector = data.Vectors.AsSpan(i * dims, dims);
+            var docScale = data.Scales[i];
+            var score = Int8Quantization.Dot(primaryQ, vector) * primaryScale * docScale;
+
+            if (topicQ.Length > 0)
+            {
+                var bestTopic = float.MinValue;
+                foreach (var (q, scale) in topicQ)
+                {
+                    var topicScore = Int8Quantization.Dot(q, vector) * scale * docScale;
+                    if (topicScore > bestTopic)
+                    {
+                        bestTopic = topicScore;
+                    }
+                }
+
+                score = (score + bestTopic) / 2;
+            }
+
+            Push(heap, data.PaperIds[i], new ScoreKey(score, data.PaperIds[i]), n);
+        }
+    }
+
+    /// <summary>The sequential scoring kernel over [start, end).</summary>
+    private static void ScanRange(
+        PackedVectors data,
+        int start,
+        int end,
+        sbyte[] primaryQ,
+        float primaryScale,
+        (sbyte[] Q, float Scale)[] topicQ,
+        int? cutoffDay,
+        IReadOnlySet<long>? restrictTo,
+        int n,
+        PriorityQueue<long, ScoreKey> heap)
+    {
+        var dims = data.Dims;
+        for (var i = start; i < end; i++)
+        {
+            if (cutoffDay is { } day && data.EpochDays[i] < day)
             {
                 continue;
             }
@@ -92,24 +254,39 @@ public class InMemoryEmbeddingIndex(
                 score = (score + bestTopic) / 2;
             }
 
-            if (heap.Count < n)
-            {
-                heap.Enqueue(data.PaperIds[i], score);
-            }
-            else if (heap.TryPeek(out _, out var min) && score > min)
-            {
-                heap.DequeueEnqueue(data.PaperIds[i], score);
-            }
+            Push(heap, data.PaperIds[i], new ScoreKey(score, data.PaperIds[i]), n);
         }
+    }
 
-        var result = new List<ScoredPaper>(heap.Count);
-        while (heap.TryDequeue(out var paperId, out var score))
+    private static void Push(
+        PriorityQueue<long, ScoreKey> heap, long paperId, ScoreKey key, int n)
+    {
+        if (heap.Count < n)
         {
-            result.Add(new ScoredPaper(paperId, score));
+            heap.Enqueue(paperId, key);
         }
+        else if (heap.TryPeek(out _, out var min) && KeyComparer.Compare(key, min) > 0)
+        {
+            heap.DequeueEnqueue(paperId, key);
+        }
+    }
 
-        result.Reverse(); // heap drains lowest-first
-        return result;
+    /// <summary>
+    /// Canonical result order: higher score is better; exact float ties go to
+    /// the lower paper id. Today's sequential heap left tie order unspecified
+    /// — pinning it is what makes the parallel scan reproducible.
+    /// </summary>
+    internal readonly record struct ScoreKey(float Score, long PaperId);
+
+    internal sealed class ScoreKeyComparer : IComparer<ScoreKey>
+    {
+        // Min-heap order: "smallest" = lowest score, and on ties the HIGHER
+        // paper id, so it is evicted first and the lower id survives.
+        public int Compare(ScoreKey x, ScoreKey y)
+        {
+            var byScore = x.Score.CompareTo(y.Score);
+            return byScore != 0 ? byScore : y.PaperId.CompareTo(x.PaperId);
+        }
     }
 
     public async Task<IReadOnlyDictionary<long, float>> ScoreAsync(

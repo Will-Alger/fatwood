@@ -194,6 +194,11 @@ public static class ServiceCollectionExtensions
         // build straight from the database.
         services.AddOptions<SearchIndexOptions>()
             .Bind(configuration.GetSection(SearchIndexOptions.SectionName));
+
+        services.AddOptions<SearchOptions>()
+            .Bind(configuration.GetSection(SearchOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         services.AddSingleton<SearchIndexSnapshotStore>();
         services.AddSingleton<ISearchIndexSnapshots, SearchIndexSnapshotWriter>();
 
