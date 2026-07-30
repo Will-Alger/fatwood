@@ -199,6 +199,7 @@ public static class ServiceCollectionExtensions
             .Bind(configuration.GetSection(SearchOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        services.AddSingleton<ICandidateSetCache, CandidateSetCache>();
         services.AddSingleton<SearchIndexSnapshotStore>();
         services.AddSingleton<ISearchIndexSnapshots, SearchIndexSnapshotWriter>();
 

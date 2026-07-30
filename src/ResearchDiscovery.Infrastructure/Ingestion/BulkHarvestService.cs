@@ -24,6 +24,7 @@ public class BulkHarvestService(
     PaperUpserter upserter,
     IIngestionLockManager lockManager,
     IDbContextFactory<AppDbContext> dbFactory,
+    ICandidateSetCache candidateCache,
     IOptions<ArxivOptions> arxivOptions,
     ILogger<BulkHarvestService> logger) : IBulkHarvestService
 {
@@ -105,6 +106,11 @@ public class BulkHarvestService(
             var error = errors.Count == 0 ? null : string.Join(" | ", errors);
             await FinalizeRunAsync(run.Id, status, totals, error, ct);
 
+            if (totals.Added > 0)
+            {
+                candidateCache.Invalidate();
+            }
+
             logger.LogInformation(
                 "Bulk harvest run {RunId} finished: {Sets} sets, {Pages} pages, fetched {Fetched}, " +
                 "added {Added}, skipped existing {SkippedExisting}, filtered {Filtered}, failed sets: {FailedCount}",
@@ -118,6 +124,13 @@ public class BulkHarvestService(
         catch (Exception ex)
         {
             await FinalizeRunAsync(run.Id, IngestionStatus.Failed, totals, ex.Message, CancellationToken.None);
+
+            // Committed pages survive a failed run — don't serve stale sets.
+            if (totals.Added > 0)
+            {
+                candidateCache.Invalidate();
+            }
+
             throw;
         }
     }

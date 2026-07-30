@@ -41,8 +41,10 @@ public class SearchService(
     ICrossEncoder crossEncoder,
     IPaperQueryService queryService,
     ProfileService profileService,
+    ICandidateSetCache candidateCache,
     IOptions<RankingOptions> rankingOptions,
     IOptions<EmbeddingOptions> embeddingOptions,
+    IOptions<SearchOptions> searchOptions,
     ILogger<SearchService> logger) : ISearchService
 {
     private const int WildcardSlots = 2;
@@ -78,10 +80,19 @@ public class SearchService(
         int candidateCount;
         if (needsIdSet)
         {
-            candidateIds = (await FilterCandidates(db.Papers.AsNoTracking(), plan)
-                .Select(p => p.Id)
-                .ToListAsync(ct))
-                .ToHashSet();
+            if (searchOptions.Value.UseCandidateSetCache)
+            {
+                candidateIds = await candidateCache.GetAsync(
+                    plan.Categories, plan.RequireNoCode == true, publishedAfter, ct);
+            }
+            else
+            {
+                candidateIds = (await FilterCandidates(db.Papers.AsNoTracking(), plan)
+                    .Select(p => p.Id)
+                    .ToListAsync(ct))
+                    .ToHashSet();
+            }
+
             candidateCount = candidateIds.Count;
         }
         else

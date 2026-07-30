@@ -21,6 +21,7 @@ public class IngestionService(
     IIngestionLockManager lockManager,
     IDbContextFactory<AppDbContext> dbFactory,
     IPaperEmbeddingService embeddingService,
+    ICandidateSetCache candidateCache,
     IOptions<ArxivOptions> arxivOptions,
     IOptions<IngestionOptions> ingestionOptions,
     ILogger<IngestionService> logger) : IIngestionService
@@ -94,6 +95,10 @@ public class IngestionService(
             // always catch up later.
             if (added > 0 || updated > 0)
             {
+                // Papers/categories/CodeUrl changed — candidate sets reload
+                // from the database on the next filtered search.
+                candidateCache.Invalidate();
+
                 try
                 {
                     await embeddingService.EmbedMissingAsync(ct);
