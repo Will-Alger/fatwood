@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -56,6 +57,8 @@ public class SearchService(
     {
         limit = Math.Clamp(limit, 1, 200);
         var options = rankingOptions.Value;
+        var timings = new StageTimings();
+        var totalStart = Stopwatch.GetTimestamp();
 
         // An explicit weights override (the offline tuner) evaluates ONE
         // ranker: config flags still apply, interleaving never does.
@@ -70,6 +73,7 @@ public class SearchService(
             : (DateTimeOffset?)null;
         var needsIdSet = plan.Categories.Count > 0 || plan.RequireNoCode == true;
 
+        var filterStart = Stopwatch.GetTimestamp();
         IReadOnlySet<long>? candidateIds = null;
         int candidateCount;
         if (needsIdSet)
@@ -85,6 +89,8 @@ public class SearchService(
             candidateCount = await FilterCandidates(db.Papers.AsNoTracking(), plan).CountAsync(ct);
         }
 
+        timings.FilterMs = Stopwatch.GetElapsedTime(filterStart).TotalMilliseconds;
+
         if (candidateCount == 0)
         {
             return new SearchResult(plan, [], 0);
@@ -96,17 +102,17 @@ public class SearchService(
         if (!isTuningRun && options.InterleaveCandidate && options.Candidate is not null)
         {
             var control = await RankAsync(
-                plan, poolSize, candidateIds, publishedAfter, options, options.ToWeights(), ct);
+                plan, poolSize, candidateIds, publishedAfter, options, options.ToWeights(), timings, ct);
             var candidate = await RankAsync(
                 plan, poolSize, candidateIds, publishedAfter,
-                options.Candidate, options.Candidate.ToWeights(), ct);
+                options.Candidate, options.Candidate.ToWeights(), timings, ct);
             pool = TeamDraftInterleave(control, candidate, poolSize);
         }
         else
         {
             var ranked = await RankAsync(
                 plan, poolSize, candidateIds, publishedAfter,
-                options, weights ?? options.ToWeights(), ct);
+                options, weights ?? options.ToWeights(), timings, ct);
             pool = ranked.Select(p => (p, (string?)null)).ToList();
         }
 
@@ -119,6 +125,7 @@ public class SearchService(
         }
 
         // Experience annotation + wildcards need the profile's experience vector.
+        var experienceStart = Stopwatch.GetTimestamp();
         var profile = await profileService.GetAsync(userId, ct);
         IReadOnlyDictionary<long, float>? experienceScores = null;
         if (!string.IsNullOrWhiteSpace(profile?.ExperienceSummary))
@@ -141,14 +148,20 @@ public class SearchService(
                 "annotations are disabled", userId);
         }
 
+        timings.ExperienceMs = Stopwatch.GetElapsedTime(experienceStart).TotalMilliseconds;
+
+        var selectStart = Stopwatch.GetTimestamp();
         var variantByPaper = pool
             .Where(p => p.Variant is not null)
             .ToDictionary(p => p.Paper.PaperId, p => p.Variant);
         var selection = SelectWithWildcards(
             pool.Select(p => p.Paper).ToList(), limit, experienceScores);
+        timings.SelectMs = Stopwatch.GetElapsedTime(selectStart).TotalMilliseconds;
 
+        var hydrateStart = Stopwatch.GetTimestamp();
         var dtos = await queryService.GetPapersByIdsAsync(
             selection.Select(s => s.Paper.PaperId).ToList(), userId, ct);
+        timings.HydrateMs = Stopwatch.GetElapsedTime(hydrateStart).TotalMilliseconds;
 
         var hits = selection
             .Where(s => dtos.ContainsKey(s.Paper.PaperId))
@@ -160,7 +173,38 @@ public class SearchService(
                 variantByPaper.GetValueOrDefault(s.Paper.PaperId)))
             .ToList();
 
+        logger.LogInformation(
+            "Search timings: total={TotalMs:F0}ms filter={FilterMs:F0} embed={EmbedMs:F0} " +
+            "dense={DenseMs:F0} lexical={LexicalMs:F0} fuse={FuseMs:F0} blend={BlendMs:F0} " +
+            "rerank={RerankMs:F0} experience={ExperienceMs:F0} select={SelectMs:F0} " +
+            "hydrate={HydrateMs:F0} candidates={CandidateCount} pool={PoolCount} " +
+            "topics={TopicCount} tuning={Tuning} user={UserId}",
+            Stopwatch.GetElapsedTime(totalStart).TotalMilliseconds,
+            timings.FilterMs, timings.EmbedMs, timings.DenseMs, timings.LexicalMs,
+            timings.FuseMs, timings.BlendMs, timings.RerankMs, timings.ExperienceMs,
+            timings.SelectMs, timings.HydrateMs, candidateCount, pool.Count,
+            timings.TopicCount, isTuningRun, userId);
+
         return new SearchResult(plan, hits, candidateCount);
+    }
+
+    /// <summary>
+    /// Per-stage wall-clock accumulator for the search timing log line.
+    /// Interleaving runs the ranking stages twice — those stages accumulate.
+    /// </summary>
+    private sealed class StageTimings
+    {
+        public double FilterMs;
+        public double EmbedMs;
+        public double DenseMs;
+        public double LexicalMs;
+        public double FuseMs;
+        public double BlendMs;
+        public double RerankMs;
+        public double ExperienceMs;
+        public double SelectMs;
+        public double HydrateMs;
+        public int TopicCount;
     }
 
     /// <summary>
@@ -175,10 +219,12 @@ public class SearchService(
         DateTimeOffset? publishedAfter,
         RankingProfile profile,
         RankingWeights weights,
+        StageTimings timings,
         CancellationToken ct)
     {
         // Stage 1: dense retrieval. Multi-anchor scores each paper as the
         // average of whole-intent similarity and its best single-topic match.
+        var embedStart = Stopwatch.GetTimestamp();
         var queryPrefix = embeddingOptions.Value.QueryPrefix;
         var primaryVector = await embedder.EmbedAsync(queryPrefix + plan.AnchorText, ct);
 
@@ -216,17 +262,27 @@ public class SearchService(
             }
         }
 
+        timings.EmbedMs += Stopwatch.GetElapsedTime(embedStart).TotalMilliseconds;
+        timings.TopicCount = Math.Max(timings.TopicCount, topicVectors.Count);
+
+        var denseStart = Stopwatch.GetTimestamp();
         var pool = (await index.TopMultiAsync(
             primaryVector, topicVectors, poolSize, candidateIds, ct, publishedAfter)).ToList();
+        timings.DenseMs += Stopwatch.GetElapsedTime(denseStart).TotalMilliseconds;
         var anchorVectors = new List<float[]> { primaryVector };
         anchorVectors.AddRange(topicVectors);
 
         // Stage 1b: lexical fusion.
         if (profile.UseHybrid)
         {
+            var lexicalStart = Stopwatch.GetTimestamp();
             var lexical = await lexicalIndex.TopAsync(
                 plan.AnchorText, poolSize, candidateIds, ct, publishedAfter);
+            timings.LexicalMs += Stopwatch.GetElapsedTime(lexicalStart).TotalMilliseconds;
+
+            var fuseStart = Stopwatch.GetTimestamp();
             pool = await FuseAsync(pool, lexical, anchorVectors, poolSize, ct);
+            timings.FuseMs += Stopwatch.GetElapsedTime(fuseStart).TotalMilliseconds;
         }
 
         if (pool.Count == 0)
@@ -237,13 +293,17 @@ public class SearchService(
         // Stage 2: signal blend.
         if (!weights.IsPureSimilarity)
         {
+            var blendStart = Stopwatch.GetTimestamp();
             pool = await BlendAsync(pool, weights, ct);
+            timings.BlendMs += Stopwatch.GetElapsedTime(blendStart).TotalMilliseconds;
         }
 
         // Stage 3: cross-encoder rerank of the head.
         if (profile.UseReranker)
         {
+            var rerankStart = Stopwatch.GetTimestamp();
             pool = await RerankHeadAsync(plan, pool, rankingOptions.Value.RerankDepth, ct);
+            timings.RerankMs += Stopwatch.GetElapsedTime(rerankStart).TotalMilliseconds;
         }
 
         return pool;

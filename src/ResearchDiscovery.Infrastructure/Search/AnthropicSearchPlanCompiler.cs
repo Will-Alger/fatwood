@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Beta.Messages;
@@ -94,6 +95,7 @@ public class AnthropicSearchPlanCompiler(
                {profile}
                """;
 
+        var llmStart = Stopwatch.GetTimestamp();
         var response = await client.Beta.Messages.Create(new MessageCreateParams
         {
             Model = model.Id,
@@ -118,6 +120,7 @@ public class AnthropicSearchPlanCompiler(
                 },
             ],
         }, cancellationToken: ct);
+        var llmMs = Stopwatch.GetElapsedTime(llmStart).TotalMilliseconds;
 
         await usage.RecordAsync(
             LlmOptions.StepQueryCompiler, model.Id,
@@ -135,7 +138,10 @@ public class AnthropicSearchPlanCompiler(
 
         var plan = ParsePlan(json, knownCategories);
         logger.LogInformation(
-            "Compiled search via {Model}: {Interpretation}", model.Id, plan.Interpretation);
+            "Compiled search via {Model} in {LlmMs:F0}ms (in={InputTokens} out={OutputTokens} tokens): {Interpretation}",
+            model.Id, llmMs,
+            response.Usage?.InputTokens ?? 0, response.Usage?.OutputTokens ?? 0,
+            plan.Interpretation);
         return plan;
     }
 

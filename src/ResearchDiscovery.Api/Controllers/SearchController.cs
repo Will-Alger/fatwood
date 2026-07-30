@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResearchDiscovery.Api.Auth;
@@ -18,7 +19,8 @@ namespace ResearchDiscovery.Api.Controllers;
 public class SearchController(
     ISearchService searchService,
     IPaperQueryService queryService,
-    ProfileService profileService) : ControllerBase
+    ProfileService profileService,
+    ILogger<SearchController> logger) : ControllerBase
 {
     public sealed record CompileRequest(string Query);
 
@@ -89,13 +91,21 @@ public class SearchController(
         }
 
         var userId = HttpContext.GetAppUser()?.Id;
+        var searchStart = Stopwatch.GetTimestamp();
         var result = await searchService.SearchAsync(request.Plan, request.Limit ?? 30, userId, ct);
+        var searchMs = Stopwatch.GetElapsedTime(searchStart).TotalMilliseconds;
 
         // Product searches are logged (the eval CLI calls ISearchService
         // directly and never lands here). The event id goes back to the client
         // so bookmark/analyze actions can carry their search context.
+        var telemetryStart = Stopwatch.GetTimestamp();
         var searchEventId = await telemetry.LogSearchAsync(
             userId, request.QueryText, request.Plan, result, ct);
+        var telemetryMs = Stopwatch.GetElapsedTime(telemetryStart).TotalMilliseconds;
+
+        logger.LogInformation(
+            "Search endpoint: search={SearchMs:F0}ms telemetry={TelemetryMs:F0}ms hits={HitCount}",
+            searchMs, telemetryMs, result.Hits.Count);
 
         return Ok(new
         {
