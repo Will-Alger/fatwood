@@ -252,18 +252,23 @@ public class SearchService(
     {
         // Stage 1: dense retrieval. Multi-anchor scores each paper as the
         // average of whole-intent similarity and its best single-topic match.
-        // All anchors embed in ONE batched forward pass — the sequential
-        // version paid up to ~22 batch-of-1 ONNX calls per search.
+        // The ~20 short topic texts embed in ONE batched forward pass (the
+        // sequential version paid a batch-of-1 ONNX call each); the two LONG
+        // texts — the full anchor list and the HyDE abstract — embed alone,
+        // because a mixed batch pads every topic up to the longest text and
+        // the padded FLOPs measured ~3x slower than the calls they saved.
         var embedStart = Stopwatch.GetTimestamp();
         var queryPrefix = embeddingOptions.Value.QueryPrefix;
+        var primaryVector = await embedder.EmbedAsync(queryPrefix + plan.AnchorText, ct);
 
-        var texts = new List<string> { queryPrefix + plan.AnchorText };
+        var topicVectors = new List<float[]>();
         if (profile.UseMultiAnchor)
         {
             var topics = SplitAnchors(plan.AnchorText);
             if (topics.Count >= 2)
             {
-                texts.AddRange(topics.Select(t => queryPrefix + t));
+                topicVectors.AddRange(await embedder.EmbedBatchAsync(
+                    topics.Select(t => queryPrefix + t).ToList(), ct));
             }
         }
 
@@ -275,22 +280,9 @@ public class SearchService(
         // never single-handedly hijack a paper's score.
         var hydeGatedOff = profile.UseIntentProfiles
             && string.Equals(plan.Intent, "precise", StringComparison.OrdinalIgnoreCase);
-        var useHyde = profile.UseHyde && !hydeGatedOff
-            && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract);
-        if (useHyde)
+        if (profile.UseHyde && !hydeGatedOff && !string.IsNullOrWhiteSpace(plan.HypotheticalAbstract))
         {
-            texts.Add(plan.HypotheticalAbstract!);
-        }
-
-        var vectors = await embedder.EmbedBatchAsync(texts, ct);
-        var primaryVector = vectors[0];
-        var topicVectors = vectors
-            .Skip(1)
-            .Take(useHyde ? vectors.Count - 2 : vectors.Count - 1)
-            .ToList();
-        if (useHyde)
-        {
-            var hydeVector = vectors[^1];
+            var hydeVector = await embedder.EmbedAsync(plan.HypotheticalAbstract, ct);
             if (string.Equals(profile.HydeMode, "blend", StringComparison.OrdinalIgnoreCase))
             {
                 primaryVector = BlendUnit(primaryVector, hydeVector, profile.HydeBlendWeight);
