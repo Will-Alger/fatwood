@@ -199,6 +199,21 @@ and future learning-to-rank features.
    inspect those two before inventing any new gate). The plumbing ships
    anyway with `Ranking:UseIntentProfiles=false`: plans now carry `intent`,
    which is useful for eval slicing, telemetry, and as a future LTR feature.
+11. **Compiler output diet MEASURED AND REJECTED** (2026-07-31): shrinking
+   the compile schema's ranges (topics 8-15 → 6-10, HyDE abstract 4-6 → 2-3
+   sentences; knobs at `Search:Compiler:*`) to cut compile latency. Fresh
+   diet plans for all 54 queries, heads fully judged (+817 judgments), both
+   configs scored on identical judgments on the fixture corpus: control
+   0.645 nDCG@10 / 0.585 R@50 / 0.914 MRR vs diet 0.629 / 0.580 / 0.894 —
+   a consistent loss across all three metrics, for only **14% fewer output
+   tokens** (313 → 268) and ~13% lower compile wall time. Two reasons the
+   hoped-for 30-40% never existed: haiku overshoots the stated ranges
+   (asked 8-15 topics it writes ~16; asked 6-10 it writes ~13), and the
+   interpretation + JSON scaffolding are a fixed cost. The knobs stay,
+   default-off, for a future variant (e.g. abstract-only diet), but the
+   felt-latency answer is the provisional quick-pass search, not a thinner
+   compile. Compile input measured ~2,360 tokens — also the final
+   confirmation that prompt caching (4096-token minimum) is dead.
 
 ## 4. Using the data as it accumulates
 
