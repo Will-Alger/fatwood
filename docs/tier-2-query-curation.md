@@ -123,6 +123,44 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    acceptable-only — nothing in the eval asserts that a corpus giant IS the
    right slice, so over-routing away from ML would not be caught. 66 live
    codes still have no ground truth at all, led by math.IT (17k).*
+   *CORPUS-GIANT EXPANSION 2026-08-01: +5 persona queries making cs.CV, cs.CL,
+   cs.LG, cs.AI and stat.ML must-haves for the first time — the mirror test the
+   previous note called for. Every earlier batch scored a compiler that routes
+   AWAY from the giants; nothing scored one that routes away when the giant is
+   correct, and each of these five is a query where the big category genuinely
+   IS the field (an on-device vision feature, an archive-text project, a
+   from-scratch training-method reimplementation, classical planning/search, and
+   uncertainty quantification). Must-have codes 39 → 44; the eval is 76 → 81
+   queries, 22 → 27 of them plan: null.
+   Two corrections to the list above, both verified this run. (1) cs.SY and
+   cs.NA are NOT gaps of the same kind: arXiv aliases them onto eess.SY and
+   math.NA (`ArxivCategoryNames` gives each pair one display name — "Systems
+   and Control", "Numerical Analysis"), and the eval already handles them the
+   right way — `drone-mpc-control` expects eess.SY with cs.SY acceptable,
+   `cfd-solver-portfolio` expects math.NA with cs.NA acceptable. Their
+   acceptable-only status is deliberate alias-forgiveness, so authoring
+   must-haves for them would demand a specific spelling of a category the
+   compiler may legitimately name either way. They are excluded here on
+   purpose. (2) This batch is DELIBERATELY PERMISSIVE — the opposite convention
+   from the within-CS and theory batches: cs.LG is acceptable on all four
+   queries where it is not itself the must-have, and cs.AI on three of its
+   four, because when the giant is the right field its neighbours usually are
+   too. Its precision is therefore not comparable with those
+   batches, only its recall is the point. stat.ML in particular is scored with
+   cs.LG acceptable rather than expected: the two are heavily cross-listed but
+   are distinct codes, and `uncertainty-quant-statistician` asks for the
+   statistical machinery, so cs.LG-only should cost recall while cs.LG-as-extra
+   should not. Shipped with plan: null, so `eval search` and the CI nDCG floor
+   are untouched; the un-baselined backlog is now 27 queries across four
+   batches — one `eval categories --runs 3` over the 41 targets baselines all
+   of them. 67 of the 155 live codes still have no ground truth at all, led by
+   math.IT (17k), astro-ph.HE (4.2k) and math.CO (3.5k).
+   NOT DONE, and it is what would make the alias mistake impossible rather than
+   merely documented: `EvalQueryFixtureTests` has no assertion that an
+   alias pair is never split across must-have and absent — a future batch can
+   still expect cs.SY without forgiving eess.SY, and nothing would fail. That
+   test needs a taxonomy-level alias set (codes sharing a display name), which
+   is a C# change and could not be built in the steward environment.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
    *Taxonomy naming caught up with the corpus 2026-07-23:
