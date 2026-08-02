@@ -578,7 +578,7 @@ export function Discover({
           </p>
           <p className="plan-chips-caption">
             {plan.categories.length > 0
-              ? 'Limited to these fields (hover for detail, × to drop one):'
+              ? 'Limited to these fields (× to drop one):'
               : 'Searching every field — no category filter applied.'}
             {categoriesEdited && (
               <>
@@ -640,6 +640,24 @@ export function Discover({
               no public code (reproduction gap)
             </label>
           </div>
+          {plan.categories.length > 0 && (
+            <details className="plan-fields">
+              <summary>What these fields mean</summary>
+              <dl>
+                {plan.categories.map((code) => (
+                  <div key={code}>
+                    <dt>
+                      <span className="plan-field-code">{code}</span>
+                      {categoryNames.get(code) && (
+                        <span className="plan-field-name">{categoryNames.get(code)}</span>
+                      )}
+                    </dt>
+                    <dd>{categoryGloss(code)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
           <details className="plan-anchor">
             <summary>Topics driving the match</summary>
             <textarea
