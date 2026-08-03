@@ -211,6 +211,35 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    CI gate is `npm run build` (there is no web test runner in the repo), so
    the enforceable version is a type-level one: pin the live code list and
    type `byCode` as a total `Record` over it.*
+   *COVERAGE PINNED 2026-08-03: that is now enforced, so the NOT DONE above is
+   closed. `web/src/data/liveCategoryCodes.ts` holds `LiveCategoryCode`, a
+   type-only union of the 155 codes `/api/categories` serves (types only — no
+   value is imported, so it is erased at compile time and adds no bundle
+   bytes), and `categoryGloss.ts` checks both tables against it: every dotted
+   live code must have its own `byCode` line — its archive line is the
+   degradation being guarded against, so archive coverage does not excuse it —
+   while a dotless archive-level code (`hep-th`) is answered exactly by
+   `byArchive`, so either table satisfies it. A second assertion bans a gloss
+   keyed to a code the corpus does not serve, which is what catches a typo:
+   `cs.RO` mistyped as `cs.R0` otherwise reads as one missing gloss and one
+   mystery entry, neither of them an error. Failures name the code
+   (`Type '"q-bio.QM"' does not satisfy the constraint 'never'`) and were
+   confirmed by fault injection, not assumed — an earlier draft of the check
+   passed a deleted `q-bio.QM` gloss because `q-bio` covered it. Live shape
+   today: 155 codes, 146 dotted with exact lines, plus `quant-ph`, which is
+   dotless but has its own line; the 8 resolving through `byArchive` are
+   exactly the dotless codes the note above lists. LIMIT, and it is the reason
+   this is a pin and not a check: the union is a snapshot, so a category that
+   appears tomorrow still renders its archive line until someone regenerates
+   the list (command in the file header). What is gone is the silent version —
+   once the list is refreshed, a missing gloss fails `tsc` instead of being
+   noticed by nobody. Removing the human step entirely would take a CI job
+   diffing the pin against live `/api/categories`; not attempted here, since it
+   puts a network dependency in the build gate. STILL OPEN, from B.2's
+   2026-08-01 note: `EvalQueryFixtureTests` has no assertion that an alias pair
+   (`cs.SY`/`eess.SY`, `cs.NA`/`math.NA`) is never split across must-have and
+   absent. That one is C#, and no .NET SDK was available in the steward
+   environment.*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
