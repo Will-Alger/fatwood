@@ -187,6 +187,30 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    fields" once the user has edited it. Correction was one-way before —
    the only way back was spending another compile. Together with the gloss
    pass above: the chip now names the field, the tooltip explains it.*
+   *The tooltip half finished on touch 2026-08-02: the 2026-07-28 pass fixed
+   the code (`q-bio.QM` → "Quantitative Methods") but left the explanation
+   itself hover-only — `categoryGloss` reached the plan chips through a
+   `title` attribute and nowhere else, while `CategoryFilter` had rendered the
+   same gloss as visible text since the 2026-07-27 pass. The chip's name was
+   also being truncated: `.chip-category-name` caps at `max-width: 22ch`, and
+   46 of the 155 live `/api/categories` names are longer than 22 characters
+   (`astro-ph.IM` = "Instrumentation and Methods for Astrophysics", 44), so
+   for those the chip showed an ellipsis and the full name appeared in no
+   tooltip at all — the chip's `title` holds the gloss, not the name. A
+   "What these fields mean" `<details>` block under the chips now spells out
+   code, full name and gloss for each planned category, so both are reachable
+   by touch and keyboard; the caption dropped its "hover for detail"
+   instruction, which named an affordance half the audience does not have.
+   The tooltips stay for pointer users. NOT DONE: nothing pins the coverage
+   invariant this rests on — `categoryGloss` has 147 exact codes and the
+   other 8 live categories (`gr-qc`, `hep-th`, `hep-ph`, `hep-ex`, `hep-lat`,
+   `math-ph`, `nucl-th`, `nucl-ex`) resolve through the archive fallback,
+   which happens to read correctly only because they are dotless archive-level
+   codes. A new dotted code arriving via cross-listing would silently render
+   "Physics." in this block, and no build or test would notice. The frontend
+   CI gate is `npm run build` (there is no web test runner in the repo), so
+   the enforceable version is a type-level one: pin the live code list and
+   type `byCode` as a total `Record` over it.*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
