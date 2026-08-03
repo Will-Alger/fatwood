@@ -1610,6 +1610,88 @@
         "cond-mat.mes-hall",
         "math.NA"
       ]
+    },
+    {
+      "id": "vision-for-accessibility",
+      "persona": "Front-end developer volunteering with a disability-services nonprofit; Python is their second language and they have never trained a model. Goal: an on-device vision feature - scene description, sign reading - as a portfolio project.",
+      "query": "computer vision I could run on a phone - detecting objects, reading text in the wild, describing what the camera is pointed at",
+      "plan": null,
+      "expectedCategories": [
+        "cs.CV"
+      ],
+      "acceptableCategories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.HC",
+        "cs.CL",
+        "cs.MM",
+        "eess.IV"
+      ]
+    },
+    {
+      "id": "archive-text-librarian",
+      "persona": "Digital-humanities librarian who taught themselves Python for text work; no ML coursework. Goal: a language-processing project over a scanned historical newspaper archive.",
+      "query": "making sense of a huge pile of messy text - pulling out people and places, summarizing documents, searching by meaning instead of keywords",
+      "plan": null,
+      "expectedCategories": [
+        "cs.CL"
+      ],
+      "acceptableCategories": [
+        "cs.IR",
+        "cs.LG",
+        "cs.AI",
+        "cs.DL",
+        "cs.DB"
+      ]
+    },
+    {
+      "id": "ml-from-scratch-reimplementer",
+      "persona": "Self-taught developer reading ML papers on evenings; strong Python and numpy, no research background. Goal: reimplement a training method end to end rather than fine-tune someone else's checkpoint.",
+      "query": "training methods I could reimplement from scratch - optimizers, regularization, self-supervised objectives, and why these tricks actually work",
+      "plan": null,
+      "expectedCategories": [
+        "cs.LG"
+      ],
+      "acceptableCategories": [
+        "stat.ML",
+        "cs.NE",
+        "cs.AI",
+        "cs.CV",
+        "math.OC"
+      ]
+    },
+    {
+      "id": "planning-and-search-gamedev",
+      "persona": "Game developer with a decade of C# experience and no ML background, curious about classical AI. Goal: a solver or agent project - planning, search, constraint reasoning - to present at a local meetup.",
+      "query": "agents that plan rather than predict - heuristic search, constraint solving, symbolic reasoning, classical planning I can watch step through a problem",
+      "plan": null,
+      "expectedCategories": [
+        "cs.AI"
+      ],
+      "acceptableCategories": [
+        "cs.LG",
+        "cs.MA",
+        "cs.LO",
+        "cs.GT",
+        "cs.PL",
+        "cs.RO"
+      ]
+    },
+    {
+      "id": "uncertainty-quant-statistician",
+      "persona": "Statistics master's student comfortable in R and moving to Python; strong on inference, light on deep learning. Goal: a project about quantifying model uncertainty for a biostatistics-adjacent job application.",
+      "query": "putting honest uncertainty on model predictions - conformal prediction, calibration, Bayesian neural networks, when a confidence interval is actually valid",
+      "plan": null,
+      "expectedCategories": [
+        "stat.ML"
+      ],
+      "acceptableCategories": [
+        "cs.LG",
+        "stat.ME",
+        "math.ST",
+        "stat.CO",
+        "stat.AP"
+      ]
     }
   ]
 }
