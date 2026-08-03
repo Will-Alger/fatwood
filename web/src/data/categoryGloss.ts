@@ -5,15 +5,25 @@
  * a generic fallback — cross-listed papers can arrive from any corner of
  * arXiv, so full coverage is impossible and the fallback must read fine.
  *
- * `byCode` covers every category present in the live corpus (155 codes as of
- * 2026-07-27, matching `ArxivCategoryNames` on the server). The fallbacks are
- * for codes that arrive later via cross-listing, not for codes we already
- * serve — an archive-level line ("Physics.") on a category the browse filter
- * lists is a transparency gap, and it also makes that category unfindable by
- * the gloss-text search in CategoryFilter.
+ * Every category the live corpus serves resolves to a real line, not a
+ * fallback: 147 of the 155 have an exact `byCode` entry, and the other 8
+ * (`gr-qc`, `hep-th`, `hep-ph`, `hep-ex`, `hep-lat`, `math-ph`, `nucl-th`,
+ * `nucl-ex`) are archive-level codes with no dot, so their `byArchive` line is
+ * the exact answer rather than a degradation. The fallbacks are for codes that
+ * arrive later via cross-listing, not for codes we already serve — an
+ * archive-level line ("Physics.") on a category the browse filter lists is a
+ * transparency gap, and it also makes that category unfindable by the
+ * gloss-text search in CategoryFilter.
+ *
+ * That invariant is enforced at the bottom of this file against the pinned
+ * `LiveCategoryCode` list rather than trusted: it used to hold only by hand,
+ * and a new dotted code — or a typo in a key here — would have degraded
+ * silently.
  */
 
-const byCode: Record<string, string> = {
+import type { LiveCategoryCode } from './liveCategoryCodes'
+
+const byCode = {
   'cs.LG': 'How machines learn from data — training methods, architectures, generalization.',
   'cs.AI': 'Broad artificial intelligence: reasoning, planning, agents, knowledge.',
   'cs.CL': 'Computers understanding and generating human language (NLP, LLMs).',
@@ -163,7 +173,7 @@ const byCode: Record<string, string> = {
   'q-bio.OT': 'Quantitative biology that fits no other category.',
 }
 
-const byArchive: Record<string, string> = {
+const byArchive = {
   cs: 'Computer science.',
   stat: 'Statistics.',
   math: 'Mathematics.',
@@ -186,8 +196,48 @@ const byArchive: Record<string, string> = {
 }
 
 export function categoryGloss(code: string): string {
-  if (byCode[code]) return byCode[code]
-  const archive = code.split('.')[0]
-  if (byArchive[archive]) return byArchive[archive]
+  const exact = (byCode as Record<string, string>)[code]
+  if (exact) return exact
+  const archive = (byArchive as Record<string, string>)[code.split('.')[0]]
+  if (archive) return archive
   return 'An arXiv research category.'
 }
+
+/* ------------------------------------------------------------------ *
+ * Coverage checks. These are types, so they cost nothing at runtime and
+ * cannot be skipped: `npm run build` runs `tsc -b` first, and a failure
+ * here names the offending code in the error message.
+ * ------------------------------------------------------------------ */
+
+/**
+ * A live code that renders a fallback instead of a real explanation. A dotted
+ * code needs its own `byCode` line — falling through to its archive ("Physics.")
+ * is exactly the degradation this guards against, so archive coverage does not
+ * excuse it. A dotless archive-level code (`hep-th`) is answered exactly by
+ * `byArchive`, so either table satisfies it.
+ */
+type Unglossed<C extends LiveCategoryCode> = C extends keyof typeof byCode
+  ? never
+  : C extends `${string}.${string}`
+    ? C
+    : C extends keyof typeof byArchive
+      ? never
+      : C
+
+type AssertNever<T extends never> = T
+
+/**
+ * Every live category renders a real explanation. Fails with "Type 'math.XX'
+ * does not satisfy the constraint 'never'" when a code added to
+ * `LiveCategoryCode` has no gloss.
+ */
+export type NoUnglossedLiveCategory = AssertNever<
+  { [C in LiveCategoryCode]: Unglossed<C> }[LiveCategoryCode]
+>
+
+/**
+ * No gloss keyed to a code the corpus does not serve. Catches a typo'd key —
+ * which silently degrades that category to its archive line — and flags
+ * entries left behind when a category leaves the corpus.
+ */
+export type NoStaleGloss = AssertNever<Exclude<keyof typeof byCode, LiveCategoryCode>>
