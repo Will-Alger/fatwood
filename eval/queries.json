@@ -928,6 +928,7 @@
         "astro-ph.IM",
         "physics.data-an",
         "math.NA",
+        "cs.NA",
         "nlin.CD",
         "cond-mat.stat-mech"
       ]
@@ -1042,6 +1043,7 @@
       ],
       "acceptableCategories": [
         "eess.SY",
+        "cs.SY",
         "cs.CV",
         "cs.AI"
       ]
@@ -1137,7 +1139,8 @@
         "cs.CV",
         "cs.MM",
         "physics.comp-ph",
-        "math.NA"
+        "math.NA",
+        "cs.NA"
       ]
     },
     {
@@ -1191,6 +1194,7 @@
       ],
       "acceptableCategories": [
         "eess.SY",
+        "cs.SY",
         "cs.NI",
         "eess.AS",
         "cs.LG",
@@ -1274,6 +1278,7 @@
         "cs.DS",
         "cs.LG",
         "eess.SY",
+        "cs.SY",
         "stat.AP",
         "cs.CE"
       ]
@@ -1356,6 +1361,7 @@
         "stat.ME",
         "stat.ML",
         "math.ST",
+        "stat.TH",
         "cs.LG",
         "stat.AP"
       ]
@@ -1390,6 +1396,7 @@
         "cs.NI",
         "cs.DC",
         "cs.IT",
+        "math.IT",
         "cs.LO"
       ]
     },
@@ -1439,7 +1446,9 @@
         "cs.OS",
         "cs.CR",
         "cs.IT",
-        "eess.SY"
+        "math.IT",
+        "eess.SY",
+        "cs.SY"
       ]
     },
     {
@@ -1504,6 +1513,7 @@
         "cs.ET",
         "cs.CC",
         "cs.IT",
+        "math.IT",
         "cs.DS",
         "physics.comp-ph"
       ]
@@ -1574,7 +1584,8 @@
         "cs.DM",
         "math.DS",
         "cond-mat.stat-mech",
-        "math.NA"
+        "math.NA",
+        "cs.NA"
       ]
     },
     {
@@ -1608,7 +1619,8 @@
         "eess.IV",
         "physics.ins-det",
         "cond-mat.mes-hall",
-        "math.NA"
+        "math.NA",
+        "cs.NA"
       ]
     },
     {
@@ -1689,6 +1701,7 @@
         "cs.LG",
         "stat.ME",
         "math.ST",
+        "stat.TH",
         "stat.CO",
         "stat.AP"
       ]
