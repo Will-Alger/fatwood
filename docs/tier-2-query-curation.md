@@ -240,6 +240,35 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    (`cs.SY`/`eess.SY`, `cs.NA`/`math.NA`) is never split across must-have and
    absent. That one is C#, and no .NET SDK was available in the steward
    environment.*
+   *PIN REFRESH MECHANIZED 2026-08-06: the LIMIT above — the union is a
+   snapshot, so a category that appears tomorrow renders its archive line until
+   someone regenerates the list — was three manual steps (curl, a `node -e`
+   one-liner, hand-pasting 155 lines into the middle of a source file), each
+   able to go wrong quietly. It is now one command: `web/scripts/category-pin.mjs`
+   diffs the pinned union against live `/api/categories`, names every code that
+   drifted in either direction, and exits 1 on drift (`npm run check:categories`);
+   `--write` rewrites the union in place, and `--from <file>` scores a saved
+   response. It is deliberately NOT in the build gate — a network dependency in
+   `npm run build` is what the 2026-08-03 note rejected, and that judgement
+   stands; the script runs on demand and hands off to the type check that
+   already exists. Verified this run, all four branches: live serves 155 codes
+   and the pin is exactly those 155 (no drift either way); deleting `q-bio.QM`
+   from the union is reported as drift and `--write` restores the file
+   byte-identically (`diff -q` clean against a pre-edit copy); injecting a code
+   the corpus does not serve into a copy of the live response and running
+   `--write` makes `npm run build` fail with `src/data/categoryGloss.ts(235,3):
+   error TS2344: Type '"cs.NEWCODE"' does not satisfy the constraint 'never'`,
+   so the drift → pin → tsc chain holds end to end; a code removed from the
+   live response is reported as no-longer-served. `npm run build` and `oxlint`
+   pass on the branch. What is NOT closed: someone still has to decide to run
+   it — this makes the refresh cheap and correct, not automatic.
+   STILL OPEN, unchanged: the alias-pair assertion. `EvalQueryFixtureTests`
+   holds exactly four checks — `QueryIdsAreUniqueAndPopulated`,
+   `EveryAuthoredCategoryCodeIsInTheArxivTaxonomy`,
+   `ExpectedAndAcceptableCategoriesDoNotOverlap`,
+   `QueriesWithoutAFrozenPlanAreCategoryEvalTargets` — and none of them is it.
+   #18 repaired the twelve queries that had split an alias pair, but nothing
+   stops the thirteenth. Still C#, still no .NET SDK in this environment.*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
