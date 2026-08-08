@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { CategoryDto } from '../api/types'
+import { aliasIndex } from '../data/categoryAliases'
 import { categoryGloss } from '../data/categoryGloss'
 
 interface CategoryFilterProps {
@@ -9,13 +10,16 @@ interface CategoryFilterProps {
 }
 
 /**
- * Searchable category panel: filter by code, official name, or the
- * plain-English gloss, sorted by paper count so the big categories are never
- * a scroll away. Collapses to a toggle on small screens (CSS).
+ * Searchable category panel: filter by code, official name, the plain-English
+ * gloss, or the code of an alias twin, sorted by paper count so the big
+ * categories are never a scroll away. Collapses to a toggle on small screens
+ * (CSS).
  */
 export function CategoryFilter({ categories, selected, onChange }: CategoryFilterProps) {
   const [filter, setFilter] = useState('')
   const [openOnMobile, setOpenOnMobile] = useState(false)
+
+  const aliases = useMemo(() => aliasIndex(categories), [categories])
 
   const visible = useMemo(() => {
     const sorted = [...categories].sort((a, b) => b.paperCount - a.paperCount)
@@ -25,9 +29,12 @@ export function CategoryFilter({ categories, selected, onChange }: CategoryFilte
       (c) =>
         c.code.toLowerCase().includes(needle) ||
         c.name.toLowerCase().includes(needle) ||
-        categoryGloss(c.code).toLowerCase().includes(needle),
+        categoryGloss(c.code).toLowerCase().includes(needle) ||
+        // Searching "math.NA" should surface cs.NA too: same field, and
+        // covering it means ticking both boxes.
+        (aliases.get(c.code) ?? []).some((twin) => twin.toLowerCase().includes(needle)),
     )
-  }, [categories, filter])
+  }, [aliases, categories, filter])
 
   function toggle(code: string) {
     onChange(
@@ -66,27 +73,37 @@ export function CategoryFilter({ categories, selected, onChange }: CategoryFilte
         />
 
         <ul>
-          {visible.map((category) => (
-            <li key={category.code}>
-              <label title={categoryGloss(category.code)}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(category.code)}
-                  onChange={() => toggle(category.code)}
-                />
-                <span className="category-text">
-                  <span className="category-line">
-                    <span className="category-code">{category.code}</span>
-                    <span className="category-count">
-                      {category.paperCount.toLocaleString()}
+          {visible.map((category) => {
+            const twins = aliases.get(category.code) ?? []
+            return (
+              <li key={category.code}>
+                <label title={categoryGloss(category.code)}>
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(category.code)}
+                    onChange={() => toggle(category.code)}
+                  />
+                  <span className="category-text">
+                    <span className="category-line">
+                      <span className="category-code">{category.code}</span>
+                      <span className="category-count">
+                        {category.paperCount.toLocaleString()}
+                      </span>
                     </span>
+                    <span className="category-name">{category.name}</span>
+                    <span className="category-gloss">{categoryGloss(category.code)}</span>
+                    {twins.length > 0 && (
+                      <span className="category-alias">
+                        Same field as {twins.join(' and ')} — arXiv files it under both
+                        codes, and the filter matches codes exactly, so tick both to cover
+                        it.
+                      </span>
+                    )}
                   </span>
-                  <span className="category-name">{category.name}</span>
-                  <span className="category-gloss">{categoryGloss(category.code)}</span>
-                </span>
-              </label>
-            </li>
-          ))}
+                </label>
+              </li>
+            )
+          })}
           {visible.length === 0 && (
             <li className="category-empty">No categories match “{filter}”.</li>
           )}

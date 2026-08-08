@@ -21,6 +21,7 @@ import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
 import { PaperCard } from './PaperCard'
 import { RecentSearches } from './RecentSearches'
 import { EmberDots, PaperSkeletons } from './Skeletons'
+import { aliasIndex } from '../data/categoryAliases'
 import { categoryGloss } from '../data/categoryGloss'
 
 const SEARCH_STAGES = [
@@ -144,6 +145,8 @@ export function Discover({
     () => new Map(categories.map((c) => [c.code, c.name])),
     [categories],
   )
+
+  const categoryAliases = useMemo(() => aliasIndex(categories), [categories])
 
   const categoriesEdited =
     plan !== null &&
@@ -644,17 +647,33 @@ export function Discover({
             <details className="plan-fields">
               <summary>What these fields mean</summary>
               <dl>
-                {plan.categories.map((code) => (
-                  <div key={code}>
-                    <dt>
-                      <span className="plan-field-code">{code}</span>
-                      {categoryNames.get(code) && (
-                        <span className="plan-field-name">{categoryNames.get(code)}</span>
-                      )}
-                    </dt>
-                    <dd>{categoryGloss(code)}</dd>
-                  </div>
-                ))}
+                {plan.categories.map((code) => {
+                  // arXiv files some fields under two codes; the filter matches
+                  // codes exactly, so a twin left out of the plan is a slice of
+                  // the same field this search is not looking at. Say so.
+                  const missingTwins = (categoryAliases.get(code) ?? []).filter(
+                    (twin) => !plan.categories.includes(twin),
+                  )
+                  return (
+                    <div key={code}>
+                      <dt>
+                        <span className="plan-field-code">{code}</span>
+                        {categoryNames.get(code) && (
+                          <span className="plan-field-name">{categoryNames.get(code)}</span>
+                        )}
+                      </dt>
+                      <dd>
+                        {categoryGloss(code)}
+                        {missingTwins.length > 0 && (
+                          <span className="plan-field-alias">
+                            arXiv also files this field as {missingTwins.join(' and ')}, which
+                            this search is not matching.
+                          </span>
+                        )}
+                      </dd>
+                    </div>
+                  )
+                })}
               </dl>
             </details>
           )}
