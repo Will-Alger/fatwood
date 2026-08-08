@@ -472,6 +472,18 @@ body {
   margin-top: 0.1rem;
 }
 
+/* An alias twin (cs.NA / math.NA) is the same field under two codes. The
+   hairline marks it as a note about the row rather than more description. */
+.category-alias {
+  display: block;
+  color: var(--faint);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  margin-top: 0.25rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--rule);
+}
+
 .category-empty {
   color: var(--muted);
   font-size: 0.8125rem;
@@ -1465,6 +1477,16 @@ select {
   font-family: var(--font-serif);
   line-height: 1.5;
   color: var(--faint);
+}
+
+/* The half of an alias pair the plan left out — a gap in what was searched,
+   not more description, so it gets its own line rather than trailing prose. */
+.plan-field-alias {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 .plan-anchor {
