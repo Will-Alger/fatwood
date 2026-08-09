@@ -262,13 +262,21 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    live response is reported as no-longer-served. `npm run build` and `oxlint`
    pass on the branch. What is NOT closed: someone still has to decide to run
    it — this makes the refresh cheap and correct, not automatic.
-   STILL OPEN, unchanged: the alias-pair assertion. `EvalQueryFixtureTests`
-   holds exactly four checks — `QueryIdsAreUniqueAndPopulated`,
+   OPEN ON main, being closed elsewhere: the alias-pair assertion. On main
+   `EvalQueryFixtureTests` holds exactly four checks —
+   `QueryIdsAreUniqueAndPopulated`,
    `EveryAuthoredCategoryCodeIsInTheArxivTaxonomy`,
    `ExpectedAndAcceptableCategoriesDoNotOverlap`,
-   `QueriesWithoutAFrozenPlanAreCategoryEvalTargets` — and none of them is it.
-   #18 repaired the twelve queries that had split an alias pair, but nothing
-   stops the thirteenth. Still C#, still no .NET SDK in this environment.*
+   `QueriesWithoutAFrozenPlanAreCategoryEvalTargets` — and none of them is it,
+   so #18 repaired the twelve queries that had split a pair while nothing stops
+   the thirteenth. That is still true of main as this note lands, but it is no
+   longer the whole picture: #22 (`steward/eval-alias-pair-fixture`, opened
+   2026-08-09) adds exactly that assertion plus a derived `AliasesFor` on
+   `ArxivCategoryNames`. It touches only C# and shares no file with this
+   branch — verified by `git merge-tree --write-tree`, which merges the two
+   cleanly — so whichever lands second, treat this paragraph as superseded by
+   #22 rather than as a live gap. It stayed unbuildable here either way: no
+   .NET SDK in the steward environment.*
 
 ### C. Methods-corner ingestion (DONE 2026-07-19)
 *Landed: round-3 harvest of econ/q-bio/eess/stat/physics:astro-ph/
