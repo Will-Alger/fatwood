@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getLlmSettings, redeemInvite, setThemePreference } from './api/client'
 import type { LlmSettingsView, SortOrder } from './api/types'
 import { AdminPanel } from './components/AdminPanel'
@@ -13,6 +13,7 @@ import { useAnalyze } from './hooks/useAnalyze'
 import { useCategories } from './hooks/useCategories'
 import { formatBudget, useMe } from './hooks/useMe'
 import { usePapers } from './hooks/usePapers'
+import { categoryGloss } from './data/categoryGloss'
 import './App.css'
 
 const PAGE_SIZE = 25
@@ -58,6 +59,13 @@ export default function App() {
     refresh()
   })
   const [browseAnalyzeError, setBrowseAnalyzeError] = useState<string | null>(null)
+
+  // The field's real name for a selected code, so the browse filter can be read
+  // without the sidebar — same source (`/api/categories`) the plan chips use.
+  const categoryNames = useMemo(
+    () => new Map(categories.map((c) => [c.code, c.name])),
+    [categories],
+  )
 
   useEffect(() => {
     if (me?.role === 'Owner') {
@@ -294,6 +302,66 @@ export default function App() {
               Bookmarked
             </label>
           </div>
+
+          {/* What the results are filtered to, said next to the results. The
+              sidebar holds the only other copy of this, and it is collapsed
+              behind a toggle on small screens — so on a phone a filtered list
+              looked like the whole corpus. Same chips, same wording, same
+              gloss block as the Discover plan panel: one way to read "these
+              are the fields you are seeing", wherever you are. */}
+          {selectedCategories.length > 0 && (
+            <>
+              <p className="plan-chips-caption">
+                Showing these fields only (× to drop one):{' '}
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => handleCategoriesChange([])}
+                >
+                  Clear all
+                </button>
+              </p>
+              <div className="plan-chips">
+                {selectedCategories.map((code) => (
+                  <span key={code} className="chip chip-category" title={categoryGloss(code)}>
+                    <span className="chip-code">{code}</span>
+                    {categoryNames.get(code) && (
+                      <span className="chip-category-name">{categoryNames.get(code)}</span>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${code}`}
+                      onClick={() =>
+                        handleCategoriesChange(selectedCategories.filter((c) => c !== code))
+                      }
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              {/* The chip's name ellipsizes at 22ch and its gloss lives in a
+                  title tooltip, so for the 46 of 155 live names longer than
+                  that neither is reachable by touch — spell both out here. */}
+              <details className="plan-fields">
+                <summary>What these fields mean</summary>
+                <dl>
+                  {selectedCategories.map((code) => (
+                    <div key={code}>
+                      <dt>
+                        <span className="plan-field-code">{code}</span>
+                        {categoryNames.get(code) && (
+                          <span className="plan-field-name">{categoryNames.get(code)}</span>
+                        )}
+                      </dt>
+                      <dd>{categoryGloss(code)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </details>
+            </>
+          )}
+
           {categoriesError && (
             <p className="status status-error">Could not load categories: {categoriesError}</p>
           )}
