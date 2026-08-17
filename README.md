@@ -6,15 +6,48 @@ Fatwood is the resin-saturated heart of a pine — the wood that catches fire
 from a single spark. This app is that, for engineers: it finds the research
 papers that will actually ignite your next project.
 
+<!--
+  Every number below is re-derivable — re-run these before quoting or editing
+  one. The paper count goes stale on its own: ingestion runs a nightly delta
+  (Ingestion:Schedule in appsettings.json), so the corpus is larger today than
+  whenever this file was last touched. The corpus size and the category count
+  each appear twice — in the paragraph below and in "How a sentence becomes
+  insights" step 2 — so fix both copies or the next reader gets two answers.
+
+    # corpus size + the category facet, from production
+    curl -sL https://www.fatwood.io/api/papers?page=1\&pageSize=1 |
+      python3 -c 'import json,sys; print(json.load(sys.stdin)["totalItems"], "papers")'
+    curl -sL https://www.fatwood.io/api/categories |
+      python3 -c 'import json,sys; print(len(json.load(sys.stdin)), "live categories")'
+
+  The per-category `paperCount` that endpoint returns is a count of category
+  *assignments*, so summing it gives roughly twice the corpus size (papers are
+  cross-listed). It is not the paper count; do not add it up.
+
+    # harvest targets, from config
+    python3 -c 'import json; print(len(json.load(open(
+      "src/ResearchDiscovery.Api/appsettings.json"))["Arxiv"]["Categories"]))'
+
+    # eval set + judgments, from the repo (no build, no database)
+    python3 -c 'import json; q=json.load(open("eval/queries.json"))["queries"]; \
+      j=json.load(open("eval/judgments.json"))["judgments"]; \
+      print(sum(1 for x in q if x["plan"] is not None), "scored queries;", \
+      len(j), "judgments")'
+
+  nDCG@10 and the CI floor are not derivable without a run — they come from
+  docs/search-quality.md, which records the campaign that produced them.
+-->
+
 arXiv publishes hundreds of papers a day across machine learning, security,
 robotics, signal processing, computational biology, and quantitative finance.
-Fatwood indexes a decade of them — **~910,000 papers across 37 categories**.
-Somewhere in there
-is a paper that would make a fantastic project for *you specifically* — the
-right topic for where your career is going, the right scope for a solo
-build, maybe a result nobody has reproduced in public yet. The problem is
-finding it: keyword search doesn't know you, category feeds are a firehose,
-and reading 300 abstracts a day is a job.
+Fatwood indexes a decade of them — **~925,000 papers**, harvested from 37
+target arXiv categories and carrying cross-listings that spread the corpus
+across **155 categories** in all. Somewhere in there is a paper that would
+make a fantastic project for *you specifically* — the right topic for where
+your career is going, the right scope for a solo build, maybe a result nobody
+has reproduced in public yet. The problem is finding it: keyword search
+doesn't know you, category feeds are a firehose, and reading 300 abstracts a
+day is a job.
 
 Fatwood closes that gap. Describe what you're after in plain
 language — career goals included:
@@ -36,7 +69,7 @@ Principles set at the start; each is enforced somewhere concrete in the code.
 
 - **Search quality must be measurable — or none of this means anything.**
   An evaluation harness turns "are the results good?" into a number (nDCG@10
-  = 0.628 over ~7,400 graded relevance judgments across 54 frozen queries,
+  = 0.628 over ~8,200 graded relevance judgments across 54 frozen queries,
   with a CI gate that fails any PR dropping below 0.590). No ranking change
   ships unless the number goes up; several "obviously good" ideas died in
   measurement, and that's the system working.
@@ -68,8 +101,8 @@ Principles set at the start; each is enforced somewhere concrete in the code.
    concrete research topics, category filters, a date window, shown as chips.
    Editing a chip re-runs the search free: only compilation and opt-in
    analysis ever spend tokens.
-2. **Date and category filters** narrow ~910k papers — a decade of arXiv
-   across 37 categories — to your candidates in milliseconds, pushed into
+2. **Date and category filters** narrow ~925k papers — a decade of arXiv
+   across 155 categories — to your candidates in milliseconds, pushed into
    the index scan itself rather than a full-corpus query.
 3. **Meaning does the ranking**: every abstract is a point in a
    384-dimensional space (local embeddings — bge-small via ONNX, no API);
