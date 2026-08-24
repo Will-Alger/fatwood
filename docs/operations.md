@@ -71,8 +71,16 @@ interrupted runs resume. Note: a model swap replaces vectors (keyed by
 completes.
 
 Vectors are stored **int8-quantized** (per-vector max-abs scale; exact at 384
-dims) alongside the float payload — that is what keeps ~910k papers resident
+dims) alongside the float payload — that is what keeps ~925k papers resident
 in a 4 Gi replica. Legacy rows are backfilled by `QuantizeMissingAsync`.
+
+<!-- Corpus size drifts with the nightly delta; re-derive before quoting via
+     curl -sL "https://www.fatwood.io/api/papers?page=1&pageSize=1"
+     Prod served 928,075 total items on 2026-08-24 — up from the 910,733
+     Phase C landed at 2026-07-19 (see docs/tier-2-query-curation.md). The
+     4 Gi sizing decision was made at that Phase C mark; the intervening
+     ~2% is nightly-delta growth. Update the number here whenever it drifts
+     enough to look wrong, not on every ingest. -->
 
 **Index snapshots.** At the end of an embed run, both indexes (int8 vectors,
 BM25 postings) are serialized to the `search-index` blob container. A cold API
