@@ -42,12 +42,33 @@ const REVEAL_STAGGER_MS = 350
 const REVEAL_STAGGER_FAST_MS = 150
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// The front door teaches people what to type, and it was teaching one field.
+// All five examples here were CS/ML — an anomaly detector, an RL reproduction,
+// an LLM agent, a security piece, a market-data forecast — while the corpus
+// behind them is 155 arXiv categories across 20 archives, a third of it
+// outside cs.* (on 2026-08-27 /api/categories reported 1,878,336 category
+// assignments, 607,391 of them non-CS: math 151k, eess 139k, stat 109k,
+// physics 67k, astro-ph 48k, q-bio 31k). That is the corpus Phase C was
+// harvested for, and Tier 2's whole premise is that the good project for a
+// pre-med or a physics undergrad is not in a cs.* category — but neither of
+// them had any reason to believe this app held anything for them, and the
+// compiler only ever sees the queries the front door invites.
+//
+// These are worded after personas eval/queries.json already scores for
+// category routing (premed-resume, physics-gradschool-sim, audio-career-dsp,
+// cfd-solver-portfolio), so what we advertise and what we measure describe the
+// same product. Nothing enforces that spread: this is prose, and no build step
+// can tell an ML query from a q-bio one. Keep the first three on different
+// archives by hand — they are also the "Try one" chips below (`slice(0, 3)`),
+// so they are the only examples a visitor sees without waiting out the
+// placeholder rotation.
 const EXAMPLE_QUERIES = [
-  'a weekend-scale ML project on anomaly detection — I have 4 years of backend experience',
-  'papers I could reproduce to learn reinforcement learning, nothing that needs a GPU cluster',
+  'a weekend-scale anomaly-detection project — I have 4 years of backend experience',
+  'a simulation project that would impress physics grad programs — Python, and it has to run on my laptop',
+  'something science-y for my med school application — I can code a little, but I am not a CS major',
+  'portfolio projects for breaking into audio software development — DSP, not web apps',
   'recent LLM-agent papers with public code that a solo developer could extend',
-  'security research that would make a strong portfolio piece',
-  'time-series forecasting methods I could demo with free market data',
+  'papers I could turn into a small fluid-flow or PDE solver over a couple of weekends',
 ]
 
 interface AnalyzingState {
