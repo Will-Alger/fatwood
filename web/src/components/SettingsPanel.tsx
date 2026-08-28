@@ -211,10 +211,56 @@ export function SettingsPanel({
         {profile && (
           <section>
             <h3>Your profile</h3>
+            {/* This box is a search input, and it did not say so. The compiler
+                prompt routes on it by name ("infer the field(s) from the user's
+                intent and profile"), and /api/search/compile hands it over on
+                every compile — so a stale profile silently steers which arXiv
+                fields the results come from, and the user has no way to know
+                that the chips they are correcting came partly from here. */}
             <p className="settings-hint">
-              Used to personalize analysis and annotate search results. Editing it marks existing
-              analyses stale (they re-run on demand — nothing is deleted).
+              Three things read this. Compiling a search — the one model call a new query
+              makes — sends it to the planner, which uses it to choose the arXiv fields your
+              search is routed into (a pre-med profile lands in quantitative biology, a
+              backend one in distributed systems) and to expand your goals into the research
+              topics it matches on. Analysis reads it to score feasibility for you. And every
+              search embeds your experience to mark each result “close to home” or “a
+              stretch”. Editing it marks existing analyses stale (they re-run on demand —
+              nothing is deleted).
             </p>
+            {/* The one input the user never sees at search time. Spelled out
+                per field, because "personalizes your results" does not tell
+                anyone that leaving Goals on a job they no longer want keeps
+                pulling that field into every plan. */}
+            <details className="plan-fields">
+              <summary>What a search sends about you</summary>
+              <dl>
+                <div>
+                  <dt>
+                    <span className="plan-field-name">Experience</span>
+                  </dt>
+                  <dd>{profile.experienceSummary.trim() || 'Empty — nothing sent.'}</dd>
+                </div>
+                <div>
+                  <dt>
+                    <span className="plan-field-name">Goals</span>
+                  </dt>
+                  <dd>{profile.goals.trim() || 'Empty — nothing sent.'}</dd>
+                </div>
+                <div>
+                  <dt>
+                    <span className="plan-field-name">Weekly hours</span>
+                  </dt>
+                  <dd>
+                    {profile.weeklyHours ?? 'Not set — the planner is told nothing about time.'}
+                  </dd>
+                </div>
+              </dl>
+              <p>
+                {profile.experienceSummary.trim() === '' && profile.goals.trim() === ''
+                  ? 'With both Experience and Goals empty, nothing about you reaches the planner at all — a search is routed from your words alone. Weekly hours on their own do not change that.'
+                  : 'Sent with every compile, as it reads here once you save. Your query wins wherever the two disagree.'}
+              </p>
+            </details>
             <label>
               Experience
               <textarea
