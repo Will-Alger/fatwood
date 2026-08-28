@@ -738,13 +738,49 @@ select {
   color: var(--muted);
 }
 
+/* The badges are buttons that explain their own code (see PaperCard); they
+   must still read as quiet metadata, so the reset strips every button default
+   and the only affordance is a dotted underline. */
 .paper-meta .badge {
   font-family: var(--font-mono);
   color: var(--faint);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  line-height: inherit;
+  margin-right: 0.35rem;
+  cursor: pointer;
+  /* The dotted underline is the definition affordance, and it inherits the
+     badge's own colour rather than a hairline variable — at this size a
+     --rule-coloured dot row is invisible on the dark theme. */
+  text-decoration: underline dotted;
+  text-underline-offset: 0.25em;
+}
+
+.paper-meta .badge:hover,
+.paper-meta .badge[aria-expanded='true'] {
+  color: var(--text-2);
 }
 
 .paper-meta .badge-primary {
   color: var(--text-3);
+}
+
+/* The tapped badge's explanation: one line between the meta row and the
+   abstract, naming the code so it is unambiguous which badge answered. */
+.paper-field-gloss {
+  margin: -0.375rem 0 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-2);
+  max-width: 74ch;
+}
+
+.paper-field-code {
+  font-family: var(--font-mono);
+  color: var(--text-3);
+  margin-right: 0.4rem;
 }
 
 .paper-meta-sep {
