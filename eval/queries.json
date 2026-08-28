@@ -1705,6 +1705,113 @@
         "stat.CO",
         "stat.AP"
       ]
+    },
+    {
+      "id": "algorithms-beyond-leetcode",
+      "persona": "Self-taught backend developer who has ground through interview prep and can code a red-black tree from memory, with no theory coursework. Goal: an algorithms project with real substance to point at, not another sorting visualizer.",
+      "query": "algorithms worth implementing for real workloads - streaming and sketching, approximation with a provable bound, cache-aware and external-memory data structures",
+      "plan": null,
+      "expectedCategories": [
+        "cs.DS"
+      ],
+      "acceptableCategories": [
+        "cs.DM",
+        "cs.CC",
+        "math.CO",
+        "cs.DB"
+      ]
+    },
+    {
+      "id": "error-correcting-codes-firmware",
+      "persona": "Firmware engineer who writes C for battery-powered radios; strong on hardware, treats the FEC block as a library call. Goal: implement a coding scheme end to end for a long-range link that drops packets.",
+      "query": "how error correcting codes actually work so I can implement one - Reed-Solomon, LDPC, fountain codes, and how to pick a rate for a noisy link",
+      "plan": null,
+      "expectedCategories": [
+        "cs.IT"
+      ],
+      "acceptableCategories": [
+        "math.IT",
+        "eess.SP",
+        "cs.NI",
+        "cs.AR"
+      ]
+    },
+    {
+      "id": "evolutionary-simulation-hobbyist",
+      "persona": "Hobbyist programmer who builds simulations for fun and has never trained a network with gradients. Goal: a project where behaviour emerges from a population rather than from a loss curve.",
+      "query": "evolving solutions instead of training them - genetic algorithms, neuroevolution, swarm and ant-colony optimization, spiking networks I can watch adapt",
+      "plan": null,
+      "expectedCategories": [
+        "cs.NE"
+      ],
+      "acceptableCategories": [
+        "cs.LG",
+        "cs.AI",
+        "math.OC",
+        "cs.MA"
+      ]
+    },
+    {
+      "id": "video-pipeline-engineer",
+      "persona": "Backend engineer who keeps a transcoding and delivery pipeline alive with ffmpeg flags copied from forum posts. Goal: understand the media stack well enough to build and defend a streaming project.",
+      "query": "how video actually gets delivered - codecs and containers, adaptive bitrate streaming, rate-distortion tradeoffs, measuring the quality a viewer really sees",
+      "plan": null,
+      "expectedCategories": [
+        "cs.MM"
+      ],
+      "acceptableCategories": [
+        "eess.IV",
+        "eess.AS",
+        "cs.NI",
+        "cs.IT",
+        "math.IT"
+      ]
+    },
+    {
+      "id": "tail-latency-sre",
+      "persona": "Site reliability engineer who reads dashboards all day and wants the theory under them; comfortable in Go, no performance-modelling background. Goal: a measurement project that explains a slow p99 rather than guessing at it.",
+      "query": "why the p99 is slow and how to measure it honestly - queueing models, benchmarking methodology, scheduling and contention when a service is saturated",
+      "plan": null,
+      "expectedCategories": [
+        "cs.PF"
+      ],
+      "acceptableCategories": [
+        "cs.DC",
+        "cs.NI",
+        "cs.OS",
+        "math.PR",
+        "cs.SE"
+      ]
+    },
+    {
+      "id": "geometry-for-fabrication",
+      "persona": "Maker with a 3D printer and a CNC router who writes Python scripts to fix broken models; last did geometry in high school. Goal: a project on the geometry the slicer is doing for them.",
+      "query": "the geometry behind mesh and CAD tools - convex hulls, Voronoi diagrams and triangulation, repairing a broken mesh, planning a toolpath that does not cut into itself",
+      "plan": null,
+      "expectedCategories": [
+        "cs.CG"
+      ],
+      "acceptableCategories": [
+        "cs.GR",
+        "cs.RO",
+        "cs.DS",
+        "math.MG"
+      ]
+    },
+    {
+      "id": "computer-algebra-toolbuilder",
+      "persona": "High-school maths teacher who codes in Python on weekends and has been writing an expression simplifier that keeps getting the edge cases wrong. Goal: a symbolic-maths tool built on the real algorithms.",
+      "query": "building a computer algebra system - symbolic differentiation and simplification, polynomial algebra and Grobner bases, rewriting rules that are guaranteed to terminate",
+      "plan": null,
+      "expectedCategories": [
+        "cs.SC"
+      ],
+      "acceptableCategories": [
+        "cs.LO",
+        "cs.PL",
+        "cs.MS",
+        "cs.FL"
+      ]
     }
   ]
 }

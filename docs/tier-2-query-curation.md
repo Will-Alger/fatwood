@@ -161,6 +161,59 @@ blob container `search-index`; snapshot cold-load verified end-to-end
    still expect cs.SY without forgiving eess.SY, and nothing would fail. That
    test needs a taxonomy-level alias set (codes sharing a display name), which
    is a C# change and could not be built in the steward environment.*
+   *CLASSICAL-CS-CORNERS EXPANSION 2026-08-07: +7 persona queries over the part
+   of the corpus that is most obviously buildable and had somehow never been a
+   must-have — the engineering corners of CS. Five were acceptable-only, i.e.
+   forgiven as extras but never required: cs.DS (21,876 live papers — the
+   largest acceptable-only code that is not half of an alias pair), cs.IT
+   (17,675), cs.NE (15,197), cs.MM (8,772), cs.PF (4,383). Two had no ground
+   truth anywhere, expected or acceptable: cs.CG (2,493) and cs.SC (955). The
+   acceptable sets also give math.CO (3,486) and math.MG (597) their first
+   ground truth of any kind. Must-have codes 44 → 51; the eval is 81 → 88
+   queries, 27 → 34 of them plan: null; live codes with no ground truth at all
+   66 → 62. Every persona here is a working engineer with a shipped-code goal
+   (interview-prep dev wanting real algorithms, firmware engineer implementing
+   FEC, SRE explaining a p99, transcoding-pipeline maintainer, maker slicing
+   meshes, teacher building a CAS) — the queries the product exists for, and
+   the ones no batch so far has scored.
+   POSTURE is per query, not per batch, following the theory batch: five omit
+   cs.LG/cs.AI/cs.CV entirely, so a reflex ML pick scores as a precision error
+   — that is the failure being tested, since "algorithms", "video" and "codes"
+   are exactly the words that pull a compiler toward cs.LG. Only
+   `evolutionary-simulation-hobbyist` forgives them, because neuroevolution
+   genuinely is cross-listed cs.NE/cs.LG. So this batch's precision is not
+   comparable with the deliberately permissive corpus-giant batch; recall is
+   the shared measure. Alias handling follows #18 throughout:
+   `error-correcting-codes-firmware` expects cs.IT and forgives math.IT, and
+   `video-pipeline-engineer` lists both spellings as acceptable, so neither
+   query can punish a legitimate spelling choice.
+   VERIFIED THIS RUN, not assumed: all 32 authored codes are in
+   `ArxivCategoryNames` AND served by live `/api/categories` (155 categories);
+   no alias pair is split anywhere in the file, new queries or old; and the four
+   `EvalQueryFixtureTests` assertions were re-implemented as a script and pass
+   over the whole 88-query file. That script is NOT `dotnet test` — there is
+   still no .NET SDK in the steward environment, so the real fixture test runs
+   for the first time in CI.
+   Shipped with plan: null, so `eval search` and the CI nDCG floor are
+   untouched; the backlog is now 34 un-baselined queries across five batches —
+   one `eval categories --runs 3` over the 48 targets baselines all of them.
+   CORRECTION to the 2026-08-01 note above: it called math.IT (17k) the largest
+   code with no ground truth, which #18 then changed — forgiving both alias
+   spellings everywhere made math.IT acceptable on three queries. Before this
+   batch the count was 66, not 67, and it was led by astro-ph.HE (4,216),
+   math.CO (3,486) and astro-ph.CO (3,273).
+   NEXT GAP: what is left is mostly natural science, not CS — astro-ph.HE
+   (4,216), astro-ph.CO (3,273), gr-qc (2,398), cond-mat.dis-nn (2,371) and
+   hep-ex (2,340) lead the 62 codes with no ground truth, and whether those
+   corners are buildable at all is a Phase E question rather than a routing
+   one. The remaining acceptable-only codes worth a must-have are stat.AP
+   (8,093), physics.data-an (6,886) and math.DS (5,406); the four larger than
+   those (cs.SY, cs.NA, math.IT, math.ST/stat.TH) are alias halves and are
+   acceptable-only on purpose.
+   STILL OPEN, unchanged and now four notes old: `EvalQueryFixtureTests` has no
+   assertion that an alias pair is never split across must-have and absent. This
+   batch honours the rule by hand and verifies it by script; nothing in the repo
+   enforces it. Still C#, still no .NET SDK here.*
 3. **UI transparency.** The interpretation line should say *why* those
    fields were chosen so users trust/correct the chips.
    *Taxonomy naming caught up with the corpus 2026-07-23:
