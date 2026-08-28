@@ -31,6 +31,12 @@ const SEARCH_STAGES = [
   'Picking two wildcards from outside your lane…',
 ]
 
+/** "a", "a and b", "a, b and c" — for prose lists of active filters. */
+function joinPhrases(parts: string[]): string {
+  if (parts.length <= 1) return parts.join('')
+  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+}
+
 const RESULT_LIMIT = 30
 const ANALYZE_OPTIONS = [5, 10, 15, 20, 25]
 const ANALYZE_DEFAULT = 10
@@ -153,6 +159,37 @@ export function Discover({
     plannerCategories !== null &&
     (plannerCategories.length !== plan.categories.length ||
       plannerCategories.some((c) => !plan.categories.includes(c)))
+
+  // Everything this plan narrows on, in plain words, plus the one-click way to
+  // drop each. Stage 0 applies exactly these three filters
+  // (SearchService.FilterCandidates: categories, published-after, has-no-code),
+  // so an empty candidate set is always attributable to what is listed here —
+  // and an empty list means the search was not filtered at all.
+  const narrowing = useMemo(() => {
+    const filters: string[] = []
+    const relaxations: { label: string; patch: Partial<SearchPlan> }[] = []
+    if (!plan) return { filters, relaxations }
+
+    if (plan.categories.length > 0) {
+      const fields = plan.categories.map((code) => categoryNames.get(code) ?? code)
+      filters.push(
+        `${plan.categories.length === 1 ? 'the field' : 'the fields'} ${joinPhrases(fields)}`,
+      )
+      relaxations.push({ label: 'search every field', patch: { categories: [] } })
+    }
+    if (plan.dateWindowDays != null) {
+      filters.push(`papers from the last ${plan.dateWindowDays.toLocaleString()} days`)
+      relaxations.push({ label: 'any publication date', patch: { dateWindowDays: null } })
+    }
+    if (plan.requireNoCode === true) {
+      filters.push('papers with no public code')
+      relaxations.push({
+        label: 'allow papers that already have code',
+        patch: { requireNoCode: null },
+      })
+    }
+    return { filters, relaxations }
+  }, [plan, categoryNames])
 
   // The prose behind the current plan, read at execute time (a ref, not
   // state, so long-lived poll loops don't capture a stale value). Sent with
@@ -896,12 +933,46 @@ export function Discover({
               or untick the filter.
             </p>
           )}
-          {result.hits.length === 0 && (
-            <p className="status">
-              No results. If the corpus was just ingested, run the embedding pass
-              (<code>dotnet run -- embed</code>) so papers can be ranked.
-            </p>
-          )}
+          {/* Two different dead ends were sharing one operator-facing message.
+              The server already tells them apart: SearchService returns
+              totalCandidates = 0 when stage-0 filters left nothing to rank,
+              and only logs "run `embed` first" in the other case (candidates
+              matched, none had vectors). A user whose plan simply over-filtered
+              was being told to run a CLI command they cannot run, about a
+              corpus that is fine. Say which filters emptied the search instead,
+              and let one click loosen each — the same updatePlan the chips use,
+              so relaxing re-runs the search without spending another compile. */}
+          {result.hits.length === 0 &&
+            (result.totalCandidates > 0 ? (
+              <p className="status">
+                {result.totalCandidates.toLocaleString()} papers matched the filters, but
+                none of them could be ranked. If the corpus was just ingested, run the
+                embedding pass (<code>dotnet run -- embed</code>) so papers can be ranked.
+              </p>
+            ) : narrowing.filters.length > 0 ? (
+              <p className="status">
+                No papers match this search — its filters ruled out everything before
+                ranking started. It is limited to {joinPhrases(narrowing.filters)}. Widen
+                it:{' '}
+                {narrowing.relaxations.map((relaxation, i) => (
+                  <span key={relaxation.label}>
+                    {i > 0 && ' · '}
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => updatePlan(relaxation.patch)}
+                    >
+                      {relaxation.label}
+                    </button>
+                  </span>
+                ))}
+              </p>
+            ) : (
+              <p className="status">
+                No papers match this search, and it has no filters to loosen — try
+                different words. (On a fresh database, run the ingestion backfill first.)
+              </p>
+            ))}
         </>
       )}
       </div>
