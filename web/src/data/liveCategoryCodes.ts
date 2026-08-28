@@ -13,13 +13,15 @@
  * enforcement available.
  *
  * The pin catches drift only when it is refreshed, so refresh it whenever the
- * corpus grows a category. Regenerate this list, verbatim, with:
+ * corpus grows a category. `scripts/category-pin.mjs` is that procedure, and
+ * it both checks and rewrites the union below:
  *
- *     curl -sL https://www.fatwood.io/api/categories -o /tmp/cats.json
- *     node -e "console.log(require('/tmp/cats.json').map(c=>c.code).sort()
- *       .map(c=>\"  | '\"+c+\"'\").join('\n'))"
+ *     npm run check:categories              # exits 1 on drift, naming the codes
+ *     node scripts/category-pin.mjs --write # rewrite this union from live
  *
- * A code added here without a gloss fails `tsc`; that failure is the point.
+ * It is not part of `npm run build` on purpose — the build gate must not
+ * depend on the network. A code added here without a gloss fails `tsc`; that
+ * failure is the point, and it is what `--write` hands off to.
  */
 export type LiveCategoryCode =
   | 'astro-ph.CO'
