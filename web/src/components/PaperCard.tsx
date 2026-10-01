@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { markNotInterested, setBookmark } from '../api/client'
 import type { PaperAnalysisDto, PaperDto, SearchContext } from '../api/types'
+import { categoryGloss } from '../data/categoryGloss'
 import { EmberDots } from './Skeletons'
 
 const ABSTRACT_PREVIEW_LENGTH = 400
@@ -130,6 +131,10 @@ export function PaperCard({
 }: PaperCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
+  // Which category badge, if any, is currently explaining itself. One at a
+  // time: the line sits under the meta row, so two open at once would push the
+  // abstract around for no gain.
+  const [openCategory, setOpenCategory] = useState<string | null>(null)
   const [bookmarked, setBookmarked] = useState(paper.isBookmarked)
   const [bookmarkBusy, setBookmarkBusy] = useState(false)
 
@@ -161,6 +166,8 @@ export function PaperCard({
     ranked && rankedCount !== undefined && rankedCount > 0
       ? relevanceTier(rank, rankedCount)
       : null
+
+  const categoryGlossId = `paper-field-${paper.arxivId}`
 
   const needsClamp = paper.abstract.length > ABSTRACT_PREVIEW_LENGTH
   const abstract =
@@ -271,13 +278,24 @@ export function PaperCard({
             </>
           )}
           {paper.categories.length > 0 && <span className="paper-meta-sep">·</span>}
+          {/* The codes are the only untranslated arXiv jargon left on the card.
+              Each badge is a disclosure: it explains itself in plain English
+              below this line. A `title` alone would leave touch and keyboard
+              users with a bare `q-bio.QM`, which is the gap the plan chips
+              already closed for search. */}
           {paper.categories.map((code) => (
-            <span
+            <button
               key={code}
+              type="button"
               className={code === paper.primaryCategory ? 'badge badge-primary' : 'badge'}
+              title={categoryGloss(code)}
+              aria-expanded={openCategory === code}
+              aria-controls={openCategory === code ? categoryGlossId : undefined}
+              aria-label={`${code} — what this field is`}
+              onClick={() => setOpenCategory(openCategory === code ? null : code)}
             >
-              {code}{' '}
-            </span>
+              {code}
+            </button>
           ))}
           {experienceProximity === 'close' && (
             <>
@@ -299,6 +317,13 @@ export function PaperCard({
             </>
           )}
         </p>
+
+        {openCategory !== null && (
+          <p className="paper-field-gloss" id={categoryGlossId}>
+            <span className="paper-field-code">{openCategory}</span>{' '}
+            {categoryGloss(openCategory)}
+          </p>
+        )}
 
         <p className="paper-abstract">
           {abstract}{' '}

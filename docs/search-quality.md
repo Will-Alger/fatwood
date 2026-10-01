@@ -51,12 +51,47 @@ The 2026-07-12 campaign (40-query set, all heads judged, identical ground truth)
 | + cross-encoder rerank (ms-marco L-12) | 0.593 | 0.626 | 0.883 |
 | **+ HyDE anchor (shipped)** | **0.620** | **0.673** | **0.956** |
 
-**Ground truth**: `eval/queries.json` (40 queries: 20 original authored + 1
-adopted real query + 19 authored 2026-07-12 targeting terminology mismatch,
-exact-term/acronym, cross-domain, constraint-heavy, vague-career, and corpus
-edge categories) and `eval/judgments.json` (~4,900 LLM-judged (query, paper)
-grades 0–3, append-only, rubric v1). Both are versioned repo artifacts —
+**Ground truth** — counts re-derived from the files 2026-08-13; recount with
+the snippet below rather than trusting this paragraph, which has drifted
+before:
+
+`eval/queries.json` holds **81 queries, 54 of them scored**. The other 27
+carry `plan: null`, which makes them invisible to `eval search` and to the CI
+gate (`EvalRunner.ScoreAsync` filters `Plan is null`) until they are compiled
+and judged — they are the Tier 2 category-inference backlog and today are
+exercised only by `eval categories`. Those 54 are the 40 the earlier version
+of this line described (20 original authored + 1 adopted real query + 19
+authored 2026-07-12 targeting terminology mismatch, exact-term/acronym,
+cross-domain, constraint-heavy, vague-career, and corpus edge categories) plus
+the 14 Tier 2 persona queries compiled and judged at the 2026-07-19
+re-baseline — the two batches this file already documents, summing to the
+count that was re-derived; the totals are measured, the split between them is
+not. 41 queries carry `expectedCategories`: those 14 plus all 27 plan-null
+ones. Two of the 14 (`data-journalist-broad`, `cs-senior-undecided`)
+expect the *empty* set on purpose — a genuinely cross-domain query should emit
+no category filter at all. So tally category ground truth by
+`expectedCategories is not null`, never by a truthiness test: the field is
+present-but-null on the 40 queries that have no category expectations, and an
+empty list is itself an expectation.
+
+`eval/judgments.json` holds **8,208 LLM-judged (query, paper) grades 0–3**
+(4,832 pooled + 3,376 random) over those 54 scored queries and 6,442 distinct
+papers, append-only, **rubric v2**. Both files are versioned repo artifacts —
 every change is reviewable in a diff.
+
+```bash
+# Re-derive every count above. Repo root, no build and no database needed.
+python3 - <<'EOF'
+import json
+q = json.load(open('eval/queries.json'))['queries']
+j = json.load(open('eval/judgments.json'))
+print(len(q), 'queries;', sum(1 for x in q if x['plan'] is not None), 'scored;',
+      sum(1 for x in q if x.get('expectedCategories') is not None),
+      'with category expectations')
+print(len(j['judgments']), 'judgments; rubric v%s;' % j['rubricVersion'],
+      len({x['arxivId'] for x in j['judgments']}), 'distinct papers')
+EOF
+```
 
 **Telemetry** (append-only tables, logged ONLY by API controllers — the eval
 CLI must NEVER write telemetry or evaluation poisons its own data):
@@ -113,9 +148,15 @@ and future learning-to-rank features.
   rubric change (`RubricVersion` mismatch is a hard error by design — never
   mix rubrics silently; `eval regrade` does the full re-grade). A human
   spot-audit remains worthwhile.
-- **21 queries** — nDCG differences under ~0.02 are noise at this n. Grow
-  the set via `eval adopt` (real usage) and judge. 50+ queries would allow
-  per-query significance.
+- **54 scored queries** (81 in the file; the other 27 are `plan: null` and
+  never reach `eval search` — see §1). This bullet read "21 queries" until
+  2026-08-13 and named 50+ as the size at which per-query significance
+  becomes possible; the scored set passed that mark at the 2026-07-19
+  re-baseline, so a per-query significance test is now writable rather than
+  aspirational, and nobody has written one. Until one exists, keep treating
+  mean deltas under ~0.02 as noise — that margin was calibrated at n=21 and
+  is therefore conservative, not wrong. Keep growing the set via `eval adopt`
+  (real usage) and judge.
 - **Pooled recall bias**: Recall@50 is relative to judged papers only. It
   gets more honest as more rankers' heads accumulate. The random samples
   (`source: "random"`) are the unbiased slice — that's what `eval audit`
@@ -123,7 +164,7 @@ and future learning-to-rank features.
 - **Corpus drift**: scores shift as ingestion grows the corpus. Compare
   rankers on the same DB snapshot, same judgment file, same day.
 - **CI gate: LIVE** (2026-07-12, `eval-gate` job in ci.yml). Every PR seeds
-  the checked-in mini-corpus (`eval/corpus.json.gz` — all 4,069 judged
+  the checked-in mini-corpus (`eval/corpus.json.gz` — all 6,442 judged
   papers, no vectors; CI re-embeds deterministically), scores the frozen
   queries, and fails below `EVAL_NDCG_FLOOR` (0.590 = fixture baseline
   0.618 − noise margin). Recalibrate the floor whenever the eval set,

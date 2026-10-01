@@ -30,9 +30,21 @@ export function PaperList({
   }
 
   if (!data || data.items.length === 0) {
+    // This list is the browse view, and every filter above it can empty it:
+    // a narrow category, a short date window, Analyzed only, Bookmarked. In
+    // production the corpus is never the cause — /api/papers returns zero for
+    // ordinary combinations against the full corpus (math.CO alone has 3,509
+    // papers; math.CO with windowDays=1 has none) — so blaming an empty
+    // database sent users looking in the one place that is never wrong, and
+    // handed them an operator instruction they have no way to act on. The
+    // backfill hint is real for a fresh local database, so it stays where that
+    // is possible: `import.meta.env.DEV` is false in the built SPA prod serves.
     return (
       <p className="status">
-        No papers found. If the database is empty, run the ingestion backfill first.
+        No papers match these filters. Try widening the date window, or clearing a
+        category, Analyzed only, or Bookmarked.
+        {import.meta.env.DEV &&
+          ' If this is a fresh local database, run the ingestion backfill first.'}
       </p>
     )
   }

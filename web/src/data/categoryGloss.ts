@@ -19,6 +19,14 @@
  * `LiveCategoryCode` list rather than trusted: it used to hold only by hand,
  * and a new dotted code — or a typo in a key here — would have degraded
  * silently.
+ *
+ * The archive tier is pinned there too, for the tier below the corpus: the
+ * codes that reach `categoryGloss` without being in it. The compiler emits
+ * `plan.categories` freely — `eval categories` reports "taxonomy-unreachable"
+ * codes precisely because it can name a category the corpus does not serve —
+ * and such a code reaches a plan chip with no name from `/api/categories` and
+ * no `byCode` line, so its archive line is the only explanation left. Every
+ * archive the corpus serves must therefore have one.
  */
 
 import type { LiveCategoryCode } from './liveCategoryCodes'
@@ -183,6 +191,10 @@ const byArchive = {
   physics: 'Physics.',
   'astro-ph': 'Astrophysics — space and the universe.',
   'cond-mat': 'Condensed matter physics.',
+  // Also in `byCode`, and reached through it today: `quant-ph` is an archive
+  // arXiv gives no subcategories, so nothing dotted resolves here yet. It is
+  // the one archive the corpus serves that had no fallback line at all.
+  'quant-ph': 'Quantum physics: computing, information, and foundations.',
   'q-bio': 'Quantitative biology.',
   nlin: 'Nonlinear science and complex systems.',
   'gr-qc': 'General relativity and quantum cosmology.',
@@ -241,3 +253,32 @@ export type NoUnglossedLiveCategory = AssertNever<
  * entries left behind when a category leaves the corpus.
  */
 export type NoStaleGloss = AssertNever<Exclude<keyof typeof byCode, LiveCategoryCode>>
+
+/**
+ * The archive a code falls back to: the part before the dot, or the whole code
+ * when it has none (`hep-th` is itself an archive).
+ */
+type ArchiveOf<C extends string> = C extends `${infer Archive}.${string}` ? Archive : C
+
+/**
+ * A live archive with no `byArchive` line. Every code of that archive the
+ * corpus serves is glossed today — `NoUnglossedLiveCategory` already saw to
+ * that — so the gap is invisible until a sibling code shows up without one,
+ * which is the whole case `byArchive` exists to answer. Then it falls past
+ * both tables to "An arXiv research category.", which explains nothing.
+ */
+type UncoveredArchive<C extends LiveCategoryCode> = ArchiveOf<C> extends keyof typeof byArchive
+  ? never
+  : ArchiveOf<C>
+
+/**
+ * Every archive the corpus serves has a fallback line. Fails with "Type
+ * '"quant-ph"' does not satisfy the constraint 'never'".
+ *
+ * There is deliberately no converse assertion. `byArchive` is *meant* to reach
+ * past the corpus — an entry for an archive we do not serve yet is the feature,
+ * not the stale key `NoStaleGloss` catches in `byCode`.
+ */
+export type NoUncoveredLiveArchive = AssertNever<
+  { [C in LiveCategoryCode]: UncoveredArchive<C> }[LiveCategoryCode]
+>

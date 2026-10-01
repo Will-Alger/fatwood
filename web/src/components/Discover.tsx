@@ -21,6 +21,7 @@ import { useTypingPlaceholder } from '../hooks/useTypingPlaceholder'
 import { PaperCard } from './PaperCard'
 import { RecentSearches } from './RecentSearches'
 import { EmberDots, PaperSkeletons } from './Skeletons'
+import { aliasIndex } from '../data/categoryAliases'
 import { categoryGloss } from '../data/categoryGloss'
 
 const SEARCH_STAGES = [
@@ -29,6 +30,12 @@ const SEARCH_STAGES = [
   'Scoring the survivors by meaning…',
   'Picking two wildcards from outside your lane…',
 ]
+
+/** "a", "a and b", "a, b and c" — for prose lists of active filters. */
+function joinPhrases(parts: string[]): string {
+  if (parts.length <= 1) return parts.join('')
+  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+}
 
 const RESULT_LIMIT = 30
 const ANALYZE_OPTIONS = [5, 10, 15, 20, 25]
@@ -42,12 +49,33 @@ const REVEAL_STAGGER_MS = 350
 const REVEAL_STAGGER_FAST_MS = 150
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// The front door teaches people what to type, and it was teaching one field.
+// All five examples here were CS/ML — an anomaly detector, an RL reproduction,
+// an LLM agent, a security piece, a market-data forecast — while the corpus
+// behind them is 155 arXiv categories across 20 archives, a third of it
+// outside cs.* (on 2026-08-27 /api/categories reported 1,878,336 category
+// assignments, 607,391 of them non-CS: math 151k, eess 139k, stat 109k,
+// physics 67k, astro-ph 48k, q-bio 31k). That is the corpus Phase C was
+// harvested for, and Tier 2's whole premise is that the good project for a
+// pre-med or a physics undergrad is not in a cs.* category — but neither of
+// them had any reason to believe this app held anything for them, and the
+// compiler only ever sees the queries the front door invites.
+//
+// These are worded after personas eval/queries.json already scores for
+// category routing (premed-resume, physics-gradschool-sim, audio-career-dsp,
+// cfd-solver-portfolio), so what we advertise and what we measure describe the
+// same product. Nothing enforces that spread: this is prose, and no build step
+// can tell an ML query from a q-bio one. Keep the first three on different
+// archives by hand — they are also the "Try one" chips below (`slice(0, 3)`),
+// so they are the only examples a visitor sees without waiting out the
+// placeholder rotation.
 const EXAMPLE_QUERIES = [
-  'a weekend-scale ML project on anomaly detection — I have 4 years of backend experience',
-  'papers I could reproduce to learn reinforcement learning, nothing that needs a GPU cluster',
+  'a weekend-scale anomaly-detection project — I have 4 years of backend experience',
+  'a simulation project that would impress physics grad programs — Python, and it has to run on my laptop',
+  'something science-y for my med school application — I can code a little, but I am not a CS major',
+  'portfolio projects for breaking into audio software development — DSP, not web apps',
   'recent LLM-agent papers with public code that a solo developer could extend',
-  'security research that would make a strong portfolio piece',
-  'time-series forecasting methods I could demo with free market data',
+  'papers I could turn into a small fluid-flow or PDE solver over a couple of weekends',
 ]
 
 interface AnalyzingState {
@@ -145,11 +173,44 @@ export function Discover({
     [categories],
   )
 
+  const categoryAliases = useMemo(() => aliasIndex(categories), [categories])
+
   const categoriesEdited =
     plan !== null &&
     plannerCategories !== null &&
     (plannerCategories.length !== plan.categories.length ||
       plannerCategories.some((c) => !plan.categories.includes(c)))
+
+  // Everything this plan narrows on, in plain words, plus the one-click way to
+  // drop each. Stage 0 applies exactly these three filters
+  // (SearchService.FilterCandidates: categories, published-after, has-no-code),
+  // so an empty candidate set is always attributable to what is listed here —
+  // and an empty list means the search was not filtered at all.
+  const narrowing = useMemo(() => {
+    const filters: string[] = []
+    const relaxations: { label: string; patch: Partial<SearchPlan> }[] = []
+    if (!plan) return { filters, relaxations }
+
+    if (plan.categories.length > 0) {
+      const fields = plan.categories.map((code) => categoryNames.get(code) ?? code)
+      filters.push(
+        `${plan.categories.length === 1 ? 'the field' : 'the fields'} ${joinPhrases(fields)}`,
+      )
+      relaxations.push({ label: 'search every field', patch: { categories: [] } })
+    }
+    if (plan.dateWindowDays != null) {
+      filters.push(`papers from the last ${plan.dateWindowDays.toLocaleString()} days`)
+      relaxations.push({ label: 'any publication date', patch: { dateWindowDays: null } })
+    }
+    if (plan.requireNoCode === true) {
+      filters.push('papers with no public code')
+      relaxations.push({
+        label: 'allow papers that already have code',
+        patch: { requireNoCode: null },
+      })
+    }
+    return { filters, relaxations }
+  }, [plan, categoryNames])
 
   // The prose behind the current plan, read at execute time (a ref, not
   // state, so long-lived poll loops don't capture a stale value). Sent with
@@ -644,17 +705,33 @@ export function Discover({
             <details className="plan-fields">
               <summary>What these fields mean</summary>
               <dl>
-                {plan.categories.map((code) => (
-                  <div key={code}>
-                    <dt>
-                      <span className="plan-field-code">{code}</span>
-                      {categoryNames.get(code) && (
-                        <span className="plan-field-name">{categoryNames.get(code)}</span>
-                      )}
-                    </dt>
-                    <dd>{categoryGloss(code)}</dd>
-                  </div>
-                ))}
+                {plan.categories.map((code) => {
+                  // arXiv files some fields under two codes; the filter matches
+                  // codes exactly, so a twin left out of the plan is a slice of
+                  // the same field this search is not looking at. Say so.
+                  const missingTwins = (categoryAliases.get(code) ?? []).filter(
+                    (twin) => !plan.categories.includes(twin),
+                  )
+                  return (
+                    <div key={code}>
+                      <dt>
+                        <span className="plan-field-code">{code}</span>
+                        {categoryNames.get(code) && (
+                          <span className="plan-field-name">{categoryNames.get(code)}</span>
+                        )}
+                      </dt>
+                      <dd>
+                        {categoryGloss(code)}
+                        {missingTwins.length > 0 && (
+                          <span className="plan-field-alias">
+                            arXiv also files this field as {missingTwins.join(' and ')}, which
+                            this search is not matching.
+                          </span>
+                        )}
+                      </dd>
+                    </div>
+                  )
+                })}
               </dl>
             </details>
           )}
@@ -877,12 +954,46 @@ export function Discover({
               or untick the filter.
             </p>
           )}
-          {result.hits.length === 0 && (
-            <p className="status">
-              No results. If the corpus was just ingested, run the embedding pass
-              (<code>dotnet run -- embed</code>) so papers can be ranked.
-            </p>
-          )}
+          {/* Two different dead ends were sharing one operator-facing message.
+              The server already tells them apart: SearchService returns
+              totalCandidates = 0 when stage-0 filters left nothing to rank,
+              and only logs "run `embed` first" in the other case (candidates
+              matched, none had vectors). A user whose plan simply over-filtered
+              was being told to run a CLI command they cannot run, about a
+              corpus that is fine. Say which filters emptied the search instead,
+              and let one click loosen each — the same updatePlan the chips use,
+              so relaxing re-runs the search without spending another compile. */}
+          {result.hits.length === 0 &&
+            (result.totalCandidates > 0 ? (
+              <p className="status">
+                {result.totalCandidates.toLocaleString()} papers matched the filters, but
+                none of them could be ranked. If the corpus was just ingested, run the
+                embedding pass (<code>dotnet run -- embed</code>) so papers can be ranked.
+              </p>
+            ) : narrowing.filters.length > 0 ? (
+              <p className="status">
+                No papers match this search — its filters ruled out everything before
+                ranking started. It is limited to {joinPhrases(narrowing.filters)}. Widen
+                it:{' '}
+                {narrowing.relaxations.map((relaxation, i) => (
+                  <span key={relaxation.label}>
+                    {i > 0 && ' · '}
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => updatePlan(relaxation.patch)}
+                    >
+                      {relaxation.label}
+                    </button>
+                  </span>
+                ))}
+              </p>
+            ) : (
+              <p className="status">
+                No papers match this search, and it has no filters to loosen — try
+                different words. (On a fresh database, run the ingestion backfill first.)
+              </p>
+            ))}
         </>
       )}
       </div>

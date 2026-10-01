@@ -194,6 +194,47 @@ public static class ArxivCategoryNames
             ["stat.TH"] = "Statistics Theory",
         };
 
+    /// <summary>
+    /// arXiv files a few fields under two codes at once — a numerical analysis
+    /// paper is cs.NA or math.NA depending on where its author submitted it —
+    /// and the taxonomy gives each such pair a single display name because it
+    /// is a single field. Membership is DERIVED from <see cref="Names"/> (the
+    /// codes sharing a display name) rather than listed separately, so a pair
+    /// added to the taxonomy cannot be forgotten here. The flip side is that
+    /// two genuinely distinct fields must never share a name — cs.LG "Machine
+    /// Learning" and stat.ML "Machine Learning (Statistics)" are deliberately
+    /// spelled apart — which ArxivCategoryAliasTests pins.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> Aliases =
+        Names.GroupBy(entry => entry.Value, StringComparer.Ordinal)
+            .Where(field => field.Count() > 1)
+            .SelectMany(field => field.Select(entry => (
+                Code: entry.Key,
+                Twins: (IReadOnlyList<string>)[.. field
+                    .Select(other => other.Key)
+                    .Where(code => !string.Equals(code, entry.Key, StringComparison.Ordinal))
+                    .Order(StringComparer.Ordinal)])))
+            .ToDictionary(pair => pair.Code, pair => pair.Twins, StringComparer.Ordinal);
+
+    /// <summary>
+    /// Every group of codes that name the same field, each group sorted and
+    /// the groups ordered by their first code. Exposed so a test can assert
+    /// the whole set at once: the derivation above is only as trustworthy as
+    /// the display names it reads.
+    /// </summary>
+    public static IReadOnlyList<IReadOnlyList<string>> AliasGroups { get; } =
+        [.. Aliases
+            .Select(entry => (IReadOnlyList<string>)[.. entry.Value.Prepend(entry.Key).Order(StringComparer.Ordinal)])
+            .DistinctBy(group => string.Join('/', group), StringComparer.Ordinal)
+            .OrderBy(group => group[0], StringComparer.Ordinal)];
+
     public static string DisplayNameFor(string code) =>
         Names.TryGetValue(code, out var name) ? name : code;
+
+    /// <summary>
+    /// The other codes arXiv uses for the same field, or empty when this code
+    /// is the only spelling of its field (the ordinary case).
+    /// </summary>
+    public static IReadOnlyList<string> AliasesFor(string code) =>
+        Aliases.TryGetValue(code, out var twins) ? twins : [];
 }
