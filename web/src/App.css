@@ -98,11 +98,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Paper grain over everything, the fire included, so the canvas sits in the page. */
+/* Paper grain over everything, the fire included, so the canvas sits in the page.
+   It overhangs the viewport top and bottom: iOS Safari paints the page behind
+   its see-through status bar and toolbar (and during overscroll), and a plain
+   inset: 0 layer stops short there, leaving untextured bands. */
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  inset: -160px 0;
   pointer-events: none;
   z-index: 50;
   opacity: 0.09;
@@ -125,7 +128,10 @@ button:active:not(:disabled) {
 .app {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 0 2.5rem 3rem;
+  /* viewport-fit=cover draws edge to edge, so keep content out of the notch,
+     the home indicator and landscape's rounded corners. */
+  padding: env(safe-area-inset-top) max(2.5rem, env(safe-area-inset-right))
+    calc(3rem + env(safe-area-inset-bottom)) max(2.5rem, env(safe-area-inset-left));
   /* Sticky footer: fill the viewport and push the footer to the bottom on
      short pages instead of letting it float mid-screen. */
   min-height: 100vh;
@@ -2207,6 +2213,8 @@ select:disabled {
   display: flex;
   justify-content: flex-end;
   z-index: 10;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 /* Auth uses a centered dialog, not the side drawer, and must scroll when the
@@ -2215,7 +2223,8 @@ select:disabled {
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
-  padding: 0 1rem;
+  padding: env(safe-area-inset-top) max(1rem, env(safe-area-inset-right))
+    env(safe-area-inset-bottom) max(1rem, env(safe-area-inset-left));
 }
 
 .auth-panel,
@@ -2562,7 +2571,8 @@ select:disabled {
   }
 
   .app {
-    padding: 0 1rem 2.5rem;
+    padding: env(safe-area-inset-top) max(1rem, env(safe-area-inset-right))
+      calc(2.5rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   }
 
   /* Brand and account on the first row, the sections across the second. */
