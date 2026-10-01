@@ -90,7 +90,21 @@
   box-sizing: border-box;
 }
 
+/* Paper grain. It is part of the page, not a fixed overlay: iOS Safari draws
+   page content behind its see-through status bar and floating toolbar, but
+   clips position: fixed layers at their edges, which left untextured bands.
+
+   - html carries a pre-faded copy, for overscroll beyond the document;
+   - body::before covers the whole document (it scrolls with the paper) and
+     sits over everything, the fire included, so the canvas reads as printed
+     on the same sheet. Black noise at 9% is the same darkening multiply gave,
+     without a blend layer the size of the document. */
+html {
+  background: #e7e4dc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E");
+}
+
 body {
+  position: relative;
   margin: 0;
   font-family: var(--font-sans);
   background: var(--bg);
@@ -98,19 +112,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Paper grain over everything, the fire included, so the canvas sits in the page.
-   It overhangs the viewport top and bottom: iOS Safari paints the page behind
-   its see-through status bar and toolbar (and during overscroll), and a plain
-   inset: 0 layer stops short there, leaving untextured bands. */
 body::before {
   content: '';
-  position: fixed;
-  inset: -160px 0;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
   z-index: 50;
   opacity: 0.09;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
 }
 
 button {
