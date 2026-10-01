@@ -1,18 +1,14 @@
 # Fatwood
 
-**Kindling for your next build** · [fatwood.io](https://fatwood.io)
-
-Fatwood is the resin-saturated heart of a pine — the wood that catches fire
-from a single spark. This app is that, for engineers: it finds the research
-papers that will actually ignite your next project.
+[fatwood.io](https://fatwood.io)
 
 <!--
   Every number below is re-derivable — re-run these before quoting or editing
   one. The paper count goes stale on its own: ingestion runs a nightly delta
   (Ingestion:Schedule in appsettings.json), so the corpus is larger today than
-  whenever this file was last touched. The corpus size and the category count
-  each appear twice — in the paragraph below and in "How a sentence becomes
-  insights" step 2 — so fix both copies or the next reader gets two answers.
+  whenever this file was last touched. The corpus size appears twice — in the
+  paragraph below and in the "How it works" diagram — so fix both copies or
+  the next reader gets two answers.
 
     # corpus size + the category facet, from production
     curl -sL https://www.fatwood.io/api/papers?page=1\&pageSize=1 |
@@ -38,118 +34,81 @@ papers that will actually ignite your next project.
   docs/search-quality.md, which records the campaign that produced them.
 -->
 
-arXiv publishes hundreds of papers a day across machine learning, security,
-robotics, signal processing, computational biology, and quantitative finance.
-Fatwood indexes a decade of them — **~925,000 papers**, harvested from 37
-target arXiv categories and carrying cross-listings that spread the corpus
-across **155 categories** in all. Somewhere in there is a paper that would
-make a fantastic project for *you specifically* — the right topic for where
-your career is going, the right scope for a solo build, maybe a result nobody
-has reproduced in public yet. The problem is finding it: keyword search
-doesn't know you, category feeds are a firehose, and reading 300 abstracts a
-day is a job.
+Fatwood helps engineers find research papers worth building as side
+projects. You describe your background and goals in plain English. It
+searches **~925,000 arXiv papers** and returns a ranked
+shortlist. For any paper you pick, it can also write a personal feasibility
+read: what you'd learn, how long the build would take, and how it would read
+on a resume.
 
-Fatwood closes that gap. Describe what you're after in plain
-language — career goals included:
+<!-- TODO: screenshot of a search → results page (plan chips + wildcard badges) -->
 
-> *"I want to move from backend work into applied machine learning — looking
-> for a weekend-scale project on anomaly detection. I have four years of
-> Java experience."*
+## How it works
 
-— and get back a ranked shortlist of real, current papers, each scored for
-how buildable it is **by you**: what you'd learn, how long it would take,
-what it says on a resume, and an extension idea that plays to your
-strengths. Plus a couple of deliberate *wildcards* from outside your comfort
-zone, because the goal is to expand what you can build, not echo what you
-already know.
+```mermaid
+flowchart LR
+    prompt["<b>Your prompt</b><br/><i>weekend anomaly-detection<br/>project, 4 yrs of Java</i>"]
+    plan["<b>Search plan</b><br/>topics, categories, dates<br/><i>1 LLM call · editable</i>"]
+    search["<b>Hybrid search</b><br/>925k papers<br/>embeddings + BM25"]
+    results["<b>Ranked shortlist</b><br/>incl. 2 wildcards from<br/>outside your comfort zone"]
+    analysis["<b>Feasibility read</b><br/>for papers you pick<br/><i>1 LLM call each</i>"]
 
-## Project goals
+    prompt --> plan --> search --> results -->|opt-in| analysis
+```
 
-Principles set at the start; each is enforced somewhere concrete in the code.
+1. **An LLM turns your prompt into a search plan.** That's one call per search.
+   The plan shows up as editable chips, and editing a chip re-runs the search
+   without another LLM call.
+2. **Search runs locally, with no LLM involved.** Every abstract is embedded
+   ahead of time (bge-small via ONNX, 384 dimensions, int8-quantized in
+   memory). Results come from meaning similarity fused with BM25 keyword
+   matching.
+3. **Two results are wildcards on purpose.** They're relevant papers
+   furthest from your stated experience, because the point is to stretch
+   what you can build.
+4. **Analysis is opt-in and costs a call per paper.** It's cached per paper ×
+   profile, and the UI shows a dollar estimate before you spend anything.
 
-- **Search quality must be measurable — or none of this means anything.**
-  An evaluation harness turns "are the results good?" into a number (nDCG@10
-  = 0.628 over ~8,200 graded relevance judgments across 54 frozen queries,
-  with a CI gate that fails any PR dropping below 0.590). No ranking change
-  ships unless the number goes up; several "obviously good" ideas died in
-  measurement, and that's the system working.
-- **Exploration is protected, structurally.** A great project must never be
-  missed over a skill you could learn in a weekend. Experience similarity
-  annotates results but never ranks or gates them; wildcard slots are a
-  contractual guarantee; analysis treats unfamiliar tools as learnable,
-  never as blockers.
-- **Tokens are spent deliberately and visibly.** The LLM never filters the
-  corpus — it compiles your intent (once per search) and analyzes papers you
-  explicitly choose, on the cheapest capable model, with live dollar
-  estimates in the UI. Browsing and searching cost zero tokens, always.
-- **Real data only.** Every paper is live from arXiv, every citation from
-  Semantic Scholar, every quality claim from actual measurement. Mock data
-  is banned from the product path.
-- **Improve from real usage — with a human in the loop.** Every search and
-  reaction is logged; reports surface biases and candidates; nothing retunes
-  itself automatically. Detect automatically, tweak deliberately.
-- **Open to anyone, safe to run.** Real accounts (Entra External ID, rendered
-  natively in-app), a per-user dollar budget bounding every account's spend,
-  rate limiting and bot protection at every layer, and cost alarms above it
-  all — shareable without fearing the bill.
-- **Production-grade, portable engineering.** Provider-swappable database,
-  140 tests, infrastructure as code, CI/CD — built to hold up under review.
+## Every ranking change is measured
 
-## How a sentence becomes insights
+An offline eval harness scores the ranker against 54 frozen queries and
+~8,200 graded relevance judgments. CI fails any PR that drops nDCG@10 below
+**0.590**; the current ranker scores **0.628**. Several ideas that seemed
+obviously good were dropped because the numbers said so:
 
-1. **One LLM call compiles your prose into a transparent, editable plan** —
-   concrete research topics, category filters, a date window, shown as chips.
-   Editing a chip re-runs the search free: only compilation and opt-in
-   analysis ever spend tokens.
-2. **Date and category filters** narrow ~925k papers — a decade of arXiv
-   across 155 categories — to your candidates in milliseconds, pushed into
-   the index scan itself rather than a full-corpus query.
-3. **Meaning does the ranking**: every abstract is a point in a
-   384-dimensional space (local embeddings — bge-small via ONNX, no API);
-   relevance is geometric closeness to your intent *and* your best-matching
-   topic — including a HyDE anchor, the abstract of the hypothetical ideal
-   paper the compiler writes for your search (measured +0.02 nDCG, biggest
-   wins on queries phrased nothing like paper language).
-4. **Exact words get a vote**: a BM25 text index runs in parallel and the
-   rankings fuse — this hybrid measured **+17% nDCG** over embeddings alone.
-5. **Wildcard slots** inject high-relevance papers least similar to your
-   experience before results render.
-6. **Opt-in analysis** reads each chosen paper against your profile:
-   feasibility, learning bridge, goal alignment, resume story, extension
-   idea. Cached forever per paper × profile version.
-7. **Every search feeds the quality loop**: telemetry + an offline eval
-   harness (frozen queries, graded judgments, nDCG/Recall/MRR) gate every
-   ranking change. The current pipeline exists because measurement picked it.
+```mermaid
+%%{init: {"themeVariables": {"xyChart": {"plotColorPalette": "#c2410c"}}}}%%
+xychart-beta
+    title "Ranking campaign, July 2026 (nDCG@10, same 21 queries)"
+    x-axis ["Embeddings", "+ multi-topic", "+ BM25", "Both (shipped)", "Both + reranker"]
+    y-axis "nDCG@10" 0 --> 0.7
+    bar [0.523, 0.520, 0.594, 0.614, 0.612]
+```
 
-![Architecture: query → staged retrieval → results, with telemetry feeding the offline quality loop](docs/architecture.svg)
+Hybrid search shipped with a **+17%** gain. The cross-encoder reranker
+didn't ship, because it was a wash. The full methodology and campaign history
+are in [docs/search-quality.md](docs/search-quality.md).
 
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
-| Backend | .NET 10 / ASP.NET Core, layered (Domain / Application / Infrastructure / Api), dual web + CLI entry point |
-| Data | PostgreSQL via EF Core — provider-swappable to SQL Server by design (no raw SQL, no pg-only types) |
-| Search | Local ONNX embeddings (bge-small-en-v1.5), int8-quantized in-memory vector index + packed BM25 postings, Reciprocal Rank Fusion, optional cross-encoder; indexes snapshot to blob storage for seconds-fast cold start |
-| LLM | Anthropic API (structured outputs), config-driven model registry with per-step selection and pricing |
-| Frontend | React + TypeScript (Vite), no UI framework |
-| Accounts | Entra External ID with native (in-app) auth, per-user budget ledger, BYO API keys (encrypted, write-only), branded email via Azure Communication Services |
-| Edge | Cloudflare (DDoS/bot protection, strict TLS), ASP.NET rate limiting, CSP/HSTS |
-| Quality | Offline IR eval harness (nDCG/Recall/MRR vs LLM-judged ground truth), search telemetry, interleaving experiments |
-| Delivery | Docker single-image (API + SPA), Bicep IaC, GitHub Actions CI/CD (OIDC, no cloud secrets), Azure Container Apps + cron jobs, Key Vault |
-| Tests | 140 xUnit tests: unit (real fixtures, pinned metrics) + integration (full API over in-memory Sqlite) |
+| Backend | .NET 10 / ASP.NET Core, layered (Domain / Application / Infrastructure / Api), web + CLI from one entry point |
+| Data | PostgreSQL via EF Core, kept portable to SQL Server (no raw SQL, no pg-only types) |
+| Search | Local ONNX embeddings, in-memory int8 vector index + BM25, Reciprocal Rank Fusion; indexes snapshot to blob storage for fast cold start |
+| LLM | Anthropic API with structured outputs, per-step model selection and pricing |
+| Frontend | React + TypeScript (Vite) |
+| Accounts | Entra External ID (native in-app auth), per-user dollar budget, bring-your-own API key |
+| Delivery | Single Docker image, Bicep IaC, GitHub Actions (OIDC), Azure Container Apps, Cloudflare at the edge |
+| Quality | IR eval harness (nDCG / Recall / MRR) as a CI gate, search telemetry, interleaving experiments |
 
 ## Documentation
 
 | Doc | What's in it |
 |---|---|
-| [docs/running.md](docs/running.md) | Prerequisites, local dev loop, packaged app, configuration, SQL Server swap, tests |
-| [docs/operations.md](docs/operations.md) | Ingestion, embeddings, analysis, enrichment — CLI + admin API, cost controls |
-| [docs/accounts.md](docs/accounts.md) | Accounts platform: native auth, budget ledger, BYO keys, branded email, the perimeter |
-| [docs/search-quality.md](docs/search-quality.md) | The eval harness, measurement protocol, ranking campaign results, improvement roadmap |
-| [docs/design-decisions.md](docs/design-decisions.md) | Every explicit trade-off, from arXiv API choice to exploration guardrails |
-| [DEPLOY.md](DEPLOY.md) | Azure deployment: Bicep, OIDC CI/CD, Key Vault, migration bundles |
-| [docs/app-handbook.html](docs/app-handbook.html) | Rendered walkthrough of the app — open in a browser |
-| [docs/phase-2-redesign.md](docs/phase-2-redesign.md) | *Historical:* the original personalized-discovery design brief, kept for provenance |
-
-*Architecture diagram source: [docs/architecture.mmd](docs/architecture.mmd) —
-re-render with `npx -y @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.svg -b transparent`.*
+| [docs/running.md](docs/running.md) | Run it locally, configuration, tests |
+| [docs/operations.md](docs/operations.md) | Ingestion, embeddings, analysis, enrichment, cost controls |
+| [docs/search-quality.md](docs/search-quality.md) | Eval harness, measurement protocol, ranking campaigns |
+| [docs/accounts.md](docs/accounts.md) | Auth, budget ledger, BYO keys, email, rate limiting |
+| [docs/design-decisions.md](docs/design-decisions.md) | The explicit trade-offs and why |
+| [DEPLOY.md](DEPLOY.md) | Azure deployment |
