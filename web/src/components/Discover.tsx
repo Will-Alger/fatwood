@@ -78,14 +78,37 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 // archives by hand — they are also the "Try one" chips below (`slice(0, 3)`),
 // so they are the only examples a visitor sees without waiting out the
 // placeholder rotation.
-const EXAMPLE_QUERIES = [
-  'a weekend-scale anomaly-detection project — I have 4 years of backend experience',
-  'a simulation project that would impress physics grad programs — Python, and it has to run on my laptop',
-  'something science-y for my med school application — I can code a little, but I am not a CS major',
-  'portfolio projects for breaking into audio software development — DSP, not web apps',
-  'recent LLM-agent papers with public code that a solo developer could extend',
-  'papers I could turn into a small fluid-flow or PDE solver over a couple of weekends',
+// Example goals: the full query is what runs (and what the placeholder types
+// out); the label is the short name its suggestion pill wears.
+const EXAMPLES = [
+  {
+    label: 'Weekend anomaly detection',
+    query: 'a weekend-scale anomaly-detection project — I have 4 years of backend experience',
+  },
+  {
+    label: 'Physics sim for grad school',
+    query:
+      'a simulation project that would impress physics grad programs — Python, and it has to run on my laptop',
+  },
+  {
+    label: 'Science project for med school',
+    query:
+      'something science-y for my med school application — I can code a little, but I am not a CS major',
+  },
+  {
+    label: 'Breaking into audio DSP',
+    query: 'portfolio projects for breaking into audio software development — DSP, not web apps',
+  },
+  {
+    label: 'Extendable LLM agents',
+    query: 'recent LLM-agent papers with public code that a solo developer could extend',
+  },
+  {
+    label: 'A small PDE solver',
+    query: 'papers I could turn into a small fluid-flow or PDE solver over a couple of weekends',
+  },
 ]
+const EXAMPLE_QUERIES = EXAMPLES.map((e) => e.query)
 
 interface AnalyzingState {
   total: number
@@ -872,12 +895,13 @@ export function Discover({
       {!result && busy === null && (
         <div className="discover-intro" id="how-it-works">
           <div className="discover-examples">
-            <span className="discover-examples-label">Try one</span>
-            {EXAMPLE_QUERIES.slice(0, 3).map((example) => (
+            <span className="discover-examples-label">Try</span>
+            {EXAMPLES.slice(0, 4).map((example) => (
               <button
-                key={example}
+                key={example.label}
                 type="button"
                 className="example-chip"
+                title={example.query}
                 disabled={!canSpend || busy !== null}
                 onPointerEnter={(e) => {
                   const r = e.currentTarget.getBoundingClientRect()
@@ -885,10 +909,10 @@ export function Discover({
                 }}
                 onClick={() => {
                   spiritRef.current?.mood('happy', 1.6)
-                  tryExample(example)
+                  tryExample(example.query)
                 }}
               >
-                {example}
+                {example.label}
               </button>
             ))}
           </div>
