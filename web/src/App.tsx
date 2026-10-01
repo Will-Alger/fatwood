@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getLlmSettings, redeemInvite, setThemePreference } from './api/client'
+import { getLlmSettings, redeemInvite } from './api/client'
 import type { LlmSettingsView, SortOrder } from './api/types'
 import { AdminPanel } from './components/AdminPanel'
 import { AuthPanel } from './components/AuthPanel'
@@ -19,18 +19,12 @@ import './App.css'
 const PAGE_SIZE = 25
 
 type Tab = 'discover' | 'browse' | 'admin'
-type Theme = 'dark' | 'light'
-
-function currentTheme(): Theme {
-  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
-}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('discover')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [llmSettings, setLlmSettings] = useState<LlmSettingsView | null>(null)
-  const [theme, setTheme] = useState<Theme>(currentTheme)
   const [inviteCode, setInviteCode] = useState('')
   const [inviteError, setInviteError] = useState<string | null>(null)
 
@@ -75,27 +69,6 @@ export default function App() {
     }
   }, [me?.role])
 
-  // The account's saved theme wins over the local default once known.
-  useEffect(() => {
-    if (me?.theme && me.theme !== currentTheme()) {
-      document.documentElement.dataset.theme = me.theme
-      localStorage.setItem('fatwood.theme', me.theme)
-      setTheme(me.theme)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me?.id])
-
-  function toggleTheme() {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    document.documentElement.dataset.theme = next
-    localStorage.setItem('fatwood.theme', next)
-    setTheme(next)
-    if (me) {
-      // Fire-and-forget; localStorage already has the fallback.
-      setThemePreference(next).catch(() => undefined)
-    }
-  }
-
   async function handleInviteRedeem() {
     setInviteError(null)
     try {
@@ -124,63 +97,14 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* Three islands: sections on the left, the mark centred, the account
+          on the right. */}
       <header className="app-header">
-        <div className="app-header-top">
-          <div className="app-brand">
-            <Logo size={34} />
-            <div>
-              <h1>Fatwood</h1>
-              <p>Kindling for your next build.</p>
-            </div>
-          </div>
-          <div className="app-header-actions">
-            {me && (
-              <span
-                className="budget-chip"
-                title={
-                  me.budget.unlimited
-                    ? `${me.email} — unlimited (${me.role.toLowerCase()})`
-                    : `${me.email} — remaining search & analysis budget`
-                }
-              >
-                <span className="budget-chip-label">budget</span>
-                {formatBudget(me)}
-              </span>
-            )}
-            {ready && signedOut && (
-              <button type="button" className="signin-button" onClick={() => setAuthOpen(true)}>
-                Sign in
-              </button>
-            )}
-            {/* Header affordances are words, not glyphs: the label names the
-                theme you are in, the way the mock reads "Dark" / "Light". */}
-            <button
-              type="button"
-              className="icon-button"
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              /* The visible word names the theme you are in, so the accessible
-                 name has to contain it too (WCAG 2.5.3 Label in Name). */
-              aria-label={
-                theme === 'dark' ? 'Dark theme — switch to light' : 'Light theme — switch to dark'
-              }
-            >
-              {theme === 'dark' ? 'Dark' : 'Light'}
-            </button>
-            <button
-              type="button"
-              className="icon-button"
-              onClick={() => setSettingsOpen(true)}
-              title="Settings"
-            >
-              Settings
-            </button>
-          </div>
-        </div>
-        <nav className="app-tabs">
+        <nav className="island app-tabs" aria-label="Sections">
           <button
             type="button"
             className={tab === 'discover' ? 'tab tab-active' : 'tab'}
+            aria-current={tab === 'discover' ? 'page' : undefined}
             onClick={() => setTab('discover')}
           >
             Discover
@@ -188,6 +112,7 @@ export default function App() {
           <button
             type="button"
             className={tab === 'browse' ? 'tab tab-active' : 'tab'}
+            aria-current={tab === 'browse' ? 'page' : undefined}
             onClick={() => setTab('browse')}
           >
             Browse
@@ -196,12 +121,45 @@ export default function App() {
             <button
               type="button"
               className={tab === 'admin' ? 'tab tab-active' : 'tab'}
+              aria-current={tab === 'admin' ? 'page' : undefined}
               onClick={() => setTab('admin')}
             >
               Admin
             </button>
           )}
         </nav>
+        <div className="app-brand">
+          <Logo size={18} />
+          <h1>Fatwood</h1>
+        </div>
+        <div className="island app-header-actions">
+          {me && (
+            <span
+              className="budget-chip"
+              title={
+                me.budget.unlimited
+                  ? `${me.email} — unlimited (${me.role.toLowerCase()})`
+                  : `${me.email} — remaining search & analysis budget`
+              }
+            >
+              <span className="budget-chip-label">budget</span>
+              {formatBudget(me)}
+            </span>
+          )}
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => setSettingsOpen(true)}
+            title="Settings"
+          >
+            Settings
+          </button>
+          {ready && signedOut && (
+            <button type="button" className="signin-button" onClick={() => setAuthOpen(true)}>
+              Sign in
+            </button>
+          )}
+        </div>
       </header>
 
       {me && !me.isActive && (

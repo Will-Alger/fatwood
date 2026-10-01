@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   analyzeSelection,
   compileSearch,
@@ -23,6 +23,15 @@ import { RecentSearches } from './RecentSearches'
 import { EmberDots, PaperSkeletons } from './Skeletons'
 import { aliasIndex } from '../data/categoryAliases'
 import { categoryGloss } from '../data/categoryGloss'
+import type { Spirit } from '../campfire/scene'
+
+// Decorative and ~10 kB gzipped (mostly traced keyframes): loaded on demand so
+// it never weighs on the main bundle. The fallback holds the hero's layout.
+const Campfire = lazy(() => import('./Campfire').then((m) => ({ default: m.Campfire })))
+
+// One shared context for measuring the query text, so the fire spirit's eyes
+// can follow the caret as you type.
+let measureCtx: CanvasRenderingContext2D | null = null
 
 const SEARCH_STAGES = [
   'Sifting tens of thousands of papers…',
@@ -107,12 +116,22 @@ export function Discover({
   categories,
 }: DiscoverProps) {
   const [query, setQuery] = useState('')
+  const queryRef = useRef<HTMLTextAreaElement>(null)
+  // The fire spirit in the hero (null until the lazy scene mounts, and again
+  // once results replace the hero). Everything that talks to him is optional.
+  const spiritRef = useRef<Spirit | null>(null)
+  const perkTimerRef = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(perkTimerRef.current), [])
   const [lastCompiledQuery, setLastCompiledQuery] = useState<string | null>(null)
   const [plan, setPlanState] = useState<SearchPlan | null>(null)
   const [result, setResult] = useState<SearchResult | null>(null)
   const [busy, setBusy] = useState<'compile' | 'search' | null>(null)
   const [analyzing, setAnalyzing] = useState<AnalyzingState | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // A failed search: let the fire settle back down.
+  useEffect(() => {
+    if (error) spiritRef.current?.mood('idle')
+  }, [error])
   const [notice, setNotice] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'match' | 'score'>('match')
   const [analyzeN, setAnalyzeN] = useState(ANALYZE_DEFAULT)
@@ -348,6 +367,8 @@ export function Discover({
     const trimmed = (overrideQuery ?? query).trim()
     if (!trimmed) return
     setWipeKey((k) => k + 1) // light the fuse across the field
+    spiritRef.current?.stoke(1)
+    spiritRef.current?.mood('delighted', 1.8, 'focused')
 
     // Re-running the same text re-executes the existing plan — deterministic
     // and free. Only genuinely new text goes back through the LLM compiler.
@@ -398,6 +419,21 @@ export function Discover({
       setError(err instanceof Error ? err.message : 'Could not compile the search')
       setBusy(null)
     }
+  }
+
+  // Point his eyes at roughly where the caret is in the query box.
+  function lookAtCaret() {
+    const el = queryRef.current
+    const spirit = spiritRef.current
+    if (!el || !spirit) return
+    measureCtx ??= document.createElement('canvas').getContext('2d')
+    if (!measureCtx) return
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    measureCtx.font = `${cs.fontSize} ${cs.fontFamily}`
+    const line = el.value.slice(0, el.selectionStart ?? el.value.length).split('\n').pop() ?? ''
+    const x = r.left + 16 + Math.min(measureCtx.measureText(line).width, r.width - 32)
+    spirit.look(x, r.top + r.height / 2, 1.6)
   }
 
   function tryExample(example: string) {
@@ -555,16 +591,73 @@ export function Discover({
       ? ` — est. $${(analysisEstimate.perPaper * analyzeCount).toFixed(2)} with ${analysisEstimate.model.displayName}`
       : ''
 
+  // The hero stays up through the first search, so the fire can react to it;
+  // results replace it.
+  const showHero = !result
+
   return (
     <div className="discover-layout">
+      {showHero && (
+        <section className="discover-hero">
+          <div className="hero-copy">
+            <p className="hero-eyebrow">A decade of arXiv, updated nightly</p>
+            <h2>
+              Kindling for your <em>next build.</em>
+            </h2>
+            <p className="hero-lede">
+              Describe your background and goals. Fatwood searches a decade of arXiv for the
+              research papers worth building.
+            </p>
+            <div className="hero-actions">
+              <button
+                type="button"
+                className="hero-primary"
+                onClick={() => {
+                  queryRef.current?.focus()
+                  queryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }}
+              >
+                Start a search
+              </button>
+              <a className="hero-secondary" href="#how-it-works">
+                See how it works
+              </a>
+            </div>
+          </div>
+          <Suspense fallback={<div className="campfire" aria-hidden="true" />}>
+            <Campfire spiritRef={spiritRef} />
+          </Suspense>
+        </section>
+      )}
       <div className="discover">
       <div className="search-box">
         {/* On submit a 2px ember line races the length of the field once, then
             goes out — the only place the metaphor shows before results land. */}
         {wipeKey > 0 && <span key={wipeKey} className="search-wipe" aria-hidden="true" />}
         <textarea
+          ref={queryRef}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            const spirit = spiritRef.current
+            if (!spirit) return
+            spirit.stoke(0.08)
+            spirit.mood('focused')
+            lookAtCaret()
+            // you paused: he perks up at what you wrote
+            window.clearTimeout(perkTimerRef.current)
+            perkTimerRef.current = window.setTimeout(() => {
+              if (queryRef.current?.value.trim()) spiritRef.current?.mood('curious', 1.4, 'focused')
+            }, 900)
+          }}
+          onFocus={() => {
+            spiritRef.current?.stoke(0.25)
+            spiritRef.current?.mood('curious', 1.2, 'focused')
+            lookAtCaret()
+          }}
+          onBlur={() => {
+            if (busy === null) spiritRef.current?.mood('idle')
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
@@ -777,51 +870,52 @@ export function Discover({
       )}
 
       {!result && busy === null && (
-        /* The fuse is present but unlit — a grey rule, waiting. */
-        <div className="discover-intro">
-          <div className="fuse fuse-unlit" aria-hidden="true" />
-          <div>
-            <div className="discover-steps">
-              <div className="discover-step">
-                <span className="discover-step-number">01</span>
-                <h3>Describe the build</h3>
-                <p>
-                  Plain language works — mention your experience, your goals, and how much time
-                  you have.
-                </p>
-              </div>
-              <div className="discover-step">
-                <span className="discover-step-number">02</span>
-                <h3>We rank the corpus</h3>
-                <p>
-                  Tens of thousands of live arXiv papers, ranked by meaning and exact terms — with
-                  two deliberate wildcards from outside your comfort zone.
-                </p>
-              </div>
-              <div className="discover-step">
-                <span className="discover-step-number">03</span>
-                <h3>Analyze your picks</h3>
-                <p>
-                  For the papers you choose, get a personal feasibility read: what you'd learn,
-                  how long it takes, what it says on a resume.
-                </p>
-              </div>
+        <div className="discover-intro" id="how-it-works">
+          <div className="discover-examples">
+            <span className="discover-examples-label">Try one</span>
+            {EXAMPLE_QUERIES.slice(0, 3).map((example) => (
+              <button
+                key={example}
+                type="button"
+                className="example-chip"
+                disabled={!canSpend || busy !== null}
+                onPointerEnter={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect()
+                  spiritRef.current?.look(r.left + r.width / 2, r.top + r.height / 2, 1)
+                }}
+                onClick={() => {
+                  spiritRef.current?.mood('happy', 1.6)
+                  tryExample(example)
+                }}
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+          <div className="discover-steps">
+            <div className="discover-step">
+              <span className="discover-step-number">01</span>
+              <h3>Describe the build</h3>
+              <p>
+                Plain language works — mention your experience, your goals, and how much time
+                you have.
+              </p>
             </div>
-            <div className="discover-examples">
-              <div className="discover-examples-label">Try one</div>
-              <div className="discover-example-list">
-                {EXAMPLE_QUERIES.slice(0, 3).map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    className="example-chip"
-                    disabled={!canSpend || busy !== null}
-                    onClick={() => tryExample(example)}
-                  >
-                    {example}
-                  </button>
-                ))}
-              </div>
+            <div className="discover-step">
+              <span className="discover-step-number">02</span>
+              <h3>We rank the corpus</h3>
+              <p>
+                Tens of thousands of live arXiv papers, ranked by meaning and exact terms — with
+                two deliberate wildcards from outside your comfort zone.
+              </p>
+            </div>
+            <div className="discover-step">
+              <span className="discover-step-number">03</span>
+              <h3>Analyze your picks</h3>
+              <p>
+                For the papers you choose, get a personal feasibility read: what you'd learn,
+                how long it takes, what it says on a resume.
+              </p>
             </div>
           </div>
         </div>

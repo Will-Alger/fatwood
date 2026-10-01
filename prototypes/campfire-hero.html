@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fatwood Hero Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&display=swap" rel="stylesheet">
+<style>
+/* Light-only Fatwood ("Flashpoint" tokens from prototypes/ui-v1.html).
+   The campfire is no longer a dark picture in a box: it is drawn straight onto
+   the page, on the page's own paper, like the particle field in the reference.
+
+   Shape: no square corners anywhere. Every surface is a squircle (continuous
+   curvature, the Apple corner) via `corner-shape: squircle`; browsers without it
+   fall back to a smaller plain radius that reads close. Nested shapes keep
+   concentric corners: inner radius = outer radius minus the gap between them. */
+:root {
+  --font-sans: 'Archivo', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --bg: #e7e4dc; --surface: #f4f2ec; --surface-2: #e2ded5; --surface-3: #d9d5cb;
+  --text: #191814; --text-2: #262420; --text-3: #453f36;
+  --muted: #565148; --faint: #68635a;
+  --rule-strong: #b9b3a7; --rule: #d3cec3; --rule-soft: #dcd8ce;
+  --ember: #a82a17; --ember-ink: #f6f1e8;
+  /* radii: plain-radius fallback values */
+  --r-xs: 7px; --r-sm: 10px; --r-md: 13px; --r-lg: 18px; --r-xl: 24px;
+  --lift: 0 1px 1px rgba(25, 24, 20, .04), 0 2px 6px rgba(25, 24, 20, .05);
+  --lift-2: 0 1px 2px rgba(25, 24, 20, .05), 0 10px 30px -8px rgba(25, 24, 20, .14);
+  color-scheme: light;
+}
+/* a squircle needs a larger radius than a circular arc to look as soft */
+@supports (corner-shape: squircle) {
+  :root { --r-xs: 11px; --r-sm: 16px; --r-md: 20px; --r-lg: 28px; --r-xl: 38px; }
+  * { corner-shape: squircle; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: clip; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-sans); -webkit-font-smoothing: antialiased;
+}
+/* paper grain over everything, the fire included, so the canvas sits in the page */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .09;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { transition: background-color .15s, color .15s, transform .15s; }
+button:active, .btn:active { transform: scale(.97); }
+:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+.shell { max-width: 1240px; margin: 0 auto; padding: 0 40px; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---------- header: three frosted islands, brand centred ---------- */
+.top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 20px 0; }
+.island, .brand {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--rule-soft); box-shadow: var(--lift);
+}
+.island { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--r-md); justify-self: start; }
+.island.right { justify-self: end; }
+/* inner buttons are concentric with the island: its radius minus the 4px inset */
+.island a, .island button {
+  border: 0; background: none; cursor: pointer; text-decoration: none; border-radius: calc(var(--r-md) - 4px);
+  font-size: 12.5px; letter-spacing: .01em; color: var(--text-3); padding: 7px 13px;
+}
+.island a:hover, .island button:hover { color: var(--text); background: var(--surface-2); }
+.island a[aria-current] { color: var(--text); background: var(--surface-3); }
+.island .cta { background: var(--text); color: var(--ember-ink); }
+.island .cta:hover { background: #000; color: var(--ember-ink); }
+.brand {
+  display: flex; align-items: center; gap: 9px; padding: 9px 56px; border-radius: var(--r-md);
+  text-decoration: none; color: var(--text);
+  font-weight: 700; font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+}
+.fw-wood { fill: var(--text); } .fw-tip { fill: var(--ember); }
+
+/* ---------- hero ---------- */
+.hero {
+  flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center;
+  gap: 24px; min-height: 520px; position: relative;
+}
+.hero-copy { padding: 0 0 40px 56px; max-width: 560px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 22px; display: inline-flex; align-items: center; gap: 9px;
+  padding: 6px 12px 6px 10px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--rule-soft);
+}
+.eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; corner-shape: round; background: var(--ember); box-shadow: 0 0 0 3px rgba(168, 42, 23, .14); }
+h1 {
+  font-family: var(--font-serif); font-weight: 400; font-size: clamp(40px, 4.6vw, 60px);
+  line-height: 1.02; letter-spacing: -.025em; margin: 0 0 22px; font-optical-sizing: auto;
+}
+h1 em { font-style: italic; }
+.lede { font-family: var(--font-serif); font-size: 19px; line-height: 1.42; color: var(--muted); margin: 0 0 38px; max-width: 30em; }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn {
+  display: inline-block; border: 0; cursor: pointer; font-size: 13.5px; letter-spacing: .01em;
+  padding: 13px 22px; border-radius: var(--r-md); text-decoration: none; transition: background-color .15s, transform .15s, box-shadow .15s;
+}
+.btn-primary { background: var(--text); color: var(--ember-ink); box-shadow: var(--lift); }
+.btn-primary:hover { background: #000; box-shadow: var(--lift-2); }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--rule-soft); box-shadow: var(--lift); padding: 12px 21px; }
+.btn-secondary:hover { background: #fbfaf6; box-shadow: var(--lift-2); }
+
+/* the fire sits on the page: no frame, no background, it bleeds into the paper */
+.hero-fire { position: relative; height: min(560px, calc(100vh - 230px)); min-height: 420px; }
+.hero-fire canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+
+/* ---------- the search: one floating squircle along the hero's bottom edge ---------- */
+.strip { padding: 8px 0 28px; }
+.search {
+  display: flex; align-items: stretch; gap: 6px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--rule-soft); border-radius: var(--r-xl); box-shadow: var(--lift-2);
+  transition: box-shadow .2s, border-color .2s;
+}
+.search:focus-within { border-color: var(--rule-strong); box-shadow: 0 0 0 4px rgba(168, 42, 23, .08), var(--lift-2); }
+.search textarea {
+  flex: 1; min-width: 0; border: 0; background: none; resize: none; outline: none;
+  font-family: var(--font-serif); font-size: 17px; line-height: 1.5; padding: 13px 14px; min-height: 52px;
+  field-sizing: content; max-height: 160px; overflow-y: auto; scrollbar-width: none;
+}
+.search textarea::placeholder { color: var(--faint); }
+.search .time {
+  display: flex; flex-direction: column; justify-content: center; gap: 1px; padding: 0 14px;
+  background: var(--bg); border-radius: calc(var(--r-xl) - 6px);
+}
+.search .time span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.search .time select { border: 0; background: none; font-size: 14px; padding: 0; outline: none; cursor: pointer; }
+.search .go {
+  border: 0; background: var(--ember); color: var(--ember-ink); padding: 0 28px; font-size: 14px; cursor: pointer;
+  border-radius: calc(var(--r-xl) - 6px);
+}
+.search .go:hover { background: #8f2312; }
+.strip-meta { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 14px; padding: 0 6px; font-family: var(--font-mono); font-size: 11px; color: var(--faint); }
+.strip-meta button {
+  border: 1px solid var(--rule-soft); background: var(--surface); padding: 6px 12px; cursor: pointer; border-radius: var(--r-sm);
+  font-family: var(--font-sans); font-size: 12px; color: var(--text-3);
+}
+.strip-meta button:hover { border-color: var(--rule-strong); color: var(--text); background: #fbfaf6; }
+.examples { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.examples > span { margin-right: 4px; }
+.strip-meta .count { white-space: nowrap; }
+
+/* ---------- how it works: three cards ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 40px 0 80px; }
+.step { padding: 22px 24px 26px; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: var(--r-lg); box-shadow: var(--lift); }
+.step b {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-xs);
+  background: var(--bg); font-family: var(--font-mono); font-weight: 400; font-size: 11px; color: var(--muted);
+}
+.step h3 { font-family: var(--font-serif); font-weight: 500; font-size: 20px; margin: 16px 0 8px; }
+.step p { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+
+@media (max-width: 860px) {
+  .shell { padding: 0 16px; }
+  .top { grid-template-columns: auto 1fr; gap: 8px; }
+  .top .island:first-child { display: none; }
+  .brand { padding: 9px 14px; justify-self: start; }
+  .hero { grid-template-columns: 1fr; gap: 0; }
+  .hero-fire { order: -1; height: 360px; min-height: 0; margin: -20px 0 -10px; }
+  .hero-copy { padding: 0 0 32px; }
+  .lede { font-size: 17px; }
+  .search { flex-wrap: wrap; }
+  .search textarea { flex-basis: 100%; }
+  .search .time { flex: 1; padding: 8px 14px; }
+  .search .go { padding: 14px 24px; }
+  .strip-meta { flex-direction: column; align-items: flex-start; }
+  .steps { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <nav class="island" aria-label="Sections">
+      <a href="#" aria-current="page">Discover</a>
+      <a href="#">Browse</a>
+    </nav>
+    <a class="brand" href="#">
+      <svg width="16" height="18" viewBox="0 0 30 34" aria-hidden="true"><polygon points="4,34 11,31 22,3 15,1" class="fw-wood"/><polygon points="22,3 15,1 18,9 24,10" class="fw-tip"/></svg>
+      Fatwood
+    </a>
+    <div class="island right">
+      <button type="button">Settings</button>
+      <button type="button" class="cta">Sign in</button>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">A decade of arXiv, updated nightly</p>
+      <h1>Kindling for your <em>next build.</em></h1>
+      <p class="lede">Describe your background and goals. Fatwood searches a decade of arXiv for the research papers worth building.</p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="start">Start a search</button>
+        <a class="btn btn-secondary" href="#how">See how it works</a>
+      </div>
+    </div>
+    <div class="hero-fire" aria-hidden="true"><canvas id="fire"></canvas></div>
+  </main>
+
+  <section class="strip">
+    <div class="search">
+      <textarea id="q" rows="1" aria-label="Describe what you want to build" placeholder="Four years of Java, want a weekend anomaly-detection project…"></textarea>
+      <label class="time"><span>time</span>
+        <select aria-label="Time window"><option>auto</option><option>any time</option><option>last month</option><option>last year</option></select>
+      </label>
+      <button type="button" class="go">Search</button>
+    </div>
+    <div class="strip-meta">
+      <div class="examples"><span>Try one</span>
+        <button type="button">graph neural nets for code review</button>
+        <button type="button">tiny on-device speech model</button>
+        <button type="button">RAG over my own notes</button>
+      </div>
+      <span class="count">~925,000 papers · nightly delta</span>
+    </div>
+  </section>
+
+  <section class="steps" id="how">
+    <div class="step"><b>01</b><h3>Describe the build</h3><p>Plain language works — mention your experience, your goals, and how much time you have.</p></div>
+    <div class="step"><b>02</b><h3>We rank the corpus</h3><p>Hundreds of thousands of arXiv papers, ranked by meaning and exact terms — with two deliberate wildcards from outside your comfort zone.</p></div>
+    <div class="step"><b>03</b><h3>Analyze your picks</h3><p>For the papers you choose, get a personal feasibility read: what you'd learn, how long it takes, what it says on a resume.</p></div>
+  </section>
+</div>
+
+<script>
+/* The campfire from prototypes/campfire-main.html, redrawn for the page instead of a night
+   scene: no sky, no clearing, no smoke, a transparent canvas. The logs are re-inked in the page's own
+   charcoal, and the firelight is a warm stain rather than an additive glow.
+   The flame drawings, timing and grain are unchanged.
+   It also has a face: a small fire spirit who blinks, looks around, follows the cursor and
+   reacts to what you do on the page (see the wiring at the bottom). */
+const Campfire = (canvas) => {
+const ctx = canvas.getContext('2d');
+const FIRE_X = 500;
+// the part of the 1000x750 design the camera holds: the fire, and room above it for embers.
+// The canvas is bottom-anchored, so the logs always sit on the hero's floor.
+const VIEW = { x: 300, y: 330, w: 400, h: 425 };
+const PAPER = [240, 236, 226], INK = [32, 29, 25];
+const theme = { glow: 1 };
+
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+const R = (a, b) => a + rnd() * (b - a);
+const wob = (t, s) => Math.sin(t * 1.7 + s) * .5 + Math.sin(t * 3.1 + s * 2.3) * .3 + Math.sin(t * 7.3 + s * .7) * .2;
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+
+let VT, VB, VL, VR, cw, ch, dpr, scale, ox, oy, staticLayer, fireLayer, faceLayer, frontLogLayer, speckPattern;
+
+function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function toDesign(g) { g.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy); }
+
+// ---------- static scene: just the ash bed and the back logs ----------
+function buildStatic() {
+  seed = 7;
+  const g = staticLayer.getContext('2d');
+  toDesign(g);
+  // a soft scorch on the paper where the fire sits, so the pile has weight
+  g.save(); g.translate(FIRE_X, 712); g.scale(1, .16);
+  const sh = g.createRadialGradient(0, 0, 0, 0, 0, 200);
+  sh.addColorStop(0, rgba(INK, .28)); sh.addColorStop(.55, rgba(INK, .1)); sh.addColorStop(1, rgba(INK, 0));
+  g.fillStyle = sh; g.beginPath(); g.arc(0, 0, 200, 0, 7); g.fill(); g.restore();
+  // ash and charcoal crumbs scattered round the base, thinning outward
+  for (let i = 0; i < 70; i++) {
+    const a = R(0, Math.PI * 2), d = Math.pow(rnd(), .7) * 175, x = FIRE_X + Math.cos(a) * d, y = 712 + Math.sin(a) * d * .14;
+    const s = R(.8, 3.4) * (1 - d / 260);
+    g.fillStyle = rgba(INK, R(.35, .85)); g.beginPath(); g.ellipse(x, y, s, s * .7, R(0, 3), 0, 7); g.fill();
+  }
+  drawBackLogs(g);
+  sprinkle(g);
+}
+
+// texture: paper and soot specks, clipped to what's painted
+function sprinkle(g) {
+  g.globalCompositeOperation = 'source-atop';
+  const area = (VR - VL) * (VB - VT) / (1000 * 750);
+  for (let i = 0, n = 14000 * area; i < n; i++) {
+    g.fillStyle = rgba(PAPER, R(.05, .2)); const s = R(.5, 1.6); g.fillRect(R(VL, VR), R(VT, VB), s, s);
+  }
+  for (let i = 0, n = 9000 * area; i < n; i++) {
+    g.fillStyle = rgba([8, 7, 6], R(.15, .4)); const s = R(.6, 1.8); g.fillRect(R(VL, VR), R(VT, VB), s, s);
+  }
+  g.globalCompositeOperation = 'source-over';
+}
+
+function buildSpeck() {
+  const c = mkCanvas(256, 256), g = c.getContext('2d');
+  for (let i = 0; i < 4200; i++) { g.fillStyle = `rgba(0,0,0,${R(.3, 1)})`; const s = R(.6, 1.8); g.fillRect(R(0, 256), R(0, 256), s, s); }
+  return c;
+}
+
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  if (!r.width || !r.height) return false;
+  cw = r.width; ch = r.height; dpr = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+  scale = Math.min(cw / VIEW.w, ch / VIEW.h);
+  ox = (cw - VIEW.w * scale) / 2 - VIEW.x * scale;
+  oy = ch - (VIEW.y + VIEW.h) * scale;
+  VL = -ox / scale; VR = (cw - ox) / scale; VT = -oy / scale; VB = (ch - oy) / scale;
+  staticLayer = mkCanvas(canvas.width, canvas.height);
+  fireLayer = mkCanvas(canvas.width, canvas.height);
+  faceLayer = mkCanvas(canvas.width, canvas.height);
+  frontLogLayer = mkCanvas(canvas.width, canvas.height);
+  buildStatic();
+  { const g = frontLogLayer.getContext('2d'); toDesign(g); drawFrontLogs(g); sprinkle(g); }
+  speckPattern = fireLayer.getContext('2d').createPattern(buildSpeck(), 'repeat');
+  return true;
+}
+
+// ---------- logs, re-inked in charcoal ----------
+function log(g, x1, y1, x2, y2, th, top, bot, opts = {}) {
+  const L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1), r = th / 2;
+  g.save(); g.translate(x1, y1); g.rotate(a);
+  const lg = g.createLinearGradient(0, -r, 0, r);
+  lg.addColorStop(0, top); lg.addColorStop(1, bot);
+  g.fillStyle = lg; g.beginPath(); g.roundRect(0, -r, L, th, r); g.fill();
+  g.strokeStyle = opts.grain || rgba(PAPER, .32); g.lineWidth = 1.8; g.lineCap = 'round';
+  for (const [v, s0, s1] of opts.lines || []) {
+    g.beginPath();
+    for (let k = 0; k <= 16; k++) {
+      const s = s0 + (s1 - s0) * k / 16, x = s * L, y = v * r * .7 + Math.sin(s * 9 + v * 5) * 2.2;
+      k ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+  }
+  if (opts.cap) {   // cut end: pale heartwood with a growth ring
+    g.fillStyle = '#cbc3b3'; g.beginPath(); g.ellipse(L - r * .55, 0, r * .62, r * .98, 0, 0, 7); g.fill();
+    g.strokeStyle = '#6f665a'; g.lineWidth = 2.4; g.beginPath(); g.ellipse(L - r * .55, 1, r * .3, r * .5, 0, 0, 7); g.stroke();
+  }
+  g.restore();
+}
+function drawBackLogs(g) {
+  log(g, 414, 662, 500, 684, 30, '#3d3832', '#24211d', { lines: [[-.2, .2, .8]] });
+  log(g, 498, 690, 596, 650, 34, '#3d3832', '#24211d', { lines: [[-.3, .35, .85], [.25, .5, .9]] });
+}
+function drawFrontLogs(g) {
+  log(g, 392, 712, 520, 702, 36, '#776f65', '#5c564d', { lines: [[.1, .12, .6]], grain: rgba(PAPER, .4) });
+  log(g, 398, 684, 612, 706, 40, '#433b34', '#1d1a17', { cap: true, lines: [[-.35, .12, .45], [-.1, .5, .85], [.4, .3, .7]] });
+}
+
+// ---------- fire: traced keyframes (unchanged) ----------
+const FLAME_FRAMES = [
+  [-61.7,-18.1,-67,-43.9,-66.8,-59.8,-64.4,-72.8,-53.8,-104.4,-43.9,-122.3,-27.3,-145.2,-22.5,-146,-15.2,-139.6,-9.9,-138.1,-2.7,-140,6.2,-146.6,18.7,-163,26.7,-179.7,31,-193.9,34.2,-197.2,39.9,-193,50.3,-179.3,53.8,-164.8,53.3,-147.2,48.7,-131.1,39.4,-110.9,38,-99.5,38.4,-95.7,42,-91.3,45.5,-90.1,56.9,-90.6,59.9,-86.8,64,-36.5,62.6,-29,53.7,-16.9,44.8,-11.6,36,-7.6,27.1,-4.6,18.2,-2.2,9.3,-0.5,0.4,0.6,-8.4,1,-17.3,0.9,-26.2,0.1,-35.1,-1.4,-43.9,-3.8,-52.8,-7.5],
+  [-46.5,-21.9,-49.4,-21.2,-67.9,-18.9,-72.2,-31.1,-74.9,-46,-74.9,-59.9,-67.7,-92.9,-55.9,-120,-43.7,-139,-24,-160.3,-20.4,-158.4,-20.1,-151.3,-16.7,-147.1,-11.5,-146.9,-4.9,-150.3,9.8,-166.1,18.3,-178.6,25.8,-193.5,29.4,-196.6,33.7,-194.6,36.2,-189.7,39.7,-177.2,40.9,-165.7,39.8,-146.2,32.3,-115.3,32.6,-107.7,36.9,-101.9,43.6,-99.1,50.7,-101.2,56.7,-106,59.7,-105.7,61.4,-102.6,63.8,-87.7,65.9,-68.6,64.1,-57.4,63.8,-43.5,60,-27,52.4,-13.5,44.8,-7.9,37.2,-3.9,29.6,-0.9,22,1.3,14.4,2.7,6.8,3.4,-0.9,3.5,-8.5,2.8,-16.1,1.3,-23.7,-1,-31.3,-4.3,-38.9,-9.1],
+  [-70.6,-23.6,-75.9,-45.4,-74.7,-72,-64.9,-101.9,-53.1,-125,-44.3,-137.4,-22.3,-158.9,-11.3,-166,-6.6,-166.7,-5.9,-164.2,-11.8,-150.8,-10.9,-145.4,-8.1,-143.2,-4.9,-143.2,2.7,-148.7,13.9,-166.1,21.9,-188.8,24.5,-191.5,27.9,-186.2,29.9,-175,30,-165.1,20.3,-123.1,19.3,-103.8,20.5,-100.2,24.3,-96,27.6,-94.4,32.9,-95.5,40.2,-101.5,49.5,-115.6,53.2,-116.7,54.2,-103.5,63.9,-49.5,63.8,-31.6,54.2,-17.1,44.6,-11,35,-6.5,25.4,-3.1,15.8,-0.6,6.2,1.1,-3.4,2,-13,2.2,-22.6,1.6,-32.2,0.3,-41.8,-1.9,-51.4,-5.2,-61,-10.2],
+  [-63.9,-18.1,-66.9,-26.8,-67,-40.8,-68.7,-50,-66.1,-64.8,-66.1,-76.7,-74.9,-105,-71.4,-123.5,-64.8,-136.8,-55.8,-144.9,-53.2,-144.1,-45.4,-131.8,-42.1,-130.4,-37.3,-132.3,-33.6,-138.5,-27.9,-162.2,-19,-176.5,-10.3,-183.8,12.6,-192.8,14.9,-190,7.2,-171.5,4.2,-158.7,4.1,-138.8,6.3,-129.7,11.9,-120.1,16.3,-116.2,21.5,-114.2,25.3,-114.4,30.1,-117.2,37.5,-127.6,38.8,-128,41,-125.9,44.5,-111.4,57.9,-81,61.5,-68.5,63.9,-55.5,62.9,-27.9,53.8,-15.8,44.8,-10.6,35.7,-6.8,26.7,-3.8,17.6,-1.5,8.6,0.1,-0.5,1.1,-9.6,1.5,-18.6,1.3,-27.7,0.4,-36.7,-1.2,-45.8,-3.6,-54.8,-7.4],
+  [-68,-23.2,-80.2,-54.1,-82.9,-69,-82.9,-93,-78.3,-113,-73.8,-125.2,-68.8,-133,-65.9,-134.9,-63.3,-134.1,-65.7,-106.5,-63.6,-95.5,-57.7,-88.5,-54.1,-88.5,-51.2,-90.5,-49,-97.5,-48.8,-145.4,-44.9,-159.8,-41.8,-166.5,-31.7,-180.3,-21.2,-188.9,-9.8,-194.5,-7.1,-193.3,-6.8,-190.1,-12.4,-178.5,-15.9,-163.9,-15.6,-148.1,-11.7,-137.7,-4.5,-129.1,4.6,-127.2,12.9,-131.1,22.5,-142.7,25.1,-142.8,26.8,-137.9,28.3,-120.5,32.9,-104.4,55.7,-53.9,58.4,-39.2,55.4,-32.8,58.4,-24.7,49.4,-10.8,40.3,-5.3,31.3,-1.3,22.3,1.5,13.3,3.6,4.2,4.8,-4.8,5.2,-13.8,5,-22.9,4,-31.9,2.2,-40.9,-0.5,-49.9,-4.2,-59,-9.5],
+  [-72.7,-38,-73.1,-69.8,-74.9,-79.1,-77.1,-109.8,-76,-110.9,-69.3,-102.8,-63.5,-98.8,-60.3,-99.3,-58,-102,-56.9,-131.5,-53.3,-160,-50.1,-168.7,-41.9,-183.3,-35.4,-190.5,-31.6,-192.5,-29.1,-188.8,-27.2,-169.6,-21.1,-152.1,-16.1,-144.2,-5.8,-135.2,1,-132.4,10.7,-132.4,20.2,-138.3,28.9,-148.2,33,-146.7,37.2,-132.6,56.7,-82.6,61.8,-58.7,61.9,-34.9,59.5,-23.8,50.1,-10.8,40.6,-6.2,31.2,-3.3,21.7,-1.5,12.3,-0.6,2.8,-0.5,-6.6,-1.1,-16,-2.5,-25.5,-4.6,-34.9,-7.6,-44.4,-11.4,-53.8,-16.3,-63.3,-22.9],
+  [-62.7,-23.4,-63.9,-42.9,-61.1,-69.7,-61.1,-89.6,-66.6,-117,-63.6,-120.5,-52.3,-111.3,-47.2,-111,-44.9,-113.3,-45.3,-124.4,-50.9,-152.1,-50.9,-164,-45.1,-191.6,-41.8,-197.9,-39.1,-198.6,-36.8,-196.5,-33,-180.1,-27.8,-170.2,-18,-159.6,-5.7,-151.1,3.4,-149.1,13.1,-149.7,26.5,-155.9,33.2,-162.7,36.2,-163,37.3,-161.9,38.3,-144.4,41.3,-133.6,50.4,-111.4,59.3,-83,64,-49,63.9,-33,61,-22.2,52.2,-9,43.3,-3.8,34.5,-0.2,25.7,2.4,16.8,4.1,8,5.1,-0.8,5.4,-9.7,5,-18.5,3.8,-27.4,1.9,-36.2,-0.9,-45,-4.7,-53.9,-10],
+  [-57.5,-19.3,-65.4,-27.5,-66.9,-44,-64.6,-63,-57.3,-100,-56.5,-121.6,-52.3,-123.1,-45.9,-119.3,-38.6,-118.4,-34.2,-121.4,-33.1,-124.9,-33.3,-132.8,-41,-165.6,-38.8,-190.7,-34.5,-199.5,-32.5,-198.1,-30.9,-190.9,-27.3,-184.4,3.8,-162.9,25.9,-140.5,38,-136.1,44.8,-139,51.7,-145,53.2,-145.3,55.5,-143.3,56.5,-133.7,61.4,-121.7,71.6,-84,72.8,-46.5,71.7,-31.1,62.5,-18.3,53.2,-12.7,44,-8.6,34.8,-5.4,25.6,-2.9,16.3,-1.1,7.1,0.1,-2.1,0.6,-11.4,0.5,-20.6,-0.3,-29.8,-1.9,-39,-4.3,-48.3,-8.2],
+  [-63.9,-19.8,-62.5,-54.3,-57.7,-72.3,-42.8,-108.1,-40.1,-121,-39.4,-140.6,-35.3,-141.8,-28.7,-135,-23.7,-133.4,-16.2,-139,-13.3,-145.8,-13.3,-159.6,-16.3,-170.3,-22.4,-183.7,-20.5,-186.7,-3.1,-182,7.2,-177.8,27,-162.9,36.7,-146.9,41.6,-131,43.5,-117.8,46.9,-113.4,49.9,-113.2,52.8,-115.3,61.6,-130.8,64.4,-129.9,67.2,-125.3,75.9,-87,75.9,-55,70.7,-31.2,64.5,-21.8,55.3,-9.5,46.2,-4.5,37,-1,27.8,1.6,18.6,3.4,9.5,4.5,0.3,5,-8.9,4.8,-18,4,-27.2,2.4,-36.4,0.1,-45.6,-3.1,-54.7,-7.8],
+  [-46.4,-44.3,-52.5,-48.5,-59.2,-47,-61.1,-48.5,-60.1,-59.6,-54.7,-71.3,-50.4,-77,-49,-84.4,-41.8,-90.3,-38.5,-94.9,-34.5,-111.2,-29.9,-121.3,-25.3,-137.4,-21.9,-158,-19.6,-160.3,-17.1,-159.1,-16.8,-148.1,-13.3,-141.9,-10,-141.8,-5.1,-147.3,-1.8,-155.9,0.9,-168.8,-0.5,-189.8,3.5,-193.6,9.8,-191.1,17.4,-185.3,32.4,-169.5,40.7,-150.9,43.2,-141.9,48.3,-100.1,51.1,-93.2,55.7,-90.6,59,-91.4,61.8,-94,63.8,-99.2,62.8,-122.6,57.1,-148.2,57.7,-151.9,60.1,-154,63.1,-153,67,-149.1,78.9,-128,81.6,-121.1,85.9,-100.9,85.7,-67.1,83.3,-56.1,76.5,-36.9,65.1,-24.2,57.6,-18.5,50.2,-8.8,42.7,-6,35.3,-4.7,27.9,-4.2,20.5,-4.5,13,-5.4,5.6,-6.9,-1.8,-9.1,-9.3,-11.8,-16.7,-15.3,-24.1,-19.4,-31.5,-24.5,-39,-30.9],
+  [50.5,-18.6,47,-19.7,43.6,-18.9,-68.4,-24.3,-68.4,-45.2,-66.2,-58,-54.7,-89.3,-31.2,-129.3,-22.8,-132.8,-14,-130.1,-8.3,-130.7,-5,-132.3,1.9,-139.3,11.2,-159.4,15.8,-177.5,15.4,-186.8,18.4,-189.4,23,-187.6,27.1,-183.5,30.9,-177.1,35.2,-164.9,36,-121.2,38.2,-114.3,43,-112.4,48.3,-117.4,52.7,-133.5,53.1,-143.4,54.4,-146.3,58.8,-144.7,63.7,-132.8,65,-113.3,62.1,-92.5,62,-80.6,65.6,-64.1,68,-43.1,67.8,-33.2,64.7,-20.4,63.7,-8.7,62.7,-3.9,61.7,-0.6,60.6,1.9,59.6,3.6,58.6,4.7,57.6,5.1,56.6,4.9,55.6,4.1,54.6,2.6,53.5,0.4,52.5,-2.7,51.5,-7.1],
+  [-68.2,-23.1,-70.7,-36,-68.7,-61,-62.9,-80.6,-46.2,-107.1,-37.9,-114.5,-21.6,-139.8,-17.4,-149.3,-4.7,-142.8,2.8,-142.3,11.1,-146.4,21.7,-157.9,28.6,-175,29.6,-196.6,33.5,-200.8,38,-198.8,46.4,-188.3,50.8,-178.1,53.9,-165.4,51.7,-146.4,41.3,-118.7,40.5,-111.5,44.4,-107.9,49.5,-108.3,54.3,-111.4,63.2,-121.1,65.8,-121.9,66.6,-120.9,62.1,-89.2,66,-52.8,65.9,-31.7,56.3,-17.4,46.7,-11.3,37.2,-6.9,27.6,-3.5,18,-1,8.4,0.7,-1.2,1.7,-10.7,1.9,-20.3,1.5,-29.9,0.2,-39.5,-2,-49,-5.2,-58.6,-10]
+];
+// the yellow core of each drawing, same space
+const CORE_FRAMES = [
+  [-40.5,-46.8,-39.7,-60,-38,-65.3,-34.9,-70,-30.4,-73.5,-14.3,-74.1,-2.1,-86.8,3.5,-89.8,8.1,-87.7,11.2,-83.1,11.1,-69.9,13.3,-64.9,16.5,-63.3,27.8,-63.3,33.8,-59.5,35,-54,33.7,-46.6,28.4,-38.8,23.1,-35.7,17.8,-33.5,12.5,-32,7.2,-30.9,1.9,-30.3,-3.4,-30.1,-8.7,-30.3,-14,-31,-19.3,-32.1,-24.6,-33.6,-29.9,-35.8,-35.2,-39],
+  [-45.9,-43.2,-44.5,-58.5,-40.3,-72.8,-37.3,-77.5,-34.2,-79.6,-17.7,-79.1,-13.2,-82.8,-5.4,-93.5,1.6,-97.8,6.1,-95.7,10.6,-89.7,10.9,-79.9,9,-66.7,9.7,-63,12.1,-60.2,17.5,-59.4,35.7,-68.5,39.3,-68.5,43.7,-65.1,45.7,-59.9,45.9,-54,39.3,-47,32.8,-43.8,26.2,-41.3,19.7,-39.2,13.1,-37.6,6.6,-36.3,0,-35.4,-6.6,-34.8,-13.1,-34.5,-19.7,-34.6,-26.2,-35.1,-32.8,-36,-39.3,-37.7],
+  [30.3,-42.1,26.9,-42.2,-44.9,-49.9,-42.2,-68.7,-38.6,-73,-33.5,-74.8,-23.6,-69.8,-18.4,-70.1,-9.4,-85.9,-4.9,-87.9,-1.2,-87.6,3.3,-84.3,8,-66.3,11.4,-62,16.4,-60.6,29,-63.9,34.2,-62.3,39.3,-47.5,39,-42.2,38.4,-36.5,37.8,-34.2,37.1,-32.6,36.5,-31.5,35.9,-30.7,35.3,-30.2,34.7,-30,34,-30.2,33.4,-30.7,32.8,-31.4,32.2,-32.6,31.5,-34.1,30.9,-36.4],
+  [-46.8,-46.4,-45.7,-59.8,-42.3,-66.3,-37.7,-69.2,-32.3,-69.2,-24,-65.6,-20.8,-66.7,-17.8,-71.2,-14.8,-88,-10.1,-93.8,-6.9,-94.9,-1.6,-93.5,2,-89.1,7.3,-69.3,12.1,-64.2,15.2,-64.6,18,-67.1,26.8,-79.2,32.2,-79.5,35.2,-77.4,37.9,-72.6,40.8,-57.8,38.6,-40.9,32.5,-36.2,26.4,-34.5,20.3,-33.5,14.2,-32.8,8.1,-32.5,2,-32.5,-4.1,-32.8,-10.2,-33.3,-16.3,-34.1,-22.4,-35.2,-28.5,-36.6,-34.6,-38.4,-40.7,-40.9],
+  [-49.9,-45.5,-50.6,-52.9,-48.7,-58.1,-43.3,-62.6,-31.9,-62.1,-27.1,-64.4,-25.1,-69.5,-23.6,-88.9,-19.6,-95,-15.1,-96.6,-10.1,-94.3,-6.2,-90.4,3.1,-70.2,8.6,-62.6,13.7,-61.5,24.3,-69.5,29.3,-68,33,-63.9,37.7,-49.9,31.4,-42.3,25.2,-39.1,18.9,-36.7,12.7,-34.9,6.4,-33.6,0.2,-32.7,-6.1,-32.2,-12.4,-32.1,-18.6,-32.4,-24.9,-33.1,-31.1,-34.2,-37.4,-35.9,-43.6,-38.5],
+  [28,-42.1,-47.1,-43.4,-47.6,-52.9,-42.7,-58.2,-31.6,-60.5,-27.4,-64.1,-26.3,-67.5,-27.9,-88.7,-26.7,-98.1,-23,-106.5,-17.5,-109.7,-11,-107.6,-7.6,-103.3,-3.6,-94.9,3.2,-71.7,9.1,-64.7,12.5,-65,15.4,-67.5,21.2,-81.1,24.7,-85.5,29.6,-87.3,35.6,-83.2,39.7,-74.9,41.9,-63.9,41.7,-48,39.8,-40.8,39,-35.8,38.1,-33.9,37.3,-32.6,36.4,-31.6,35.6,-31,34.7,-30.7,33.9,-30.7,33.1,-30.9,32.2,-31.4,31.4,-32.2,30.5,-33.3,29.7,-34.8,28.8,-36.9],
+  [-45.1,-41.3,-46.2,-48.2,-44,-53.2,-40,-57,-27.2,-57.9,-21.9,-63.1,-20,-70.3,-18.6,-103.7,-13.4,-113.4,-10.4,-115.9,-5.6,-114.5,1.7,-105.6,5.7,-85.3,6.5,-71.6,10.2,-65.7,13.3,-65,17.2,-68.8,22.3,-88.7,25.4,-93.4,30.3,-95.8,36.9,-92.8,40.7,-86.4,43.8,-73.7,43.6,-50,37.3,-44,30.9,-41.3,24.6,-39.2,18.3,-37.5,11.9,-36.2,5.6,-35.1,-0.8,-34.3,-7.1,-33.9,-13.4,-33.7,-19.8,-33.8,-26.1,-34.2,-32.4,-35.1,-38.8,-36.6],
+  [26.1,-40,-41,-49.6,-39.6,-57,-36.9,-61.9,-31.1,-66.9,-18.5,-66.9,-14.1,-69.5,-12.1,-74.6,-10.7,-96.1,-8.8,-103.3,-4.1,-111.3,2.5,-115.8,7,-113.7,9.8,-109,11,-99.5,10.1,-77.9,11.4,-72.5,13.7,-69.7,17,-68.7,20,-70.3,28.1,-82.8,35.5,-88.8,40.8,-89.5,46.7,-84.9,50,-72.3,49.9,-60.4,47.2,-47.5,41.6,-40.2,40.5,-35.5,39.4,-33.6,38.3,-32.3,37.2,-31.3,36.1,-30.6,35,-30.2,33.8,-30.1,32.7,-30.2,31.6,-30.6,30.5,-31.2,29.4,-32.1,28.3,-33.4,27.2,-35.3],
+  [-34.8,-49.7,-32.4,-68.6,-30,-73.6,-26,-77.8,-22.8,-79.5,-19.3,-79.1,-9.5,-70.5,-5.9,-70.7,-3.3,-73.2,-1.1,-80.3,-1.9,-101.9,0.3,-114.9,5,-123,9.2,-126.3,12.1,-126.9,15.7,-126.2,20.2,-122.7,23.7,-114.2,23.7,-102.4,18.2,-80.7,18.2,-70.9,19.7,-67.5,22.5,-65,25.8,-64.9,37.5,-77.2,44.3,-79.9,48,-79.3,50.9,-76.9,53.9,-68.1,53.8,-58.2,51.7,-49.1,45.5,-40.1,39.3,-36.6,33.2,-34.1,27,-32.4,20.8,-31.2,14.6,-30.5,8.4,-30.3,2.3,-30.6,-3.9,-31.4,-10.1,-32.6,-16.3,-34.5,-22.4,-37,-28.6,-40.6],
+  [-39.9,-45,-35.6,-69.2,-27.7,-84,-21.8,-88.6,-16.6,-87.6,-13.4,-83.5,-10.9,-74.5,-8.3,-71.9,-5,-71.7,-1.1,-75.7,5,-90.9,15.4,-93.9,25.9,-99.6,28.8,-97.7,29.7,-94.3,25.1,-74.3,26.1,-60.8,31.6,-56.4,45.4,-60.4,50.3,-58.2,53,-53.7,48.4,-42.3,42.1,-36.7,35.8,-34.6,29.5,-33.2,23.2,-32.2,16.9,-31.6,10.6,-31.3,4.2,-31.3,-2.1,-31.7,-8.4,-32.4,-14.7,-33.4,-21,-34.7,-27.3,-36.5,-33.6,-39],
+  [-41,-43.3,-38.7,-62.4,-34,-74.4,-29.2,-79.9,-24,-81.9,-16.7,-80.6,-8.8,-75.5,-5.3,-75.8,-2.4,-78,7.8,-93.7,12.1,-97.7,16.3,-99.5,21.8,-95.6,24.7,-86.8,21.5,-56.8,26.6,-51.5,39.8,-51.6,44.2,-48.4,38.1,-41.8,32,-38.9,25.9,-36.8,19.9,-35.2,13.8,-34,7.7,-33.1,1.6,-32.6,-4.5,-32.4,-10.6,-32.5,-16.7,-33,-22.7,-33.9,-28.8,-35.3,-34.9,-37.4],
+  [-32,-40.9,-37.8,-58.5,-36.3,-67.7,-32,-73.9,-25.6,-77.7,-20.2,-78.9,-6.7,-78.4,7.6,-87,13,-88,18.5,-86.9,22,-82.7,23,-73.1,22,-61.5,23.7,-56.2,27.9,-53,38.2,-49,41.4,-44.8,41.3,-41.3,36.1,-36.1,30.8,-34.1,25.6,-32.6,20.4,-31.5,15.1,-30.8,9.9,-30.4,4.7,-30.2,-0.6,-30.3,-5.8,-30.7,-11.1,-31.4,-16.3,-32.4,-21.5,-33.8,-26.8,-35.8]
+];
+
+function smoothPath(pts, dy = 0) {
+  const P = new Path2D(), n = pts.length / 2, X = i => pts[((i + n) % n) * 2], Y = i => pts[((i + n) % n) * 2 + 1] + dy;
+  P.moveTo(X(0), Y(0));
+  for (let i = 0; i < n; i++) {
+    P.bezierCurveTo(X(i) + (X(i + 1) - X(i - 1)) / 6, Y(i) + (Y(i + 1) - Y(i - 1)) / 6,
+                    X(i + 1) - (X(i + 2) - X(i)) / 6, Y(i + 1) - (Y(i + 2) - Y(i)) / 6, X(i + 1), Y(i + 1));
+  }
+  P.closePath(); return P;
+}
+const BULB = { x: -2, y: -60, rx: 68, ry: 66, top: -125 };
+function settleBase(f) {
+  const out = f.slice();
+  for (let i = 0; i < f.length; i += 2) {
+    const x = f[i], y = f[i + 1];
+    const u = Math.min(1, Math.max(0, (y - BULB.top) / (BULB.y - BULB.top))), w = u * u * (3 - 2 * u);
+    if (!w) continue;
+    const dx = x - BULB.x, dy = y - BULB.y;
+    let tx, ty;
+    if (dy < 0) { tx = BULB.x + Math.sign(dx || 1) * BULB.rx * Math.sqrt(Math.max(0, 1 - (dy / BULB.ry) ** 2)); ty = y; }
+    else { const d = Math.hypot(dx / BULB.rx, dy / BULB.ry) || 1; tx = BULB.x + dx / d; ty = BULB.y + dy / d; }
+    out[i] = x + (tx - x) * w; out[i + 1] = y + (ty - y) * w;
+  }
+  return out;
+}
+const FLAME_PATHS = FLAME_FRAMES.map(f => smoothPath(settleBase(f)));
+const CORE_PATHS = CORE_FRAMES.map(f => smoothPath(f));
+const FLAME_TIPS = FLAME_FRAMES.map(f => { let k = 1; for (let i = 3; i < f.length; i += 2) if (f[i] < f[k]) k = i; return [f[k - 1], f[k]]; });
+const hash = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+function drop(g, x, y, s) {
+  g.moveTo(x, y - s * 1.7);
+  g.bezierCurveTo(x + s * 1.05, y - s * .5, x + s * .85, y + s, x, y + s);
+  g.bezierCurveTo(x - s * .85, y + s, x - s * 1.05, y - s * .5, x, y - s * 1.7);
+}
+
+const FLAME_X = FIRE_X, FLAME_Y = 698;
+const licks = [];
+let lastFi = -1;
+function drawFire(fi, flick, stoke) {
+  const k = fi % FLAME_PATHS.length;
+  const sx = 1 + .04 * stoke, sy = 1 + .14 * stoke;   // a stoked fire stands taller
+  const path = FLAME_PATHS[k], tip = FLAME_TIPS[k];
+  if (fi !== lastFi) {
+    lastFi = fi;
+    for (let i = licks.length - 1; i >= 0; i--) {
+      const l = licks[i]; l.y -= 15; l.x += l.dx; l.s *= .75;
+      if (++l.age > 4) licks.splice(i, 1);
+    }
+    if (hash(fi, 11) < .35 + .4 * stoke) licks.push({ x: FLAME_X + tip[0] * sx + (hash(fi, 13) * 2 - 1) * 5, y: FLAME_Y + tip[1] * sy - 16, s: 5 + hash(fi, 14) * 4, dx: (hash(fi, 15) * 2 - 1) * 3, age: 0 });
+  }
+  const g = fireLayer.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, fireLayer.width, fireLayer.height);
+  toDesign(g);
+  g.save(); g.translate(FLAME_X, FLAME_Y); g.scale(sx, sy);
+  const fg = g.createLinearGradient(0, 0, 0, -200);
+  fg.addColorStop(0, '#f2702e'); fg.addColorStop(.3, '#f98a36'); fg.addColorStop(.55, '#f5702b'); fg.addColorStop(1, '#df4a22');
+  g.fillStyle = fg; g.fill(path);
+  g.save(); g.clip(path);
+  g.fillStyle = '#fcd03a'; g.shadowColor = '#fcd03a'; g.shadowBlur = 10 * dpr * scale;
+  g.fill(CORE_PATHS[k]); g.restore();
+  g.globalCompositeOperation = 'source-atop';
+  const tint = g.createLinearGradient(0, BULB.y - 10, 0, BULB.y + BULB.ry);
+  tint.addColorStop(0, 'rgba(140,28,24,0)'); tint.addColorStop(1, 'rgba(140,28,24,.5)');
+  g.fillStyle = tint; g.fillRect(-120, BULB.y - 10, 240, 120);
+  g.globalCompositeOperation = 'destination-in';
+  const fade = g.createLinearGradient(0, BULB.y - 20, 0, BULB.y + BULB.ry);
+  fade.addColorStop(0, 'rgba(0,0,0,1)'); fade.addColorStop(.55, 'rgba(0,0,0,.72)'); fade.addColorStop(1, 'rgba(0,0,0,.5)');
+  g.fillStyle = fade; g.fillRect(-300, -400, 600, 500);
+  g.globalCompositeOperation = 'destination-out';
+  g.save(); g.beginPath(); g.rect(-120, BULB.y, 240, 120); g.clip();
+  g.globalAlpha = .55; g.translate(hash(fi, 42) * 256, hash(fi, 43) * 256);
+  g.fillStyle = speckPattern; g.fillRect(-400, -400, 800, 800); g.restore();
+  g.globalCompositeOperation = 'source-over';
+  g.restore();
+  g.fillStyle = '#e8562a'; g.beginPath(); licks.forEach(l => drop(g, l.x, l.y, l.s)); g.fill();
+  g.globalCompositeOperation = 'destination-out'; g.globalAlpha = .4;
+  g.save(); g.translate(hash(fi, 40) * 256, hash(fi, 41) * 256);
+  g.fillStyle = speckPattern; g.fillRect(VL - 300, VT - 300, VR - VL + 600, VB - VT + 600); g.restore();
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.save();
+  ctx.shadowColor = `rgba(245,110,40,${.45 * flick})`; ctx.shadowBlur = 26 * dpr * scale;
+  ctx.globalAlpha = .92;
+  ctx.drawImage(fireLayer, 0, 0);
+  ctx.restore();
+}
+
+const embers = [];
+let emberClock = 0;
+function drawEmbers(t, dt, stoke) {
+  toDesign(ctx);
+  emberClock += dt;
+  const every = .14 / Math.max(.25, 1 + 3 * stoke);
+  while (emberClock > every) {
+    emberClock -= every;
+    embers.push({ x: FIRE_X + R(-22, 22), y: 560 + R(-10, 20), vx: R(-12, 12), vy: -R(45, 95) * (1 + Math.max(0, stoke)), life: 0, max: R(1.2, 2.6), s: R(1.4, 2.8), ph: R(0, 6) });
+  }
+  for (let i = embers.length - 1; i >= 0; i--) {
+    const e = embers[i]; e.life += dt;
+    if (e.life > e.max) { embers.splice(i, 1); continue; }
+    e.x += (e.vx + Math.sin(t * 3 + e.ph) * 18) * dt; e.y += e.vy * dt;
+    const k = 1 - e.life / e.max, fl = .6 + .4 * Math.sin(t * 20 + e.ph);
+    ctx.fillStyle = `rgba(${200 + 40 * k | 0},${70 + 60 * k | 0},30,${k * fl})`;
+    ctx.fillRect(e.x, e.y, e.s, e.s * 1.4);
+  }
+}
+
+// ---------- the spirit: a face that lives in the fire ----------
+// Big round eyes sitting in the yellow core, and a mouth that only shows when he has something
+// to say: at rest, focused or asleep it's just the eyes. He blinks, looks around on his own,
+// follows the cursor when it's near, and wears an expression the page can set.
+// Every expression is a set of numbers the face eases toward, so moods blend into each other.
+const MOODS = {
+  //          lid: eyes shut (0 or 1)
+  //          eye: eye size   pupil: pupil size   mouth: how visible (0 = no mouth)   smile: 0 flat .. 1 smile   w: mouth width
+  idle:      { lid: 0, eye: 1,    pupil: 1,    mouth: 0, smile: .5,  w: .7 },
+  curious:   { lid: 0, eye: 1.04, pupil: 1,    mouth: 1, smile: 0,   w: .5 },
+  focused:   { lid: 0, eye: 1,    pupil: .92,  mouth: 0, smile: 0,   w: .5 },
+  happy:     { lid: 0, eye: 1.04, pupil: 1.15, mouth: 1, smile: 1,   w: .9 },
+  delighted: { lid: 0, eye: 1.08, pupil: 1.2,  mouth: 1, smile: 1,   w: 1.15 },
+  sleepy:    { lid: 1, eye: 1,    pupil: 1,    mouth: 0, smile: 0,   w: .45 },
+};
+const face = { ...MOODS.idle, gx: 0, gy: 0, blink: 0 };
+let mood = 'idle', moodUntil = 0, moodNext = null;
+let gazeTarget = [0, 0], nextGlance = 1.5, nextBlink = 2.5, blinkAt = -1;
+let pointer = null, pointerAt = -99, lookAtPt = null, lookUntil = 0;
+let lastInput = 0, clock = 0;
+const zs = [];
+const FACE_DY = -84, EYE_DX = 23;
+
+function setMood(name, secs = 0, then = 'idle') {
+  mood = name; moodUntil = secs ? clock + secs : 0; moodNext = then;
+}
+// where the face is on the page, for aiming the eyes at things
+function faceClient() {
+  const r = canvas.getBoundingClientRect();
+  return [r.left + (FIRE_X * scale + ox), r.top + ((FLAME_Y + FACE_DY) * scale + oy)];
+}
+function aimAt(x, y) {
+  const [fx, fy] = faceClient(), dx = x - fx, dy = y - fy, d = Math.hypot(dx, dy) || 1, m = Math.min(1, d / 160);
+  return [dx / d * m, dy / d * m * .8];
+}
+
+function updateFace(dt, stokeTarget) {
+  clock += dt;
+  if (moodUntil && clock > moodUntil) { mood = moodNext || 'idle'; moodUntil = 0; }
+  // nodding off: nothing has happened for a while
+  if (mood === 'idle' && clock - lastInput > 22) mood = 'sleepy';
+  const target = MOODS[mood], ease = Math.min(1, dt * 9);
+  for (const k in target) face[k] += (target[k] - face[k]) * ease;
+
+  // gaze: something to look at > a nearby cursor > glancing around on his own
+  if (lookAtPt && clock < lookUntil) gazeTarget = aimAt(...lookAtPt);
+  else if (pointer && clock - pointerAt < 2.5) gazeTarget = aimAt(...pointer);
+  else if (clock > nextGlance) {
+    const spots = [[0, 0], [0, 0], [-.9, .1], [.9, .1], [-.7, -.6], [.6, -.5], [-.6, .8], [.2, .9]];
+    gazeTarget = spots[Math.floor(Math.random() * spots.length)];
+    nextGlance = clock + 1.2 + Math.random() * 2.8;
+  }
+  if (mood === 'sleepy') gazeTarget = [0, .3];
+  const sac = Math.min(1, dt * 16);   // eyes snap, they don't drift
+  face.gx += (gazeTarget[0] - face.gx) * sac; face.gy += (gazeTarget[1] - face.gy) * sac;
+
+  // blinking, now and then twice
+  if (clock > nextBlink) { blinkAt = clock; nextBlink = clock + (Math.random() < .2 ? .32 : 2.2 + Math.random() * 4); }
+  const bt = clock - blinkAt;
+  face.blink = bt >= 0 && bt < .16 ? Math.sin(bt / .16 * Math.PI) : 0;
+
+  if (mood === 'sleepy' && Math.random() < dt * .7) zs.push({ x: 0, y: 0, a: 0 });
+}
+
+// The face is painted like it's glowing through the flame, not stuck on it: warm cream eyes,
+// a thin brown ring, a brown pupil, drawn to their own layer and laid in semi-transparent,
+// with the flame's print grain knocked through so it shares the fire's texture.
+const INK_LINE = 'rgba(92,34,12,.9)', SCLERA = '#fbe6be', PUPIL = '#3a160a';
+// Always a circle. The only time it isn't is when it's shut (a blink, or asleep), and then it's
+// a clean closed curve, swapped in whole like a drawn frame rather than a lid sliding down.
+function drawEye(g, ex, ey) {
+  const r = 12.5 * face.eye;
+  g.lineWidth = 1.7; g.strokeStyle = INK_LINE; g.lineCap = 'round';
+  if (Math.max(face.lid, face.blink) > .5) {
+    g.beginPath(); g.moveTo(ex - r * .85, ey + 1); g.quadraticCurveTo(ex, ey + r * .55, ex + r * .85, ey + 1);
+    g.lineWidth = 2.1; g.stroke(); return;
+  }
+  g.beginPath(); g.arc(ex, ey, r, 0, 7); g.fillStyle = SCLERA; g.fill();
+  g.save(); g.clip();
+  const pr = 5.2 * face.pupil, room = r - pr - 1.5;
+  g.fillStyle = PUPIL;
+  g.beginPath(); g.arc(ex + face.gx * room, ey + face.gy * room * .9, pr, 0, 7); g.fill();
+  g.restore();
+  g.beginPath(); g.arc(ex, ey, r, 0, 7); g.stroke();
+}
+
+function drawMouth(g, mx, my) {
+  if (face.mouth < .02) return;
+  const w = 8.5 * face.w, s = face.smile;
+  g.save(); g.globalAlpha = face.mouth;
+  g.strokeStyle = INK_LINE; g.lineWidth = 1.9; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(mx - w, my); g.quadraticCurveTo(mx, my + s * 7, mx + w, my); g.stroke();
+  g.restore();
+}
+
+const FACE_ALPHA = .72;
+function drawFace(fi, stoke) {
+  const g = faceLayer.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, faceLayer.width, faceLayer.height);
+  toDesign(g);
+  const sy = 1 + .14 * stoke;
+  // the face rides the flame: a slow sway plus a small step with each drawing
+  const jx = (hash(fi, 51) - .5) * 1.4, jy = (hash(fi, 52) - .5) * 1.2;
+  const cx = FLAME_X - 2 + Math.sin(clock * 1.3) * 1.8 + jx + face.gx * 2.5, cy = FLAME_Y + FACE_DY * sy + jy + face.gy * 2;
+  drawEye(g, cx - EYE_DX, cy - 4);
+  drawEye(g, cx + EYE_DX, cy - 4);
+  drawMouth(g, cx + face.gx * 1.5, cy + 15);
+  // the flame's grain, shifted each drawing, so the face boils with it
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'destination-out'; g.globalAlpha = .3;
+  g.save(); g.translate(hash(fi, 60) * 256, hash(fi, 61) * 256);
+  g.fillStyle = speckPattern; g.fillRect(-256, -256, faceLayer.width + 512, faceLayer.height + 512); g.restore();
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.save(); ctx.globalAlpha = FACE_ALPHA; ctx.drawImage(faceLayer, 0, 0); ctx.restore();
+
+  // z's drifting up while he sleeps
+  toDesign(ctx);
+  ctx.save();
+  ctx.fillStyle = '#2a1710'; ctx.font = 'italic 600 13px "Source Serif 4", Georgia, serif';
+  for (let i = zs.length - 1; i >= 0; i--) {
+    const z = zs[i]; z.a += .016; if (z.a > 1 || mood !== 'sleepy') { zs.splice(i, 1); continue; }
+    ctx.globalAlpha = Math.sin(z.a * Math.PI) * .7;
+    ctx.save(); ctx.translate(cx + 34 + z.a * 18 + Math.sin(z.a * 6) * 4, cy - 40 - z.a * 60); ctx.scale(.7 + z.a * .6, .7 + z.a * .6); ctx.fillText('z', 0, 0); ctx.restore();
+  }
+  ctx.restore();
+}
+
+// The traced drawings originally played at 12 a second; a touch slower reads calmer on the page.
+const FLAME_FPS = 9;
+let stokeLevel = 0, stokeTarget = 0, baseline = 0;
+let last = performance.now(), start = last;
+function render(now) {
+  const t = (now - start) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
+  baseline += ((mood === 'sleepy' ? -.45 : 0) - baseline) * Math.min(1, dt * 1.5);   // asleep, the fire burns low
+  stokeTarget *= Math.exp(-dt * 1.2);
+  stokeLevel += (stokeTarget + baseline - stokeLevel) * Math.min(1, dt * 6);
+  updateFace(dt);
+  const tf = Math.floor(t * FLAME_FPS) / FLAME_FPS;
+  const flick = 1 + wob(tf * 2.2, 9) * .18 + .3 * stokeLevel;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // firelight: a warm stain on the paper, not an additive glow
+  toDesign(ctx);
+  const gl = ctx.createRadialGradient(FIRE_X, 640, 10, FIRE_X, 640, 260 * flick);
+  gl.addColorStop(0, `rgba(244,130,60,${.2 * flick * theme.glow})`); gl.addColorStop(.4, `rgba(236,120,60,${.07 * flick * theme.glow})`); gl.addColorStop(1, 'rgba(236,120,60,0)');
+  ctx.fillStyle = gl; ctx.fillRect(VL, VT, VR - VL, VB - VT);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(staticLayer, 0, 0);
+
+  const fi = Math.floor(t * FLAME_FPS);
+  drawFire(fi, flick, stokeLevel);
+  drawFace(fi, stokeLevel);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(frontLogLayer, 0, 0);
+  drawEmbers(t, dt, stokeLevel);
+}
+
+// shell: sizes to its box, pauses when off screen or in a hidden tab
+let raf = 0, ready = false, visible = true;
+function frame(now) { raf = 0; if (!ready) ready = resize(); if (ready) render(now); schedule(); }
+function schedule() { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame); }
+const ro = new ResizeObserver(() => { ready = resize(); });
+ro.observe(canvas);
+const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; schedule(); });
+io.observe(canvas);
+const onVis = () => { last = performance.now(); schedule(); };
+document.addEventListener('visibilitychange', onVis);
+// any sign of life: note it, and if he was asleep, he wakes up and looks around
+const wake = () => {
+  lastInput = clock;
+  if (mood === 'sleepy') { setMood('curious', 1); stokeTarget = Math.min(1, stokeTarget + .5); }
+};
+const onMove = e => { pointer = [e.clientX, e.clientY]; pointerAt = clock; wake(); };
+addEventListener('pointermove', onMove, { passive: true });
+addEventListener('keydown', wake);
+addEventListener('scroll', wake, { passive: true });
+schedule();
+return {
+  stoke(amount) { stokeTarget = Math.min(1, stokeTarget + amount); },
+  // name a mood, optionally for a while (then back to `then`)
+  mood(name, secs, then) { wake(); setMood(name, secs, then); },
+  // look at a point on the page for a while
+  look(x, y, secs = 1.2) { lookAtPt = [x, y]; lookUntil = clock + secs; },
+  // a quick double blink
+  blink() { blinkAt = clock; nextBlink = clock + .3; },
+  // is a page point on the fire? (for petting / poking him)
+  hit(x, y) { const [fx, fy] = faceClient(); return Math.hypot(x - fx, (y - fy) * .8) < 70 * scale; },
+  get mood_() { return mood; },
+  stop() { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); removeEventListener('pointermove', onMove); removeEventListener('keydown', wake); removeEventListener('scroll', wake); },
+};
+};
+
+// ---------- wiring: what he notices ----------
+const fire = Campfire(document.getElementById('fire'));
+const q = document.getElementById('q');
+const center = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+// where the caret roughly is, so his eyes follow your typing
+const meter = document.createElement('canvas').getContext('2d');
+const caret = () => {
+  const r = q.getBoundingClientRect(), cs = getComputedStyle(q);
+  meter.font = `${cs.fontSize} ${cs.fontFamily}`;
+  const w = meter.measureText(q.value.slice(0, q.selectionStart ?? q.value.length).split('\n').pop()).width;
+  return [r.left + 14 + Math.min(w, r.width - 28), r.top + r.height / 2];
+};
+let typingTimer = 0;
+q.addEventListener('focus', () => { fire.stoke(.25); fire.mood('curious', 1.2, 'focused'); fire.look(...caret(), 1.4); });
+q.addEventListener('blur', () => fire.mood('idle'));
+q.addEventListener('input', () => {
+  fire.stoke(.08); fire.look(...caret(), 1.6);
+  fire.mood('focused');
+  clearTimeout(typingTimer);   // you stopped typing: he perks up at what you wrote
+  typingTimer = setTimeout(() => q.value.trim() && fire.mood('curious', 1.4, document.activeElement === q ? 'focused' : 'idle'), 900);
+});
+document.getElementById('start').addEventListener('click', () => { q.focus(); q.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+document.querySelectorAll('.examples button').forEach(b => {
+  b.addEventListener('pointerenter', () => { fire.look(...center(b), 1); fire.mood('curious', 1); });
+  b.addEventListener('click', () => { q.value = b.textContent; fire.stoke(.6); fire.mood('happy', 1.6); });
+});
+// search: fed a query, he lights up; fed nothing, he peers at the empty box
+document.querySelector('.search .go').addEventListener('click', () => {
+  if (!q.value.trim()) { fire.look(...center(q), 1.4); fire.mood('curious', 1.4); return; }
+  fire.stoke(1); fire.mood('delighted', 1.8);
+});
+q.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.querySelector('.search .go').click(); } });
+// the fire itself: hover warms him up, a poke makes him blink
+const hero = document.querySelector('.hero-fire');
+let over = false;
+hero.addEventListener('pointermove', e => {
+  const on = fire.hit(e.clientX, e.clientY);
+  hero.style.cursor = on ? 'pointer' : '';
+  if (on && !over && fire.mood_ === 'idle') fire.mood('happy', 1.2);
+  over = on;
+});
+hero.addEventListener('click', e => {
+  if (!fire.hit(e.clientX, e.clientY)) return;
+  fire.stoke(.5);
+  fire.blink();
+});
+window.fire = fire;
+</script>
+</body>
+</html>

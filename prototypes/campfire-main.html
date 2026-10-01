@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campfire Loop</title>
+<style>
+:root { --bg: #150f1d; color-scheme: dark; }
+html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="Animated campfire on open ground with rising smoke"></canvas>
+<script>
+(() => {
+const W = 1000, H = 750;            // design space
+const FIRE_X = 500, FIRE_Y = 655;   // flame base
+// ---------- palette ----------
+const theme = {
+  bg: '#150f1d',
+  ground: ['#6a8197', '#4c6176', '#2a3346', '#150f1d'],
+  smoke: [[66, 80, 112], [228, 235, 248]], glow: 1, grain: .09,
+};
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// seeded rng so the static scene is stable across resizes
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+const R = (a, b) => a + rnd() * (b - a);
+const wob = (t, s) => Math.sin(t * 1.7 + s) * .5 + Math.sin(t * 3.1 + s * 2.3) * .3 + Math.sin(t * 7.3 + s * .7) * .2;
+
+let VT, VB, VL, VR, dpr, scale, ox, oy, staticLayer, smokeLayer, smokeBase, fireLayer, frontLogLayer, speckPattern, streakPattern, smokeGrain, grains = [];
+
+function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function toDesign(g) { g.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy); }
+
+// ---------- static scene ----------
+function buildStatic() {
+  seed = 7;
+  const g = staticLayer.getContext('2d');
+  toDesign(g);
+  g.fillStyle = theme.bg; g.fillRect(VL - 10, VT - 10, VR - VL + 20, VB - VT + 20);
+  // ground: a clearing lit from the fire, fading into the dark at the edges
+  const gg = g.createRadialGradient(FIRE_X, 650, 20, FIRE_X, 690, 520);
+  [0, .4, .75, 1].forEach((o, i) => gg.addColorStop(o, theme.ground[i]));
+  g.fillStyle = gg; g.beginPath();
+  g.moveTo(VL - 10, VB + 10); g.lineTo(VL - 10, 660);
+  g.bezierCurveTo(150, 610, 330, 588, 500, 588); g.bezierCurveTo(670, 588, 850, 610, VR + 10, 660);
+  g.lineTo(VR + 10, VB + 10); g.closePath(); g.fill();
+
+  drawBackLogs(g);
+
+  sprinkle(g);
+}
+
+// texture: light + dark speckle clipped to what's painted
+function sprinkle(g) {
+  g.globalCompositeOperation = 'source-atop';
+  for (let i = 0, n = 14000 * (VR - VL) * (VB - VT) / (W * H); i < n; i++) {
+    g.fillStyle = `rgba(215,225,250,${R(.05, .22)})`;
+    const s = R(.5, 1.6); g.fillRect(R(VL, VR), R(VT, VB), s, s);
+  }
+  for (let i = 0, n = 9000 * (VR - VL) * (VB - VT) / (W * H); i < n; i++) {
+    g.fillStyle = `rgba(12,8,22,${R(.15, .4)})`;
+    const s = R(.6, 1.8); g.fillRect(R(VL, VR), R(VT, VB), s, s);
+  }
+  g.globalCompositeOperation = 'source-over';
+}
+
+// grainy holes punched into the smoke
+function buildSpeck() {
+  const c = mkCanvas(256, 256), g = c.getContext('2d');
+  for (let i = 0; i < 4200; i++) { g.fillStyle = `rgba(0,0,0,${R(.3, 1)})`; const s = R(.6, 1.8); g.fillRect(R(0, 256), R(0, 256), s, s); }
+  return c;
+}
+
+// a few frames of full-screen film grain, cycled at a low frame rate
+function buildGrain() {
+  grains = [];
+  const w = Math.ceil(canvas.width / 2), h = Math.ceil(canvas.height / 2);
+  for (let k = 0; k < 4; k++) {
+    const c = mkCanvas(w, h), g = c.getContext('2d'), img = g.createImageData(w, h), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255; }
+    g.putImageData(img, 0, 0); grains.push(c);
+  }
+}
+
+function resize() {
+  if (!innerWidth || !innerHeight) return;   // hidden/zero-size window: wait for a real size
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+  scale = Math.min(innerWidth / W, innerHeight / H);
+  ox = (innerWidth - W * scale) / 2; oy = (innerHeight - H * scale) / 2;
+  VT = -oy / scale; VB = H + oy / scale; VL = -ox / scale; VR = W + ox / scale;
+  staticLayer = mkCanvas(canvas.width, canvas.height);
+  smokeLayer = mkCanvas(canvas.width, canvas.height);
+  smokeBase = mkCanvas(Math.ceil(canvas.width / 2), Math.ceil(canvas.height / 2));
+  fireLayer = mkCanvas(canvas.width, canvas.height);
+  frontLogLayer = mkCanvas(canvas.width, canvas.height);
+  { const g = frontLogLayer.getContext('2d'); toDesign(g); drawFrontLogs(g); sprinkle(g); }
+  buildStatic(); buildGrain();
+  speckPattern = smokeLayer.getContext('2d').createPattern(buildSpeck(), 'repeat');
+  streakPattern = smokeLayer.getContext('2d').createPattern(buildStreaks(), 'repeat');
+  smokeGrain = buildSmokeGrain(smokeLayer.getContext('2d'));
+}
+
+// ---------- animated parts ----------
+// Logs: a teepee of two dark logs behind the flame, a long log across the front with a
+// pale cut end, and a lighter one underneath on the left. Light wavy grain runs along each.
+function log(g, x1, y1, x2, y2, th, top, bot, opts = {}) {
+  const L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1), r = th / 2;
+  g.save(); g.translate(x1, y1); g.rotate(a);
+  const lg = g.createLinearGradient(0, -r, 0, r);
+  lg.addColorStop(0, top); lg.addColorStop(1, bot);
+  g.fillStyle = lg; g.beginPath(); g.roundRect(0, -r, L, th, r); g.fill();
+  g.strokeStyle = opts.grain || 'rgba(132,142,178,.6)'; g.lineWidth = 1.8; g.lineCap = 'round';
+  for (const [v, s0, s1] of opts.lines || []) {   // v: offset across the log (-1..1), s0..s1: span along it (0..1)
+    g.beginPath();
+    for (let k = 0; k <= 16; k++) {
+      const s = s0 + (s1 - s0) * k / 16, x = s * L, y = v * r * .7 + Math.sin(s * 9 + v * 5) * 2.2;
+      k ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+  }
+  if (opts.cap) {   // cut end: pale disc with a growth ring
+    g.fillStyle = '#5a6884'; g.beginPath(); g.ellipse(L - r * .55, 0, r * .62, r * .98, 0, 0, 7); g.fill();
+    g.strokeStyle = '#2b2f47'; g.lineWidth = 2.4; g.beginPath(); g.ellipse(L - r * .55, 1, r * .3, r * .5, 0, 0, 7); g.stroke();
+  }
+  g.restore();
+}
+
+// the teepee behind the flame (part of the static background)
+function drawBackLogs(g) {
+  log(g, 414, 662, 500, 684, 30, '#33263b', '#1f1729', { lines: [[-.2, .2, .8]] });
+  log(g, 498, 690, 596, 650, 34, '#33263b', '#1f1729', { lines: [[-.3, .35, .85], [.25, .5, .9]] });
+}
+// the logs in front: drawn over the flame, so its base sits down inside the pile
+function drawFrontLogs(g) {
+  log(g, 392, 712, 520, 702, 36, '#4f4860', '#3c364c', { lines: [[.1, .12, .6]], grain: 'rgba(150,158,190,.45)' });
+  log(g, 398, 684, 612, 706, 40, '#3b2937', '#1a1323', { cap: true, lines: [[-.35, .12, .45], [-.1, .5, .85], [.4, .3, .7]] });
+}
+
+// Smoke: a wide, soft column built from stacked passes (dim haze outside, a bright core
+// running up its left side), streaked along the flow, dissolved into grain at the edges,
+// and faded in where it leaves the fire.
+// [width scale, shift of centre (fraction of half-width), colour]: many thin steps from a dim
+// wide haze to a bright narrow core, so the layers blend instead of banding
+let SMOKE_PASSES = [];
+function buildSmokePasses() {
+  const [lo, hi] = theme.smoke;
+  SMOKE_PASSES = Array.from({ length: 12 }, (_, i) => {
+    const k = i / 11, mix = j => Math.round(lo[j] + (hi[j] - lo[j]) * k);
+    return [1.15 - k * .9, -.32 * k, `rgba(${mix(0)},${mix(1)},${mix(2)},${(.2 + .08 * (1 - k)).toFixed(2)})`];
+  });
+}
+function drawSmoke(t) {
+  // the layered body is drawn at half resolution, then blurred up so the layers melt together
+  const b = smokeBase.getContext('2d');
+  b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, smokeBase.width, smokeBase.height);
+  b.setTransform(dpr * scale / 2, 0, 0, dpr * scale / 2, dpr * ox / 2, dpr * oy / 2);
+  const y0 = 610, top = VT - 80, N = Math.ceil((y0 - top) / 9);
+  const cxAt = u => FIRE_X - 6 + u * .015
+    + (3 + u * .05) * Math.sin(u * .009 - t * 1.3)
+    + (2 + u * .02) * Math.sin(u * .021 - t * 2.1 + 1.3);
+  const spine = [];
+  for (let i = 0; i <= N; i++) {
+    const u = (y0 - top) * i / N, x = cxAt(u), dx = (cxAt(u + 2) - cxAt(u - 2)) / 4, nl = Math.hypot(1, dx);
+    const half = Math.min(118, 40 + u * .11) * (1 + .08 * Math.sin(u * .017 - t * 1.8));
+    spine.push({ x, y: y0 - u, nx: 1 / nl, ny: dx / nl, half });
+  }
+  for (const [ws, shift, col] of SMOKE_PASSES) {
+    // left edge going up, right edge coming back down; shift moves the pass off-centre
+    const g = b, edge = (p, side) => { const h = p.half * ws * side + p.half * shift; return [p.x + h * p.nx, p.y + h * p.ny]; };
+    g.beginPath();
+    spine.forEach((p, i) => i ? g.lineTo(...edge(p, -1)) : g.moveTo(...edge(p, -1)));
+    for (let i = spine.length - 1; i >= 0; i--) g.lineTo(...edge(spine[i], 1));
+    g.closePath(); g.fillStyle = col; g.fill();
+  }
+  const g = smokeLayer.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, smokeLayer.width, smokeLayer.height);
+  g.filter = `blur(${(7 * dpr * scale).toFixed(1)}px)`;
+  g.drawImage(smokeBase, 0, 0, smokeLayer.width, smokeLayer.height);
+  g.filter = 'none';
+  toDesign(g);
+  const drift = t * 38 % 256;
+  // streaks running with the flow
+  g.globalCompositeOperation = 'source-atop';
+  g.save(); g.globalAlpha = .65; g.translate(0, -drift); g.fillStyle = streakPattern; g.fillRect(VL - 10, VT - 300, VR - VL + 20, VB - VT + 600); g.restore();
+  // fade in above the fire
+  g.globalCompositeOperation = 'destination-in';
+  const fade = g.createLinearGradient(0, y0, 0, y0 - 230);
+  fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(.45, 'rgba(0,0,0,.45)'); fade.addColorStop(1, 'rgba(0,0,0,1)');
+  g.fillStyle = fade; g.fillRect(VL - 10, VT - 100, VR - VL + 20, VB - VT + 200);
+  // fine grain at device-pixel size, drifting upward with the smoke: dark specks erase,
+  // light specks sparkle
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const dd = drift * dpr * scale % 256;
+  g.save(); g.translate(0, -dd);
+  g.globalCompositeOperation = 'destination-out'; g.fillStyle = smokeGrain.dark; g.fillRect(0, 0, smokeLayer.width, smokeLayer.height + 256);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = smokeGrain.light; g.fillRect(0, 0, smokeLayer.width, smokeLayer.height + 256);
+  g.restore();
+  g.globalCompositeOperation = 'source-over';
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(smokeLayer, 0, 0);
+}
+
+// per-pixel noise tiles for the smoke: mostly faint, a few strong, so it reads as fine grain
+function buildSmokeGrain(g) {
+  const tile = (fn) => {
+    const c = mkCanvas(256, 256), x = c.getContext('2d'), img = x.createImageData(256, 256), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { const [v, a] = fn(); d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = a; }
+    x.putImageData(img, 0, 0); return g.createPattern(c, 'repeat');
+  };
+  return {
+    dark: tile(() => [0, Math.random() ** 3 * 200]),
+    light: tile(() => [240, Math.random() < .06 ? 60 + Math.random() * 110 : 0]),
+  };
+}
+
+// short vertical light and dark strokes, tiled, for the smoke's streaky texture
+function buildStreaks() {
+  const c = mkCanvas(256, 256), g = c.getContext('2d');
+  for (let i = 0; i < 900; i++) {
+    const light = rnd() < .55;
+    g.strokeStyle = light ? `rgba(236,242,255,${R(.12, .35)})` : `rgba(14,12,30,${R(.12, .35)})`;
+    g.lineWidth = R(.6, 1.6);
+    const x = R(0, 256), y = R(0, 256), len = R(6, 34);
+    for (const oy of [0, -256, 256]) { g.beginPath(); g.moveTo(x, y + oy); g.lineTo(x + R(-1.5, 1.5), y + oy + len); g.stroke(); }
+  }
+  return c;
+}
+
+// ---------- fire: traced keyframes ----------
+// 12 drawings traced from the original animation (one per held frame of its 1-second loop),
+// as flat [x,y,x,y,...] outlines. Local space: base centre at (0,0), up is -y, ~200 tall.
+// The bottom of each trace was hidden by logs in the source, so it's closed with a rounded bulb.
+const FLAME_FRAMES = [
+  [-61.7,-18.1,-67,-43.9,-66.8,-59.8,-64.4,-72.8,-53.8,-104.4,-43.9,-122.3,-27.3,-145.2,-22.5,-146,-15.2,-139.6,-9.9,-138.1,-2.7,-140,6.2,-146.6,18.7,-163,26.7,-179.7,31,-193.9,34.2,-197.2,39.9,-193,50.3,-179.3,53.8,-164.8,53.3,-147.2,48.7,-131.1,39.4,-110.9,38,-99.5,38.4,-95.7,42,-91.3,45.5,-90.1,56.9,-90.6,59.9,-86.8,64,-36.5,62.6,-29,53.7,-16.9,44.8,-11.6,36,-7.6,27.1,-4.6,18.2,-2.2,9.3,-0.5,0.4,0.6,-8.4,1,-17.3,0.9,-26.2,0.1,-35.1,-1.4,-43.9,-3.8,-52.8,-7.5],
+  [-46.5,-21.9,-49.4,-21.2,-67.9,-18.9,-72.2,-31.1,-74.9,-46,-74.9,-59.9,-67.7,-92.9,-55.9,-120,-43.7,-139,-24,-160.3,-20.4,-158.4,-20.1,-151.3,-16.7,-147.1,-11.5,-146.9,-4.9,-150.3,9.8,-166.1,18.3,-178.6,25.8,-193.5,29.4,-196.6,33.7,-194.6,36.2,-189.7,39.7,-177.2,40.9,-165.7,39.8,-146.2,32.3,-115.3,32.6,-107.7,36.9,-101.9,43.6,-99.1,50.7,-101.2,56.7,-106,59.7,-105.7,61.4,-102.6,63.8,-87.7,65.9,-68.6,64.1,-57.4,63.8,-43.5,60,-27,52.4,-13.5,44.8,-7.9,37.2,-3.9,29.6,-0.9,22,1.3,14.4,2.7,6.8,3.4,-0.9,3.5,-8.5,2.8,-16.1,1.3,-23.7,-1,-31.3,-4.3,-38.9,-9.1],
+  [-70.6,-23.6,-75.9,-45.4,-74.7,-72,-64.9,-101.9,-53.1,-125,-44.3,-137.4,-22.3,-158.9,-11.3,-166,-6.6,-166.7,-5.9,-164.2,-11.8,-150.8,-10.9,-145.4,-8.1,-143.2,-4.9,-143.2,2.7,-148.7,13.9,-166.1,21.9,-188.8,24.5,-191.5,27.9,-186.2,29.9,-175,30,-165.1,20.3,-123.1,19.3,-103.8,20.5,-100.2,24.3,-96,27.6,-94.4,32.9,-95.5,40.2,-101.5,49.5,-115.6,53.2,-116.7,54.2,-103.5,63.9,-49.5,63.8,-31.6,54.2,-17.1,44.6,-11,35,-6.5,25.4,-3.1,15.8,-0.6,6.2,1.1,-3.4,2,-13,2.2,-22.6,1.6,-32.2,0.3,-41.8,-1.9,-51.4,-5.2,-61,-10.2],
+  [-63.9,-18.1,-66.9,-26.8,-67,-40.8,-68.7,-50,-66.1,-64.8,-66.1,-76.7,-74.9,-105,-71.4,-123.5,-64.8,-136.8,-55.8,-144.9,-53.2,-144.1,-45.4,-131.8,-42.1,-130.4,-37.3,-132.3,-33.6,-138.5,-27.9,-162.2,-19,-176.5,-10.3,-183.8,12.6,-192.8,14.9,-190,7.2,-171.5,4.2,-158.7,4.1,-138.8,6.3,-129.7,11.9,-120.1,16.3,-116.2,21.5,-114.2,25.3,-114.4,30.1,-117.2,37.5,-127.6,38.8,-128,41,-125.9,44.5,-111.4,57.9,-81,61.5,-68.5,63.9,-55.5,62.9,-27.9,53.8,-15.8,44.8,-10.6,35.7,-6.8,26.7,-3.8,17.6,-1.5,8.6,0.1,-0.5,1.1,-9.6,1.5,-18.6,1.3,-27.7,0.4,-36.7,-1.2,-45.8,-3.6,-54.8,-7.4],
+  [-68,-23.2,-80.2,-54.1,-82.9,-69,-82.9,-93,-78.3,-113,-73.8,-125.2,-68.8,-133,-65.9,-134.9,-63.3,-134.1,-65.7,-106.5,-63.6,-95.5,-57.7,-88.5,-54.1,-88.5,-51.2,-90.5,-49,-97.5,-48.8,-145.4,-44.9,-159.8,-41.8,-166.5,-31.7,-180.3,-21.2,-188.9,-9.8,-194.5,-7.1,-193.3,-6.8,-190.1,-12.4,-178.5,-15.9,-163.9,-15.6,-148.1,-11.7,-137.7,-4.5,-129.1,4.6,-127.2,12.9,-131.1,22.5,-142.7,25.1,-142.8,26.8,-137.9,28.3,-120.5,32.9,-104.4,55.7,-53.9,58.4,-39.2,55.4,-32.8,58.4,-24.7,49.4,-10.8,40.3,-5.3,31.3,-1.3,22.3,1.5,13.3,3.6,4.2,4.8,-4.8,5.2,-13.8,5,-22.9,4,-31.9,2.2,-40.9,-0.5,-49.9,-4.2,-59,-9.5],
+  [-72.7,-38,-73.1,-69.8,-74.9,-79.1,-77.1,-109.8,-76,-110.9,-69.3,-102.8,-63.5,-98.8,-60.3,-99.3,-58,-102,-56.9,-131.5,-53.3,-160,-50.1,-168.7,-41.9,-183.3,-35.4,-190.5,-31.6,-192.5,-29.1,-188.8,-27.2,-169.6,-21.1,-152.1,-16.1,-144.2,-5.8,-135.2,1,-132.4,10.7,-132.4,20.2,-138.3,28.9,-148.2,33,-146.7,37.2,-132.6,56.7,-82.6,61.8,-58.7,61.9,-34.9,59.5,-23.8,50.1,-10.8,40.6,-6.2,31.2,-3.3,21.7,-1.5,12.3,-0.6,2.8,-0.5,-6.6,-1.1,-16,-2.5,-25.5,-4.6,-34.9,-7.6,-44.4,-11.4,-53.8,-16.3,-63.3,-22.9],
+  [-62.7,-23.4,-63.9,-42.9,-61.1,-69.7,-61.1,-89.6,-66.6,-117,-63.6,-120.5,-52.3,-111.3,-47.2,-111,-44.9,-113.3,-45.3,-124.4,-50.9,-152.1,-50.9,-164,-45.1,-191.6,-41.8,-197.9,-39.1,-198.6,-36.8,-196.5,-33,-180.1,-27.8,-170.2,-18,-159.6,-5.7,-151.1,3.4,-149.1,13.1,-149.7,26.5,-155.9,33.2,-162.7,36.2,-163,37.3,-161.9,38.3,-144.4,41.3,-133.6,50.4,-111.4,59.3,-83,64,-49,63.9,-33,61,-22.2,52.2,-9,43.3,-3.8,34.5,-0.2,25.7,2.4,16.8,4.1,8,5.1,-0.8,5.4,-9.7,5,-18.5,3.8,-27.4,1.9,-36.2,-0.9,-45,-4.7,-53.9,-10],
+  [-57.5,-19.3,-65.4,-27.5,-66.9,-44,-64.6,-63,-57.3,-100,-56.5,-121.6,-52.3,-123.1,-45.9,-119.3,-38.6,-118.4,-34.2,-121.4,-33.1,-124.9,-33.3,-132.8,-41,-165.6,-38.8,-190.7,-34.5,-199.5,-32.5,-198.1,-30.9,-190.9,-27.3,-184.4,3.8,-162.9,25.9,-140.5,38,-136.1,44.8,-139,51.7,-145,53.2,-145.3,55.5,-143.3,56.5,-133.7,61.4,-121.7,71.6,-84,72.8,-46.5,71.7,-31.1,62.5,-18.3,53.2,-12.7,44,-8.6,34.8,-5.4,25.6,-2.9,16.3,-1.1,7.1,0.1,-2.1,0.6,-11.4,0.5,-20.6,-0.3,-29.8,-1.9,-39,-4.3,-48.3,-8.2],
+  [-63.9,-19.8,-62.5,-54.3,-57.7,-72.3,-42.8,-108.1,-40.1,-121,-39.4,-140.6,-35.3,-141.8,-28.7,-135,-23.7,-133.4,-16.2,-139,-13.3,-145.8,-13.3,-159.6,-16.3,-170.3,-22.4,-183.7,-20.5,-186.7,-3.1,-182,7.2,-177.8,27,-162.9,36.7,-146.9,41.6,-131,43.5,-117.8,46.9,-113.4,49.9,-113.2,52.8,-115.3,61.6,-130.8,64.4,-129.9,67.2,-125.3,75.9,-87,75.9,-55,70.7,-31.2,64.5,-21.8,55.3,-9.5,46.2,-4.5,37,-1,27.8,1.6,18.6,3.4,9.5,4.5,0.3,5,-8.9,4.8,-18,4,-27.2,2.4,-36.4,0.1,-45.6,-3.1,-54.7,-7.8],
+  [-46.4,-44.3,-52.5,-48.5,-59.2,-47,-61.1,-48.5,-60.1,-59.6,-54.7,-71.3,-50.4,-77,-49,-84.4,-41.8,-90.3,-38.5,-94.9,-34.5,-111.2,-29.9,-121.3,-25.3,-137.4,-21.9,-158,-19.6,-160.3,-17.1,-159.1,-16.8,-148.1,-13.3,-141.9,-10,-141.8,-5.1,-147.3,-1.8,-155.9,0.9,-168.8,-0.5,-189.8,3.5,-193.6,9.8,-191.1,17.4,-185.3,32.4,-169.5,40.7,-150.9,43.2,-141.9,48.3,-100.1,51.1,-93.2,55.7,-90.6,59,-91.4,61.8,-94,63.8,-99.2,62.8,-122.6,57.1,-148.2,57.7,-151.9,60.1,-154,63.1,-153,67,-149.1,78.9,-128,81.6,-121.1,85.9,-100.9,85.7,-67.1,83.3,-56.1,76.5,-36.9,65.1,-24.2,57.6,-18.5,50.2,-8.8,42.7,-6,35.3,-4.7,27.9,-4.2,20.5,-4.5,13,-5.4,5.6,-6.9,-1.8,-9.1,-9.3,-11.8,-16.7,-15.3,-24.1,-19.4,-31.5,-24.5,-39,-30.9],
+  [50.5,-18.6,47,-19.7,43.6,-18.9,-68.4,-24.3,-68.4,-45.2,-66.2,-58,-54.7,-89.3,-31.2,-129.3,-22.8,-132.8,-14,-130.1,-8.3,-130.7,-5,-132.3,1.9,-139.3,11.2,-159.4,15.8,-177.5,15.4,-186.8,18.4,-189.4,23,-187.6,27.1,-183.5,30.9,-177.1,35.2,-164.9,36,-121.2,38.2,-114.3,43,-112.4,48.3,-117.4,52.7,-133.5,53.1,-143.4,54.4,-146.3,58.8,-144.7,63.7,-132.8,65,-113.3,62.1,-92.5,62,-80.6,65.6,-64.1,68,-43.1,67.8,-33.2,64.7,-20.4,63.7,-8.7,62.7,-3.9,61.7,-0.6,60.6,1.9,59.6,3.6,58.6,4.7,57.6,5.1,56.6,4.9,55.6,4.1,54.6,2.6,53.5,0.4,52.5,-2.7,51.5,-7.1],
+  [-68.2,-23.1,-70.7,-36,-68.7,-61,-62.9,-80.6,-46.2,-107.1,-37.9,-114.5,-21.6,-139.8,-17.4,-149.3,-4.7,-142.8,2.8,-142.3,11.1,-146.4,21.7,-157.9,28.6,-175,29.6,-196.6,33.5,-200.8,38,-198.8,46.4,-188.3,50.8,-178.1,53.9,-165.4,51.7,-146.4,41.3,-118.7,40.5,-111.5,44.4,-107.9,49.5,-108.3,54.3,-111.4,63.2,-121.1,65.8,-121.9,66.6,-120.9,62.1,-89.2,66,-52.8,65.9,-31.7,56.3,-17.4,46.7,-11.3,37.2,-6.9,27.6,-3.5,18,-1,8.4,0.7,-1.2,1.7,-10.7,1.9,-20.3,1.5,-29.9,0.2,-39.5,-2,-49,-5.2,-58.6,-10]
+];
+// the yellow core of each drawing, same space
+const CORE_FRAMES = [
+  [-40.5,-46.8,-39.7,-60,-38,-65.3,-34.9,-70,-30.4,-73.5,-14.3,-74.1,-2.1,-86.8,3.5,-89.8,8.1,-87.7,11.2,-83.1,11.1,-69.9,13.3,-64.9,16.5,-63.3,27.8,-63.3,33.8,-59.5,35,-54,33.7,-46.6,28.4,-38.8,23.1,-35.7,17.8,-33.5,12.5,-32,7.2,-30.9,1.9,-30.3,-3.4,-30.1,-8.7,-30.3,-14,-31,-19.3,-32.1,-24.6,-33.6,-29.9,-35.8,-35.2,-39],
+  [-45.9,-43.2,-44.5,-58.5,-40.3,-72.8,-37.3,-77.5,-34.2,-79.6,-17.7,-79.1,-13.2,-82.8,-5.4,-93.5,1.6,-97.8,6.1,-95.7,10.6,-89.7,10.9,-79.9,9,-66.7,9.7,-63,12.1,-60.2,17.5,-59.4,35.7,-68.5,39.3,-68.5,43.7,-65.1,45.7,-59.9,45.9,-54,39.3,-47,32.8,-43.8,26.2,-41.3,19.7,-39.2,13.1,-37.6,6.6,-36.3,0,-35.4,-6.6,-34.8,-13.1,-34.5,-19.7,-34.6,-26.2,-35.1,-32.8,-36,-39.3,-37.7],
+  [30.3,-42.1,26.9,-42.2,-44.9,-49.9,-42.2,-68.7,-38.6,-73,-33.5,-74.8,-23.6,-69.8,-18.4,-70.1,-9.4,-85.9,-4.9,-87.9,-1.2,-87.6,3.3,-84.3,8,-66.3,11.4,-62,16.4,-60.6,29,-63.9,34.2,-62.3,39.3,-47.5,39,-42.2,38.4,-36.5,37.8,-34.2,37.1,-32.6,36.5,-31.5,35.9,-30.7,35.3,-30.2,34.7,-30,34,-30.2,33.4,-30.7,32.8,-31.4,32.2,-32.6,31.5,-34.1,30.9,-36.4],
+  [-46.8,-46.4,-45.7,-59.8,-42.3,-66.3,-37.7,-69.2,-32.3,-69.2,-24,-65.6,-20.8,-66.7,-17.8,-71.2,-14.8,-88,-10.1,-93.8,-6.9,-94.9,-1.6,-93.5,2,-89.1,7.3,-69.3,12.1,-64.2,15.2,-64.6,18,-67.1,26.8,-79.2,32.2,-79.5,35.2,-77.4,37.9,-72.6,40.8,-57.8,38.6,-40.9,32.5,-36.2,26.4,-34.5,20.3,-33.5,14.2,-32.8,8.1,-32.5,2,-32.5,-4.1,-32.8,-10.2,-33.3,-16.3,-34.1,-22.4,-35.2,-28.5,-36.6,-34.6,-38.4,-40.7,-40.9],
+  [-49.9,-45.5,-50.6,-52.9,-48.7,-58.1,-43.3,-62.6,-31.9,-62.1,-27.1,-64.4,-25.1,-69.5,-23.6,-88.9,-19.6,-95,-15.1,-96.6,-10.1,-94.3,-6.2,-90.4,3.1,-70.2,8.6,-62.6,13.7,-61.5,24.3,-69.5,29.3,-68,33,-63.9,37.7,-49.9,31.4,-42.3,25.2,-39.1,18.9,-36.7,12.7,-34.9,6.4,-33.6,0.2,-32.7,-6.1,-32.2,-12.4,-32.1,-18.6,-32.4,-24.9,-33.1,-31.1,-34.2,-37.4,-35.9,-43.6,-38.5],
+  [28,-42.1,-47.1,-43.4,-47.6,-52.9,-42.7,-58.2,-31.6,-60.5,-27.4,-64.1,-26.3,-67.5,-27.9,-88.7,-26.7,-98.1,-23,-106.5,-17.5,-109.7,-11,-107.6,-7.6,-103.3,-3.6,-94.9,3.2,-71.7,9.1,-64.7,12.5,-65,15.4,-67.5,21.2,-81.1,24.7,-85.5,29.6,-87.3,35.6,-83.2,39.7,-74.9,41.9,-63.9,41.7,-48,39.8,-40.8,39,-35.8,38.1,-33.9,37.3,-32.6,36.4,-31.6,35.6,-31,34.7,-30.7,33.9,-30.7,33.1,-30.9,32.2,-31.4,31.4,-32.2,30.5,-33.3,29.7,-34.8,28.8,-36.9],
+  [-45.1,-41.3,-46.2,-48.2,-44,-53.2,-40,-57,-27.2,-57.9,-21.9,-63.1,-20,-70.3,-18.6,-103.7,-13.4,-113.4,-10.4,-115.9,-5.6,-114.5,1.7,-105.6,5.7,-85.3,6.5,-71.6,10.2,-65.7,13.3,-65,17.2,-68.8,22.3,-88.7,25.4,-93.4,30.3,-95.8,36.9,-92.8,40.7,-86.4,43.8,-73.7,43.6,-50,37.3,-44,30.9,-41.3,24.6,-39.2,18.3,-37.5,11.9,-36.2,5.6,-35.1,-0.8,-34.3,-7.1,-33.9,-13.4,-33.7,-19.8,-33.8,-26.1,-34.2,-32.4,-35.1,-38.8,-36.6],
+  [26.1,-40,-41,-49.6,-39.6,-57,-36.9,-61.9,-31.1,-66.9,-18.5,-66.9,-14.1,-69.5,-12.1,-74.6,-10.7,-96.1,-8.8,-103.3,-4.1,-111.3,2.5,-115.8,7,-113.7,9.8,-109,11,-99.5,10.1,-77.9,11.4,-72.5,13.7,-69.7,17,-68.7,20,-70.3,28.1,-82.8,35.5,-88.8,40.8,-89.5,46.7,-84.9,50,-72.3,49.9,-60.4,47.2,-47.5,41.6,-40.2,40.5,-35.5,39.4,-33.6,38.3,-32.3,37.2,-31.3,36.1,-30.6,35,-30.2,33.8,-30.1,32.7,-30.2,31.6,-30.6,30.5,-31.2,29.4,-32.1,28.3,-33.4,27.2,-35.3],
+  [-34.8,-49.7,-32.4,-68.6,-30,-73.6,-26,-77.8,-22.8,-79.5,-19.3,-79.1,-9.5,-70.5,-5.9,-70.7,-3.3,-73.2,-1.1,-80.3,-1.9,-101.9,0.3,-114.9,5,-123,9.2,-126.3,12.1,-126.9,15.7,-126.2,20.2,-122.7,23.7,-114.2,23.7,-102.4,18.2,-80.7,18.2,-70.9,19.7,-67.5,22.5,-65,25.8,-64.9,37.5,-77.2,44.3,-79.9,48,-79.3,50.9,-76.9,53.9,-68.1,53.8,-58.2,51.7,-49.1,45.5,-40.1,39.3,-36.6,33.2,-34.1,27,-32.4,20.8,-31.2,14.6,-30.5,8.4,-30.3,2.3,-30.6,-3.9,-31.4,-10.1,-32.6,-16.3,-34.5,-22.4,-37,-28.6,-40.6],
+  [-39.9,-45,-35.6,-69.2,-27.7,-84,-21.8,-88.6,-16.6,-87.6,-13.4,-83.5,-10.9,-74.5,-8.3,-71.9,-5,-71.7,-1.1,-75.7,5,-90.9,15.4,-93.9,25.9,-99.6,28.8,-97.7,29.7,-94.3,25.1,-74.3,26.1,-60.8,31.6,-56.4,45.4,-60.4,50.3,-58.2,53,-53.7,48.4,-42.3,42.1,-36.7,35.8,-34.6,29.5,-33.2,23.2,-32.2,16.9,-31.6,10.6,-31.3,4.2,-31.3,-2.1,-31.7,-8.4,-32.4,-14.7,-33.4,-21,-34.7,-27.3,-36.5,-33.6,-39],
+  [-41,-43.3,-38.7,-62.4,-34,-74.4,-29.2,-79.9,-24,-81.9,-16.7,-80.6,-8.8,-75.5,-5.3,-75.8,-2.4,-78,7.8,-93.7,12.1,-97.7,16.3,-99.5,21.8,-95.6,24.7,-86.8,21.5,-56.8,26.6,-51.5,39.8,-51.6,44.2,-48.4,38.1,-41.8,32,-38.9,25.9,-36.8,19.9,-35.2,13.8,-34,7.7,-33.1,1.6,-32.6,-4.5,-32.4,-10.6,-32.5,-16.7,-33,-22.7,-33.9,-28.8,-35.3,-34.9,-37.4],
+  [-32,-40.9,-37.8,-58.5,-36.3,-67.7,-32,-73.9,-25.6,-77.7,-20.2,-78.9,-6.7,-78.4,7.6,-87,13,-88,18.5,-86.9,22,-82.7,23,-73.1,22,-61.5,23.7,-56.2,27.9,-53,38.2,-49,41.4,-44.8,41.3,-41.3,36.1,-36.1,30.8,-34.1,25.6,-32.6,20.4,-31.5,15.1,-30.8,9.9,-30.4,4.7,-30.2,-0.6,-30.3,-5.8,-30.7,-11.1,-31.4,-16.3,-32.4,-21.5,-33.8,-26.8,-35.8]
+];
+
+// closed Catmull-Rom spline through the traced points, so the polygon reads as a drawn curve
+function smoothPath(pts, dy = 0) {
+  const P = new Path2D(), n = pts.length / 2, X = i => pts[((i + n) % n) * 2], Y = i => pts[((i + n) % n) * 2 + 1] + dy;
+  P.moveTo(X(0), Y(0));
+  for (let i = 0; i < n; i++) {
+    P.bezierCurveTo(X(i) + (X(i + 1) - X(i - 1)) / 6, Y(i) + (Y(i + 1) - Y(i - 1)) / 6,
+                    X(i + 1) - (X(i + 2) - X(i)) / 6, Y(i + 1) - (Y(i + 2) - Y(i)) / 6, X(i + 1), Y(i + 1));
+  }
+  P.closePath(); return P;
+}
+// The lower body should stay one steady round bulb while only the top animates: ease every
+// point below BULB.top onto a fixed oval (fully on it from the oval's centre down).
+const BULB = { x: -2, y: -60, rx: 68, ry: 66, top: -125 };
+function settleBase(f) {
+  const out = f.slice();
+  for (let i = 0; i < f.length; i += 2) {
+    const x = f[i], y = f[i + 1];
+    const u = Math.min(1, Math.max(0, (y - BULB.top) / (BULB.y - BULB.top))), w = u * u * (3 - 2 * u);
+    if (!w) continue;
+    const dx = x - BULB.x, dy = y - BULB.y;
+    let tx, ty;
+    if (dy < 0) {   // upper half: only pull the sides in/out to the oval's width at this height
+      tx = BULB.x + Math.sign(dx || 1) * BULB.rx * Math.sqrt(Math.max(0, 1 - (dy / BULB.ry) ** 2)); ty = y;
+    } else {        // lower half: project radially onto the oval
+      const d = Math.hypot(dx / BULB.rx, dy / BULB.ry) || 1; tx = BULB.x + dx / d; ty = BULB.y + dy / d;
+    }
+    out[i] = x + (tx - x) * w; out[i + 1] = y + (ty - y) * w;
+  }
+  return out;
+}
+const FLAME_PATHS = FLAME_FRAMES.map(f => smoothPath(settleBase(f)));
+const CORE_PATHS = CORE_FRAMES.map(f => smoothPath(f));
+// topmost point of each outline, where the breakaway bits leave from
+const FLAME_TIPS = FLAME_FRAMES.map(f => { let k = 1; for (let i = 3; i < f.length; i += 2) if (f[i] < f[k]) k = i; return [f[k - 1], f[k]]; });
+
+const hash = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+
+function drop(g, x, y, s) {
+  g.moveTo(x, y - s * 1.7);
+  g.bezierCurveTo(x + s * 1.05, y - s * .5, x + s * .85, y + s, x, y + s);
+  g.bezierCurveTo(x - s * .85, y + s, x - s * 1.05, y - s * .5, x, y - s * 1.7);
+}
+
+const FLAME_X = FIRE_X, FLAME_Y = 698;   // base sinks behind the front logs
+const licks = [];
+let lastFi = -1;
+function drawFire(fi, flick) {
+  const k = fi % FLAME_PATHS.length;   // the original's own order and timing: 12 drawings a second
+  const sx = 1, sy = 1;
+  const path = FLAME_PATHS[k], tip = FLAME_TIPS[k];
+
+  // bits that break off the main tip and float up, stepped with the drawing
+  if (fi !== lastFi) {
+    lastFi = fi;
+    for (let i = licks.length - 1; i >= 0; i--) {
+      const l = licks[i]; l.y -= 15; l.x += l.dx; l.s *= .75;
+      if (++l.age > 4) licks.splice(i, 1);
+    }
+    if (hash(fi, 11) < .35) licks.push({ x: FLAME_X + tip[0] * sx + (hash(fi, 13) * 2 - 1) * 5, y: FLAME_Y + tip[1] * sy - 16, s: 5 + hash(fi, 14) * 4, dx: (hash(fi, 15) * 2 - 1) * 3, age: 0 });
+  }
+
+  const g = fireLayer.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, fireLayer.width, fireLayer.height);
+  toDesign(g);
+  g.save(); g.translate(FLAME_X, FLAME_Y); g.scale(sx, sy);
+  const fg = g.createLinearGradient(0, 0, 0, -200);
+  fg.addColorStop(0, '#f2702e'); fg.addColorStop(.3, '#f98a36'); fg.addColorStop(.55, '#f5702b'); fg.addColorStop(1, '#df4a22');
+  g.fillStyle = fg; g.fill(path);
+  // soft-edged core: drawn with a same-colour shadow so it glows into the orange
+  g.save(); g.clip(path);
+  g.fillStyle = '#fcd03a'; g.shadowColor = '#fcd03a'; g.shadowBlur = 10 * dpr * scale;
+  g.fill(CORE_PATHS[k]); g.restore();
+
+  // the bulb over the logs: deepen toward red, then fade it so the logs read through
+  g.globalCompositeOperation = 'source-atop';
+  const tint = g.createLinearGradient(0, BULB.y - 10, 0, BULB.y + BULB.ry);
+  tint.addColorStop(0, 'rgba(140,28,24,0)'); tint.addColorStop(1, 'rgba(140,28,24,.5)');
+  g.fillStyle = tint; g.fillRect(-120, BULB.y - 10, 240, 120);
+  g.globalCompositeOperation = 'destination-in';
+  const fade = g.createLinearGradient(0, BULB.y - 20, 0, BULB.y + BULB.ry);
+  fade.addColorStop(0, 'rgba(0,0,0,1)'); fade.addColorStop(.55, 'rgba(0,0,0,.72)'); fade.addColorStop(1, 'rgba(0,0,0,.5)');
+  g.fillStyle = fade; g.fillRect(-300, -400, 600, 500);
+  // heavier speckle in the bulb, so it dissolves into grain over the logs
+  g.globalCompositeOperation = 'destination-out';
+  g.save(); g.beginPath(); g.rect(-120, BULB.y, 240, 120); g.clip();
+  g.globalAlpha = .55; g.translate(hash(fi, 42) * 256, hash(fi, 43) * 256);
+  g.fillStyle = speckPattern; g.fillRect(-400, -400, 800, 800); g.restore();
+  g.globalCompositeOperation = 'source-over';
+  g.restore();
+  g.fillStyle = '#e8562a'; g.beginPath(); licks.forEach(l => drop(g, l.x, l.y, l.s)); g.fill();
+
+  // print grain on the flame, shifted each step so it boils
+  g.globalCompositeOperation = 'destination-out'; g.globalAlpha = .4;
+  g.save(); g.translate(hash(fi, 40) * 256, hash(fi, 41) * 256);
+  g.fillStyle = speckPattern; g.fillRect(-W, -H, W * 3, H * 3); g.restore();
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.save();
+  ctx.shadowColor = `rgba(255,120,40,${.55 * flick})`; ctx.shadowBlur = 28 * dpr * scale;
+  ctx.globalAlpha = .9;   // the back logs read faintly through the flame
+  ctx.drawImage(fireLayer, 0, 0);
+  ctx.restore();
+  toDesign(ctx);
+}
+
+const embers = [];
+let emberClock = 0;
+function drawEmbers(t, dt) {
+  emberClock += dt;
+  while (emberClock > .14) {
+    emberClock -= .14;
+    embers.push({ x: FIRE_X + R(-22, 22), y: 560 + R(-10, 20), vx: R(-12, 12), vy: -R(45, 95), life: 0, max: R(1.2, 2.6), s: R(1.4, 2.8), ph: R(0, 6) });
+  }
+  for (let i = embers.length - 1; i >= 0; i--) {
+    const e = embers[i]; e.life += dt;
+    if (e.life > e.max) { embers.splice(i, 1); continue; }
+    e.x += (e.vx + Math.sin(t * 3 + e.ph) * 18) * dt; e.y += e.vy * dt;
+    const k = 1 - e.life / e.max, fl = .6 + .4 * Math.sin(t * 20 + e.ph);
+    ctx.fillStyle = `rgba(255,${150 + 60 * k | 0},70,${k * fl})`;
+    ctx.fillRect(e.x, e.y, e.s, e.s * 1.4);
+  }
+}
+
+let last = performance.now(), start = last;
+function render(now) {
+  const t = (now - start) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
+  const tf = Math.floor(t * 12) / 12;   // fire + grain step on twelves, like hand-drawn animation
+  const flick = 1 + wob(tf * 2.2, 9) * .18;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(staticLayer, 0, 0);
+  toDesign(ctx);
+
+  // firelight washing the clearing
+  ctx.globalCompositeOperation = 'lighter';
+  const gl = ctx.createRadialGradient(FIRE_X, 610, 10, FIRE_X, 610, 360 * flick);
+  gl.addColorStop(0, `rgba(255,120,50,${.32 * flick * theme.glow})`); gl.addColorStop(.35, `rgba(220,90,40,${.12 * flick * theme.glow})`); gl.addColorStop(1, 'rgba(200,70,30,0)');
+  ctx.fillStyle = gl; ctx.fillRect(0, 200, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+
+  drawSmoke(t);
+  toDesign(ctx);
+
+  drawFire(Math.floor(t * 12), flick);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(frontLogLayer, 0, 0); toDesign(ctx);
+
+  drawEmbers(t, dt);
+
+  // film grain
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = theme.grain;
+  ctx.drawImage(grains[reduced ? 0 : Math.floor(t * 10) % grains.length], 0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
+}
+function frame(now) { if (staticLayer) render(now); else if (innerWidth && innerHeight) resize(); requestAnimationFrame(frame); }
+
+buildSmokePasses();
+
+addEventListener('resize', resize);
+resize();
+requestAnimationFrame(frame);
+window.renderAt = sec => { last = start + sec * 1000 - 16; render(start + sec * 1000); };
+})();
+</script>
+</body>
+</html>

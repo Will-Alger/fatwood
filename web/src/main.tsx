@@ -5,16 +5,19 @@ import { createRoot } from 'react-dom/client'
 // titles and long-form prose, Plex Mono for every number and identifier.
 import '@fontsource-variable/archivo/index.css'
 import '@fontsource-variable/source-serif-4/index.css'
+import '@fontsource-variable/source-serif-4/opsz-italic.css'
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/600.css'
 import './index.css'
 import App from './App.tsx'
 import { initAuth } from './auth/auth.ts'
 
-// Apply the persisted theme before first paint so there is no flash.
-// Dark is the primary theme; light is the opt-in.
-const storedTheme = localStorage.getItem('fatwood.theme')
-document.documentElement.dataset.theme = storedTheme === 'light' ? 'light' : 'dark'
+// Fatwood is light-only. Drop the preference key the old light/dark toggle left behind.
+try {
+  localStorage.removeItem('fatwood.theme')
+} catch {
+  // storage blocked (private mode, site data off): nothing to clean up
+}
 
 // MSAL must process a possible sign-in redirect return before the app renders,
 // or the first /api/me call races the token cache. Render regardless of the

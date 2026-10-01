@@ -234,10 +234,6 @@ export function getMe(signal?: AbortSignal): Promise<MeView> {
   return getJson('/api/me', signal)
 }
 
-export function setThemePreference(theme: 'dark' | 'light'): Promise<void> {
-  return sendJson('PUT', '/api/me/theme', { theme })
-}
-
 export function redeemInvite(code: string): Promise<void> {
   return sendJson('POST', '/api/me/invite', { code })
 }

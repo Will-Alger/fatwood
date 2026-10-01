@@ -1,22 +1,30 @@
 /* ============================================================
-   Fatwood design system — "Char" (dark) / "Flashpoint" (light)
+   Fatwood design system — "Flashpoint" (light only)
 
-   Ignition is an event, not a colour. The whole interface is char
-   and bone with no chroma anywhere, and exactly ONE colour exists:
-   a deep ember red that only appears where something actually
-   catches. Scarcity is what makes it read as heat.
+   Paper and ink, and exactly ONE colour: a deep ember red that
+   only appears where something actually catches. Scarcity is what
+   makes it read as heat.
 
    Where the red is allowed, and nowhere else:
      1. the Search button (and the one primary action per dialog)
-     2. the active top-level tab
-     3. the fuse down the results gutter, and its head
-     4. the bookmark you set — plus the single destructive-ish
+     2. the fuse down the results gutter, and its head
+     3. the bookmark you set — plus the single destructive-ish
         action per admin row, and error text
+     4. focus rings
 
-   Everything else — scores, ranks, categories, links — is bone or
-   ink. Form is hairline rules and square corners: no radii, no
-   shadows, no fills. Type is Archivo for chrome, Source Serif 4
-   for prose and titles, IBM Plex Mono for every number.
+   Shape: there are no square corners. Every surface is a squircle
+   (continuous curvature, the Apple corner) via `corner-shape:
+   squircle`; browsers without it fall back to a smaller plain
+   radius that reads close. Nested shapes stay concentric: an inner
+   radius is the outer radius minus the gap between them. Surfaces
+   float on soft shadows over the paper; hairlines are a last resort.
+
+   Type is Archivo for chrome, Source Serif 4 for prose and titles,
+   IBM Plex Mono for every number.
+
+   The campfire on the Discover front page (src/campfire/) is drawn
+   straight onto the paper, with its own fire palette and a small
+   fire spirit who reacts to the page.
    ============================================================ */
 
 :root {
@@ -25,54 +33,57 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
 }
 
-:root,
-:root[data-theme='dark'] {
-  --bg: #0d0d0c;
-  --surface: #151513;
-  --surface-2: #1c1b19;
-  --text: #e9e5dc;
-  --text-2: #dad5cb; /* abstracts, long-form body */
-  --text-3: #b0aa9e; /* control labels */
-  /* muted/faint sit a shade lighter than the mock's #8e887d/#6a655c: both
-     carry real 10–13px text, and the mock values land at 5.5:1 and 3.4:1.
-     These clear 4.5:1 on bg AND on surface while keeping five clean rungs. */
-  --muted: #999389;
-  --faint: #837e75;
-  --rule-strong: #3a3835; /* input frames, section tops, table heads */
-  --rule: #3a3835; /* control underlines, dialog edges */
-  --rule-soft: #262523; /* dividers, nav underline */
-  --rule-hair: #1c1b19; /* row separators */
-  --rule-link: #3a3835; /* link underlines */
-  --ember: #b4301c; /* fills: search, active tab, fuse */
-  --ember-text: #de4e33; /* ember as text/outline on char — 4.9:1 */
-  --ember-ink: #f6f1e8; /* type on an ember fill */
-  --logo-wood: #6e6a62;
-  --overlay: rgba(6, 6, 5, 0.72);
-  color-scheme: dark;
+:root {
+  --bg: #e7e4dc; /* the paper */
+  --surface: #f4f2ec; /* cards, islands, dialogs */
+  --surface-hover: #fbfaf6;
+  --surface-2: #e2ded5; /* hover fills, skeletons */
+  --surface-3: #d9d5cb; /* the selected segment */
+  --field: rgba(25, 24, 20, 0.055); /* input wells, on paper or on a card */
+  --text: #191814;
+  --text-2: #262420; /* abstracts, long-form body */
+  --text-3: #453f36; /* control labels */
+  --muted: #565148;
+  --faint: #68635a; /* clears 4.5:1 on paper and on surface */
+  --rule-strong: #b9b3a7; /* focused frames */
+  --rule: #d3cec3; /* control edges */
+  --rule-soft: #dcd8ce; /* card edges */
+  --rule-hair: #e6e2da; /* row separators inside a card */
+  --rule-link: #b9b3a7; /* link underlines */
+  --ember: #a82a17; /* fills: search, fuse */
+  --ember-hover: #8f2312;
+  --ember-text: #a82a17; /* ember as text — 5.9:1 on paper */
+  --ember-ink: #f6f1e8; /* type on an ember (or ink) fill */
+  --ember-wash: rgba(168, 42, 23, 0.09);
+  --logo-wood: #191814;
+  --overlay: rgba(40, 36, 30, 0.26);
+
+  /* radii: plain-radius fallback values */
+  --r-xs: 7px;
+  --r-sm: 10px;
+  --r-md: 13px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  --lift: 0 1px 1px rgba(25, 24, 20, 0.04), 0 2px 6px rgba(25, 24, 20, 0.05);
+  --lift-2: 0 1px 2px rgba(25, 24, 20, 0.05), 0 10px 30px -8px rgba(25, 24, 20, 0.14);
+  --lift-3: 0 2px 6px rgba(25, 24, 20, 0.06), 0 28px 70px -12px rgba(25, 24, 20, 0.3);
+  color-scheme: light;
 }
 
-:root[data-theme='light'] {
-  --bg: #e7e4dc;
-  --surface: #f2f0ea;
-  --surface-2: #dedad0;
-  --text: #191814;
-  --text-2: #262420;
-  --text-3: #453f36;
-  /* Same adjustment as Char: the mock's #6c665c/#847e73 land at 4.5:1 and
-     3.2:1 on limestone, so both step one shade darker. */
-  --muted: #565148;
-  --faint: #68635a;
-  --rule-strong: #191814;
-  --rule: #cfcabf;
-  --rule-soft: #cfcabf;
-  --rule-hair: #d8d3c8;
-  --rule-link: #bdb7aa;
-  --ember: #a82a17;
-  --ember-text: #a82a17;
-  --ember-ink: #f6f1e8;
-  --logo-wood: #191814;
-  --overlay: rgba(25, 24, 20, 0.42);
-  color-scheme: light;
+/* A squircle needs a larger radius than a circular arc to look as soft. */
+@supports (corner-shape: squircle) {
+  :root {
+    --r-xs: 11px;
+    --r-sm: 16px;
+    --r-md: 20px;
+    --r-lg: 28px;
+    --r-xl: 38px;
+  }
+
+  * {
+    corner-shape: squircle;
+  }
 }
 
 * {
@@ -85,11 +96,34 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  transition: background-color 180ms ease, color 180ms ease;
+}
+
+/* Paper grain over everything, the fire included, so the canvas sits in the page. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.09;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+button {
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .app {
-  max-width: 1140px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 0 2.5rem 3rem;
   /* Sticky footer: fill the viewport and push the footer to the bottom on
@@ -109,41 +143,49 @@ body {
   outline-offset: 2px;
 }
 
-/* ---------- Header ---------- */
+/* Shared shapes */
 
-.app-header {
-  padding: 1.6rem 0 0;
-  margin-bottom: 1.6rem;
+.island {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--lift);
 }
 
-.app-header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+/* ---------- Header: three islands, the mark centred ---------- */
+
+.app-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas: 'tabs brand actions';
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 0;
+  margin-bottom: 1rem;
 }
 
 .app-brand {
+  grid-area: brand;
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.6rem;
+  padding: 0.55rem 2.5rem;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--lift);
 }
 
 .app-brand h1 {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 1.19rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   line-height: 1.15;
-}
-
-.app-brand p {
-  margin: 0.25rem 0 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
 }
 
 .fw-logo-wood {
@@ -155,22 +197,25 @@ body {
 }
 
 .app-header-actions {
+  grid-area: actions;
+  justify-self: end;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 2px;
+  padding: 4px;
 }
 
-/* Remaining budget: a mono figure with its field named beside it. No chip, no
-   border — the label carries the meaning. */
+/* Remaining budget: a mono figure with its field named beside it. */
 .budget-chip {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   cursor: default;
   display: inline-flex;
   align-items: baseline;
-  gap: 0.45rem;
+  gap: 0.4rem;
+  padding: 0 0.7rem;
 }
 
 .budget-chip-label {
@@ -181,29 +226,44 @@ body {
   color: var(--faint);
 }
 
-/* Header affordances are words, not glyphs or boxes. */
+/* Island buttons: concentric with the island (its radius minus the 4px inset). */
 .icon-button,
-.signin-button {
+.signin-button,
+.tab {
   font: inherit;
   font-size: 0.8125rem;
-  padding: 0;
+  letter-spacing: 0.01em;
+  padding: 0.45rem 0.85rem;
   border: none;
+  border-radius: calc(var(--r-md) - 4px);
   background: none;
-  color: var(--muted);
+  color: var(--text-3);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .icon-button:hover,
-.signin-button:hover {
+.tab:hover {
   color: var(--text);
+  background: var(--surface-2);
+}
+
+.signin-button {
+  background: var(--text);
+  color: var(--ember-ink);
+}
+
+.signin-button:hover {
+  background: #000;
 }
 
 .invite-banner {
   margin: 0 0 1.5rem;
-  padding: 0.9rem 0 0.9rem 1rem;
-  border-top: 1px solid var(--rule-soft);
-  border-bottom: 1px solid var(--rule-soft);
-  border-left: 2px solid var(--ember);
+  padding: 0.9rem 1rem 0.9rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
   color: var(--muted);
   display: flex;
   flex-wrap: wrap;
@@ -216,36 +276,35 @@ body {
 
 .invite-banner-form {
   display: flex;
-  gap: 1rem;
-  align-items: flex-end;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .invite-banner-form input {
   font: inherit;
   font-size: 0.8125rem;
-  padding: 0.4rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--field);
   color: var(--text);
   outline: none;
 }
 
 .invite-banner-form button {
   font: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.8125rem;
+  font-weight: 600;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--rule-strong);
-  background: transparent;
-  color: var(--text);
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--text);
+  color: var(--ember-ink);
   cursor: pointer;
 }
 
 .invite-banner-form button:hover:not(:disabled) {
-  border-color: var(--text);
+  background: #000;
 }
 
 .invite-banner-form button:disabled {
@@ -255,8 +314,8 @@ body {
 
 .app-footer {
   margin: 3.5rem 0 0;
-  padding: 1.25rem 0 0;
-  border-top: 1px solid var(--rule-soft);
+  padding: 1.25rem 0.25rem 0;
+  border-top: 1px solid var(--rule);
   color: var(--faint);
   font-size: 0.75rem;
   line-height: 1.7;
@@ -285,39 +344,26 @@ body {
 /* ---------- Tabs ---------- */
 
 .app-tabs {
+  grid-area: tabs;
+  justify-self: start;
   display: flex;
-  gap: 1.625rem;
-  margin-top: 1.4rem;
-  border-bottom: 1px solid var(--rule-soft);
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
 }
 
-.tab {
-  font: inherit;
-  font-size: 0.875rem;
-  padding: 0 0 0.5625rem;
-  border: none;
-  border-bottom: 3px solid transparent;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.tab:hover {
+.tab-active,
+.tab-active:hover {
   color: var(--text);
-}
-
-.tab-active {
-  color: var(--text);
+  background: var(--surface-3);
   font-weight: 600;
-  border-bottom-color: var(--ember);
-  margin-bottom: -1px;
 }
 
 /* ---------- Layout ---------- */
 
 .app-body {
   display: flex;
-  gap: 2.5rem;
+  gap: 1.75rem;
   align-items: flex-start;
 }
 
@@ -333,12 +379,17 @@ body {
 /* ---------- Category filter ---------- */
 
 .category-filter {
-  flex: 0 0 250px;
+  flex: 0 0 260px;
   position: sticky;
   top: 1rem;
   max-height: calc(100vh - 2rem);
   display: flex;
   flex-direction: column;
+  padding: 0.875rem 0.625rem 0.375rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
 }
 
 .category-filter-mobile-toggle {
@@ -355,8 +406,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.5rem;
+  padding: 0 0.375rem 0.625rem;
 }
 
 .category-filter h2 {
@@ -372,10 +422,10 @@ body {
   font: inherit;
   font-size: 0.8125rem;
   width: 100%;
-  padding: 0.5625rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule-soft);
-  background: transparent;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--field);
   color: var(--text);
   outline: none;
   margin-bottom: 0.375rem;
@@ -398,32 +448,35 @@ body {
   gap: 0.625rem;
   cursor: pointer;
   font-size: 0.8125rem;
-  padding: 0.5625rem 0;
-  border-bottom: 1px solid var(--rule-hair);
+  padding: 0.5rem 0.5rem;
+  border-radius: var(--r-sm);
 }
 
-.category-filter li:last-child label {
-  border-bottom: none;
+.category-filter label:hover {
+  background: var(--surface-2);
 }
 
-/* A 9px square that fills ember when set — the one place a checkbox is worth
-   drawing by hand, because the list is the page. */
+/* A small squircle that fills ember when set — the one checkbox worth drawing
+   by hand, because the list is the page. */
 .category-filter input[type='checkbox'] {
   appearance: none;
   -webkit-appearance: none;
-  width: 9px;
-  height: 9px;
+  width: 15px;
+  height: 15px;
   flex: 0 0 auto;
-  margin: 0.28rem 0 0;
-  /* --faint, not the hairline --rule: an unchecked box is a control boundary
-     and has to clear 3:1, which a #3a3835-on-#0d0d0c rule does not. */
-  border: 1px solid var(--faint);
+  margin: 0.1rem 0 0;
+  /* --faint, not a hairline: an unchecked box is a control boundary and has
+     to clear 3:1 against the card. */
+  border: 1.5px solid var(--faint);
+  border-radius: 5px;
   background: transparent;
   cursor: pointer;
 }
 
 .category-filter input[type='checkbox']:checked {
-  background: var(--ember);
+  background: var(--ember)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='%23f6f1e8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 11px no-repeat;
   border-color: var(--ember);
 }
 
@@ -447,6 +500,7 @@ body {
 
 .category-filter input:checked ~ .category-text .category-code {
   color: var(--text);
+  font-weight: 600;
 }
 
 .category-count {
@@ -481,13 +535,13 @@ body {
   line-height: 1.4;
   margin-top: 0.25rem;
   padding-left: 0.4rem;
-  border-left: 1px solid var(--rule);
+  border-left: 2px solid var(--rule);
 }
 
 .category-empty {
   color: var(--muted);
   font-size: 0.8125rem;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0.5rem;
 }
 
 /* ---------- Toolbar / controls ---------- */
@@ -499,7 +553,7 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem 1.25rem;
   margin-bottom: 0.75rem;
-  padding-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
   font-size: 0.8125rem;
   color: var(--text-3);
 }
@@ -522,38 +576,47 @@ body {
   accent-color: var(--ember);
 }
 
-/* Controls are underlined values, not boxes. */
+/* Selects are small squircle wells with a drawn chevron. */
 select {
+  appearance: none;
+  -webkit-appearance: none;
   font: inherit;
   font-size: 0.8125rem;
-  padding: 0.125rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
+  padding: 0.35rem 1.75rem 0.35rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-xs);
+  background: var(--field)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23565148' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    right 0.5rem center / 11px no-repeat;
   color: var(--text);
   cursor: pointer;
+  outline: none;
+}
+
+select:hover:not(:disabled) {
+  background-color: rgba(25, 24, 20, 0.085);
+}
+
+select:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ---------- The fuse ----------
-   A 3px rule down the results gutter that fills downward as papers land: lit
-   above the head, grey below. This is the only moving element on the page and
-   the only place the metaphor shows. */
+   A rounded rule down the results gutter that fills downward as papers land:
+   lit above the head, grey below. */
 
 .results-fuse-grid {
   display: grid;
-  grid-template-columns: 3px 1fr;
-  gap: 0 1.3125rem;
-  border-top: 1px solid var(--rule-strong);
+  grid-template-columns: 4px 1fr;
+  gap: 0 1.125rem;
   padding-top: 2px;
 }
 
 .fuse {
   position: relative;
-  background: var(--rule-soft);
-}
-
-.fuse-unlit {
-  background: var(--rule-hair);
+  background: var(--rule);
+  border-radius: 999px;
 }
 
 .fuse-lit {
@@ -563,22 +626,25 @@ select {
   right: 0;
   height: var(--fuse, 0%);
   background: var(--ember);
+  border-radius: 999px;
   transition: height 420ms ease;
 }
 
 .fuse-head {
   position: absolute;
   top: var(--fuse, 0%);
-  left: -3px;
-  width: 9px;
-  height: 9px;
-  margin-top: -4px;
-  background: var(--ember-text);
-  transform: rotate(45deg);
+  left: -4px;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  background: var(--ember);
+  border-radius: 50%;
+  corner-shape: round;
+  box-shadow: 0 0 0 4px var(--ember-wash);
   transition: top 420ms ease;
 }
 
-/* ---------- Paper rows ---------- */
+/* ---------- Paper cards ---------- */
 
 .paper-list {
   transition: opacity 150ms ease;
@@ -588,15 +654,18 @@ select {
   opacity: 0.55;
 }
 
-/* A row, not a card: a gutter carrying the numbers and a body carrying the
-   prose, separated by a hairline. */
+/* A card: a gutter carrying the numbers and a body carrying the prose. */
 .paper-card {
   position: relative;
   display: grid;
   grid-template-columns: var(--paper-gutter, 74px) 1fr;
   gap: 0 1.25rem;
-  padding: 1.25rem 0;
-  border-bottom: 1px solid var(--rule-hair);
+  padding: 1.25rem 1.375rem 1.25rem 1rem;
+  margin-bottom: 0.625rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
 }
 
 /* Ranked results (Discover) carry a narrower numeral gutter. */
@@ -639,13 +708,14 @@ select {
   margin-top: 0.875rem;
 }
 
-/* Wildcards get a turned square instead of a rank numeral — outside the
-   ordering on purpose. */
+/* Wildcards get a turned, softened square instead of a rank numeral —
+   outside the ordering on purpose. */
 .wildcard-mark {
   display: inline-block;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border: 2px solid var(--muted);
+  border-radius: 4px;
   transform: rotate(45deg);
   margin-top: 0.375rem;
 }
@@ -669,7 +739,8 @@ select {
 
 .match-segments span {
   width: 14px;
-  height: 3px;
+  height: 4px;
+  border-radius: 999px;
   background: var(--rule);
 }
 
@@ -707,33 +778,33 @@ select {
 
 .paper-row-actions {
   display: flex;
-  gap: 0.875rem;
+  gap: 0.375rem;
   flex-shrink: 0;
-  padding-top: 0.25rem;
 }
 
-/* Save / Hide are words in the chrome face, uppercase and quiet. Only a set
-   bookmark earns the ember. */
+/* Save / Hide are small quiet wells. Only a set bookmark earns the ember. */
 .bookmark-button {
   border: none;
-  background: none;
-  padding: 0;
+  border-radius: var(--r-xs);
+  background: var(--field);
+  padding: 0.3rem 0.7rem;
   font: inherit;
-  font-size: 0.8125rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .bookmark-button:hover:not(:disabled) {
   color: var(--text);
+  background: var(--surface-2);
 }
 
 .bookmark-on,
 .bookmark-on:hover:not(:disabled) {
   color: var(--ember-text);
+  background: var(--ember-wash);
   font-weight: 600;
 }
 
@@ -763,9 +834,6 @@ select {
   line-height: inherit;
   margin-right: 0.35rem;
   cursor: pointer;
-  /* The dotted underline is the definition affordance, and it inherits the
-     badge's own colour rather than a hairline variable — at this size a
-     --rule-coloured dot row is invisible on the dark theme. */
   text-decoration: underline dotted;
   text-underline-offset: 0.25em;
 }
@@ -835,7 +903,7 @@ select {
   border-bottom-color: var(--text);
 }
 
-/* In flight: three small red squares and a literal word, never a spinner. */
+/* In flight: three small red dots and a literal word, never a spinner. */
 .paper-analyzing {
   display: inline-flex;
   align-items: center;
@@ -862,7 +930,8 @@ select {
 .analysis-panel {
   margin-top: 1rem;
   padding: 1.125rem 1.25rem;
-  background: var(--surface);
+  background: var(--field);
+  border-radius: var(--r-md);
   font-size: 0.875rem;
 }
 
@@ -910,7 +979,7 @@ select {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding-top: 1.125rem;
+  padding-top: 1rem;
   font-size: 0.8125rem;
   color: var(--muted);
 }
@@ -924,20 +993,24 @@ select {
 
 .pagination button {
   font: inherit;
-  padding: 0;
-  border: none;
-  background: none;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--lift);
   color: var(--text);
   cursor: pointer;
 }
 
 .pagination button:hover:not(:disabled) {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  background: var(--surface-hover);
+  box-shadow: var(--lift-2);
 }
 
 .pagination button:disabled {
-  color: var(--rule);
+  color: var(--faint);
+  background: transparent;
+  box-shadow: none;
   cursor: default;
 }
 
@@ -950,7 +1023,7 @@ select {
   padding: 1.25rem 0;
 }
 
-/* Error is the one place outside the four where red earns its keep — it is
+/* Error is the one place outside the list where red earns its keep — it is
    the same "something needs you" signal. */
 .status-error {
   color: var(--ember-text);
@@ -958,8 +1031,10 @@ select {
 
 .status-notice {
   color: var(--text-3);
-  border-left: 2px solid var(--rule);
-  padding-left: 0.875rem;
+  background: var(--field);
+  border-radius: var(--r-sm);
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
 }
 
 .link-button {
@@ -971,16 +1046,19 @@ select {
   color: var(--text);
   cursor: pointer;
   text-decoration: underline;
+  text-decoration-color: var(--rule-link);
   text-underline-offset: 3px;
 }
 
 .link-button:hover:not(:disabled) {
   color: var(--text);
+  text-decoration-color: var(--text);
 }
 
 .link-button-analyze {
   color: var(--ember-text);
   text-decoration: none;
+  font-weight: 600;
 }
 
 .link-button-analyze:hover:not(:disabled) {
@@ -995,26 +1073,26 @@ select {
   text-decoration: none;
 }
 
-/* The solid ember slab: submit, and one per dialog. Nothing else. */
+/* The solid ember button: submit, and one per dialog. Nothing else. */
 .primary-button {
   font: inherit;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.5625rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.625rem 1.25rem;
   border: none;
+  border-radius: var(--r-md);
   background: var(--ember);
   color: var(--ember-ink);
   cursor: pointer;
 }
 
 .primary-button:hover:not(:disabled) {
-  background: var(--ember-text);
+  background: var(--ember-hover);
 }
 
 .primary-button:disabled {
-  background: var(--rule);
+  background: var(--surface-3);
   color: var(--muted);
   cursor: default;
 }
@@ -1023,19 +1101,18 @@ select {
 .ghost-button {
   font: inherit;
   font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.5625rem 1.125rem;
-  border: 1px solid var(--ember);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.55rem 1.1rem;
+  border: 1.5px solid var(--ember);
+  border-radius: var(--r-md);
   background: transparent;
   color: var(--ember-text);
   cursor: pointer;
 }
 
 .ghost-button:hover:not(:disabled) {
-  background: var(--ember);
-  color: var(--ember-ink);
+  background: var(--ember-wash);
 }
 
 .ghost-button:disabled {
@@ -1055,16 +1132,18 @@ select {
   margin: 1rem 0;
 }
 
-/* Three small red squares, not a spinner. */
+/* Three small red dots, not a spinner. */
 .ember-dots {
   display: inline-flex;
-  gap: 3px;
+  gap: 4px;
   align-items: center;
 }
 
 .ember-dots span {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
   background: var(--ember);
   animation: fw-tick 1.6s ease-in-out infinite;
 }
@@ -1094,6 +1173,7 @@ select {
 .skeleton-line {
   height: 0.6875rem;
   background: var(--surface-2);
+  border-radius: 999px;
   margin-bottom: 0.4375rem;
   animation: skeleton-breathe 1.6s ease-in-out infinite;
 }
@@ -1124,8 +1204,7 @@ select {
   }
 }
 
-/* Results catching: a quiet staggered reveal. No edge flash — the fuse is the
-   only thing that lights. */
+/* Results catching: a quiet staggered reveal. */
 .ignite {
   animation: ignite 420ms ease-out both;
   animation-delay: calc(min(var(--i, 0), 12) * 40ms);
@@ -1142,14 +1221,15 @@ select {
   }
 }
 
-/* A 2px line races the width of the row once when its analysis lands, then
-   goes out — the same gesture as the search wipe. */
+/* A line races along the bottom of the card once when its analysis lands,
+   then goes out — the same gesture as the search wipe. */
 .ignite-trace {
   position: absolute;
-  left: 0;
-  bottom: -1px;
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 0;
   height: 2px;
-  width: 100%;
+  border-radius: 999px;
   background: var(--ember);
   transform-origin: left;
   animation: fw-wipe 1600ms ease-out both;
@@ -1202,24 +1282,32 @@ select {
 
 .discover-layout {
   display: flex;
-  gap: 2.25rem;
+  flex-wrap: wrap; /* the hero takes its own row; see .discover-hero */
+  gap: 1.75rem;
   align-items: flex-start;
   justify-content: center;
 }
 
 .discover {
-  flex: 1 1 900px;
-  max-width: 900px;
+  /* basis 0 + the cap gives a steady width without ever wrapping the
+     recent-searches rail under it */
+  flex: 1 1 0;
+  max-width: 920px;
   min-width: 0;
 }
 
-/* Recent-searches rail: sticky beside the results on desktop. */
+/* Recent-searches rail: a sticky card beside the results on desktop. */
 .recent-panel {
-  flex: 0 0 210px;
+  flex: 0 0 230px;
   position: sticky;
   top: 1rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
+  padding: 0.875rem 0.5rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
 }
 
 .recent-panel-toggle {
@@ -1228,7 +1316,7 @@ select {
   font: inherit;
   font-size: 0.8125rem;
   text-align: left;
-  padding: 0.75rem 0;
+  padding: 0.375rem 0.5rem;
   background: none;
   color: var(--text);
   border: none;
@@ -1241,14 +1329,14 @@ select {
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--faint);
-  margin: 0 0 0.75rem;
+  margin: 0 0.5rem 0.5rem;
 }
 
 .recent-empty {
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--faint);
-  margin: 0;
+  margin: 0 0.5rem 0.5rem;
 }
 
 .recent-list {
@@ -1264,24 +1352,23 @@ select {
   width: 100%;
   text-align: left;
   font: inherit;
-  padding: 0.625rem 0;
+  padding: 0.55rem 0.55rem;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--rule-hair);
+  border-radius: var(--r-sm);
   cursor: pointer;
   color: var(--text-2);
 }
 
-.recent-list li:last-child .recent-item {
-  border-bottom: none;
-}
-
 .recent-item:hover {
   color: var(--text);
+  background: var(--surface-2);
 }
 
-.recent-item-active {
+.recent-item-active,
+.recent-item-active:hover {
   color: var(--text);
+  background: var(--surface-3);
 }
 
 .recent-item-active .recent-item-text {
@@ -1320,23 +1407,38 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Search box ---------- */
+/* ---------- Search box: one floating squircle ---------- */
 
 .search-box {
   position: relative;
   display: flex;
   align-items: stretch;
-  border: 1px solid var(--rule-strong);
+  gap: 6px;
+  padding: 6px;
   background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-xl);
+  box-shadow: var(--lift-2);
+  transition:
+    box-shadow 200ms ease,
+    border-color 200ms ease;
 }
 
-/* On submit, a 2px line races the length of the field once, then goes out. */
+.search-box:focus-within {
+  border-color: var(--rule-strong);
+  box-shadow:
+    0 0 0 4px var(--ember-wash),
+    var(--lift-2);
+}
+
+/* On submit, a line races along the bottom of the field once, then goes out. */
 .search-wipe {
   position: absolute;
-  left: 0;
+  left: 1.5rem;
+  right: 1.5rem;
   bottom: -1px;
   height: 2px;
-  width: 100%;
+  border-radius: 999px;
   background: var(--ember);
   transform-origin: left;
   animation: fw-wipe 1600ms ease-out both;
@@ -1350,12 +1452,14 @@ select {
   font-family: var(--font-serif);
   font-size: 1.0625rem;
   line-height: 1.5;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.875rem;
   border: none;
   background: transparent;
   color: var(--text);
-  resize: vertical;
-  min-height: 3.5rem;
+  resize: none;
+  field-sizing: content;
+  min-height: 3.25rem;
+  max-height: 10rem;
   outline: none;
 }
 
@@ -1367,9 +1471,10 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0 1rem;
-  border-left: 1px solid var(--rule-soft);
+  gap: 0.1rem;
+  padding: 0 0.875rem;
+  background: var(--bg);
+  border-radius: calc(var(--r-xl) - 6px);
 }
 
 .search-box .time-gate > span {
@@ -1381,22 +1486,27 @@ select {
 
 .search-box .time-gate select {
   font-size: 0.875rem;
-  border: none;
-  padding: 0.125rem 0 0;
+  padding: 0 1.1rem 0 0;
+  background-color: transparent;
+  background-position: right 0 center;
 }
 
 .search-box .primary-button {
-  padding: 0 1.875rem;
+  padding: 0 1.75rem;
   font-size: 0.875rem;
   flex-shrink: 0;
+  border-radius: calc(var(--r-xl) - 6px);
 }
 
 /* ---------- Plan panel ---------- */
 
 .plan-panel {
-  margin-top: 1.375rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule-soft);
+  margin-top: 1rem;
+  padding: 1rem 1.25rem 1.125rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
 }
 
 .plan-interpretation {
@@ -1426,7 +1536,7 @@ select {
 .plan-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.125rem;
+  gap: 0.375rem;
   align-items: center;
   font-size: 0.8125rem;
   color: var(--text-3);
@@ -1437,8 +1547,9 @@ select {
   align-items: center;
   gap: 0.4375rem;
   border: none;
-  background: none;
-  padding: 0;
+  border-radius: var(--r-xs);
+  background: var(--field);
+  padding: 0.3rem 0.5rem 0.3rem 0.7rem;
   color: inherit;
 }
 
@@ -1448,7 +1559,7 @@ select {
 
 .chip-code {
   font-family: var(--font-mono);
-  border-bottom: 1px solid var(--faint);
+  color: var(--text);
 }
 
 /* The field's real name, so the chip reads without a hover the planner's
@@ -1462,7 +1573,13 @@ select {
 }
 
 .chip button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
   border: none;
+  border-radius: 50%;
+  corner-shape: round;
   background: none;
   cursor: pointer;
   color: var(--faint);
@@ -1473,17 +1590,21 @@ select {
 
 .chip button:hover {
   color: var(--text);
+  background: var(--surface-2);
 }
 
 .chip select {
   font-size: 0.8125rem;
-  border: none;
+  padding: 0 1.1rem 0 0;
+  background-color: transparent;
+  background-position: right 0 center;
 }
 
 .chip-toggle {
   cursor: pointer;
   color: var(--muted);
   gap: 0.375rem;
+  padding-right: 0.7rem;
 }
 
 /* The chip carries the field's name, but the gloss that explains it lives in a
@@ -1558,11 +1679,17 @@ select {
   font-size: 0.9375rem;
   line-height: 1.5;
   margin-top: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--rule);
-  background: var(--surface);
+  padding: 0.625rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: var(--field);
   color: var(--text);
   outline: none;
+}
+
+.plan-anchor textarea:focus {
+  border-color: var(--rule-strong);
+  background: var(--surface-hover);
 }
 
 /* ---------- Results header ---------- */
@@ -1574,7 +1701,7 @@ select {
   gap: 1rem;
   flex-wrap: wrap;
   margin-top: 1.625rem;
-  padding-bottom: 0.625rem;
+  padding: 0 0.25rem 0.75rem;
   font-size: 0.8125rem;
   color: var(--text-3);
 }
@@ -1617,7 +1744,7 @@ select {
   font-size: 0.75rem;
   line-height: 1.6;
   color: var(--faint);
-  margin: 0 0 0.75rem;
+  margin: 0 0.25rem 0.75rem;
   max-width: 80ch;
 }
 
@@ -1643,59 +1770,163 @@ select {
   flex: 1;
   min-width: 160px;
   max-width: 320px;
-  height: 3px;
-  background: var(--rule-soft);
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-3);
   overflow: hidden;
 }
 
 .analysis-progress-fill {
   height: 100%;
+  border-radius: 999px;
   background: var(--ember);
   transition: width 400ms ease;
+}
+
+/* ---------- Landing hero (Discover, before the first results) ---------- */
+
+.discover-hero {
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  min-height: clamp(420px, 60vh, 580px);
+  padding-left: clamp(0rem, 4vw, 3.5rem);
+}
+
+.hero-copy {
+  max-width: 35rem;
+  padding-bottom: 2rem;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 1.375rem;
+  padding: 0.35rem 0.8rem 0.35rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero-eyebrow::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--ember);
+  box-shadow: 0 0 0 3px var(--ember-wash);
+}
+
+.discover-hero h2 {
+  margin: 0 0 1.375rem;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 4.6vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+.discover-hero h2 em {
+  font-style: italic;
+}
+
+.hero-lede {
+  margin: 0 0 2.25rem;
+  max-width: 32ch;
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.hero-primary,
+.hero-secondary {
+  font: 500 0.875rem var(--font-sans);
+  letter-spacing: 0.01em;
+  padding: 0.8rem 1.35rem;
+  border-radius: var(--r-md);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--lift);
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.hero-primary {
+  border: none;
+  background: var(--text);
+  color: var(--ember-ink);
+}
+
+.hero-primary:hover {
+  background: #000;
+  box-shadow: var(--lift-2);
+}
+
+.hero-secondary {
+  border: 1px solid var(--rule-soft);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.hero-secondary:hover {
+  background: var(--surface-hover);
+  box-shadow: var(--lift-2);
+}
+
+.hero-secondary:active {
+  transform: scale(0.97);
+}
+
+/* The fire sits on the page: no frame, no background — a transparent canvas
+   over the paper (see src/campfire/scene.ts). */
+.campfire {
+  position: relative;
+  height: min(540px, calc(100vh - 240px));
+  min-height: 400px;
+}
+
+.campfire canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* ---------- Empty state ---------- */
 
 .discover-intro {
-  display: grid;
-  grid-template-columns: 3px 1fr;
-  gap: 0 1.3125rem;
-  margin-top: 2.125rem;
-}
-
-.discover-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem 2rem;
-}
-
-.discover-step-number {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 1.625rem;
-  line-height: 1;
-  color: var(--rule);
-  font-variant-numeric: tabular-nums;
-}
-
-.discover-step h3 {
-  margin: 0.75rem 0 0.5rem;
-  font-family: var(--font-serif);
-  font-size: 1.1875rem;
-  font-weight: 600;
-}
-
-.discover-step p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.6;
+  margin-top: 1.25rem;
 }
 
 .discover-examples {
-  margin-top: 1.875rem;
-  padding-top: 1.125rem;
-  border-top: 1px solid var(--rule-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.75rem 0.5rem 0.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
 }
 
 .discover-examples-label {
@@ -1703,41 +1934,92 @@ select {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--faint);
-  margin-bottom: 0.75rem;
-}
-
-.discover-example-list {
-  display: flex;
-  flex-direction: column;
+  margin: 0 0.625rem 0.375rem;
 }
 
 /* Full-width rows in the serif: they read as prose someone might have typed,
    not as tags. */
 .example-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
   font: inherit;
   font-family: var(--font-serif);
   font-size: 1rem;
   line-height: 1.4;
   text-align: left;
-  padding: 0.6875rem 0;
+  padding: 0.625rem 0.75rem;
   border: none;
-  border-bottom: 1px solid var(--rule-hair);
+  border-radius: var(--r-sm);
   background: none;
   color: var(--text-2);
   cursor: pointer;
 }
 
-.discover-example-list .example-chip:last-child {
-  border-bottom: none;
+.example-chip::after {
+  content: '→';
+  font-family: var(--font-sans);
+  color: var(--faint);
+  transition:
+    transform 150ms ease,
+    color 150ms ease;
 }
 
 .example-chip:hover:not(:disabled) {
   color: var(--text);
+  background: var(--surface-2);
+}
+
+.example-chip:hover:not(:disabled)::after {
+  color: var(--text);
+  transform: translateX(3px);
 }
 
 .example-chip:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.discover-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.discover-step {
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
+}
+
+.discover-step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-xs);
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.discover-step h3 {
+  margin: 1rem 0 0.5rem;
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  font-weight: 500;
+}
+
+.discover-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
 /* ---------- Admin ---------- */
@@ -1751,44 +2033,44 @@ select {
 }
 
 .admin-panel h2 {
-  font-size: 1.15rem;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.25rem;
   color: var(--text);
 }
 
-/* Sub-tabs stay achromatic — the ember is spoken for by the top-level nav. */
+/* Sub-tabs: a segmented control — the selected segment lifts. */
 .admin-tabs {
-  display: flex;
-  gap: 1.5rem;
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
   margin-bottom: 1.375rem;
-  border-bottom: none;
+  background: var(--field);
+  border-radius: var(--r-md);
 }
 
-.admin-tabs .tab {
-  padding-bottom: 0.5rem;
-  border-bottom-width: 2px;
-}
-
-.admin-tabs .tab-active {
-  border-bottom-color: var(--text);
-  margin-bottom: 0;
+.admin-tabs .tab-active,
+.admin-tabs .tab-active:hover {
+  background: var(--surface);
+  box-shadow: var(--lift);
 }
 
 .admin-search {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   align-items: center;
   margin-bottom: 1rem;
 }
 
 .admin-search input {
   flex: 1;
-  max-width: 260px;
+  max-width: 300px;
   font: inherit;
   font-size: 0.8125rem;
-  padding: 0.4375rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--field);
   color: var(--text);
   outline: none;
 }
@@ -1800,6 +2082,11 @@ select {
 .admin-table-wrap {
   overflow-x: auto;
   margin-top: 1.375rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
 }
 
 .admin-table {
@@ -1815,8 +2102,8 @@ select {
   font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  padding: 0 0 0.625rem 1.25rem;
-  border-bottom: 1px solid var(--rule-strong);
+  padding: 0.75rem 0 0.625rem 1.25rem;
+  border-bottom: 1px solid var(--rule);
   white-space: nowrap;
 }
 
@@ -1830,6 +2117,10 @@ select {
   border-bottom: 1px solid var(--rule-hair);
   vertical-align: top;
   font-variant-numeric: tabular-nums;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
 }
 
 .admin-table td strong {
@@ -1857,32 +2148,34 @@ select {
 
 .admin-actions-group {
   display: flex;
-  gap: 1rem;
+  gap: 0.375rem;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
 
-.admin-actions button,
-.admin-panel section > button {
+.admin-actions button {
   font: inherit;
   font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
   border: none;
-  background: none;
-  color: var(--muted);
+  border-radius: var(--r-xs);
+  background: var(--field);
+  color: var(--text-3);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .admin-actions button:hover:not(:disabled) {
   color: var(--text);
+  background: var(--surface-2);
 }
 
 /* Red is reserved for the one consequential action per row. */
-.admin-actions-group button:nth-child(2) {
+.admin-actions-group button:nth-child(2),
+.admin-actions-group button:nth-child(2):hover:not(:disabled) {
   color: var(--ember-text);
+  background: var(--ember-wash);
 }
 
 .admin-actions button:disabled {
@@ -1890,32 +2183,32 @@ select {
   cursor: default;
 }
 
-.admin-panel section > button.primary-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--rule-strong);
-  background: transparent;
-  color: var(--text);
-  font-weight: 700;
-}
-
-.admin-panel section > button.primary-button:hover:not(:disabled) {
-  border-color: var(--text);
-  background: transparent;
-  color: var(--text);
-}
-
+/* Admin's section buttons aren't the app's verb: quiet surface buttons. */
+.admin-panel section > button,
 .admin-search .primary-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--rule-strong);
-  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--lift);
   color: var(--text);
-  font-size: 0.75rem;
+  cursor: pointer;
 }
 
+.admin-panel section > button:hover:not(:disabled),
 .admin-search .primary-button:hover:not(:disabled) {
-  border-color: var(--text);
-  background: transparent;
+  background: var(--surface-hover);
+  box-shadow: var(--lift-2);
   color: var(--text);
+}
+
+.admin-panel section > button:disabled,
+.admin-search .primary-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ---------- Dialogs & drawers ---------- */
@@ -1924,6 +2217,8 @@ select {
   position: fixed;
   inset: 0;
   background: var(--overlay);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: flex-end;
   z-index: 10;
@@ -1941,7 +2236,9 @@ select {
 .auth-panel,
 .admin-dialog {
   background: var(--surface);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-xl);
+  box-shadow: var(--lift-3);
   width: min(420px, calc(100vw - 2rem));
   margin: 14vh auto 2rem;
   padding: 1.5rem 1.5rem 1.375rem;
@@ -1977,7 +2274,7 @@ select {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: 1rem;
 }
 
 .auth-form label,
@@ -1985,29 +2282,30 @@ select {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  font-size: 0.625rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
 }
 
+/* Fields are filled squircle wells; focus lifts them onto the card. */
 .auth-form input,
 .admin-dialog input {
   font: inherit;
   font-size: 0.9375rem;
+  font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
-  padding: 0.4375rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--field);
   color: var(--text);
   outline: none;
 }
 
 .admin-dialog input {
   font-family: var(--font-mono);
-  font-size: 1.375rem;
+  font-size: 1.25rem;
 }
 
 .auth-form input:focus,
@@ -2015,7 +2313,8 @@ select {
 .admin-search input:focus,
 .category-search:focus,
 .invite-banner-form input:focus {
-  border-bottom-color: var(--ember);
+  border-color: var(--rule-strong);
+  background: var(--surface-hover);
 }
 
 .auth-form input::placeholder,
@@ -2026,7 +2325,7 @@ select {
 
 .auth-form .primary-button {
   margin-top: 0.5rem;
-  padding: 0.6875rem 1.125rem;
+  padding: 0.75rem 1.125rem;
 }
 
 .auth-links {
@@ -2061,6 +2360,7 @@ select {
 .admin-role-options {
   display: flex;
   flex-direction: column;
+  gap: 0.375rem;
   margin-top: 0.75rem;
 }
 
@@ -2070,27 +2370,23 @@ select {
   gap: 0.25rem;
   text-align: left;
   font: inherit;
-  padding: 0.875rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule-hair);
-  background: none;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: var(--field);
   color: var(--text);
   cursor: pointer;
 }
 
-.admin-role-options button:last-child {
-  border-bottom: none;
+.admin-role-options button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--rule-strong);
 }
 
 .admin-role-options button strong {
   font-family: var(--font-serif);
   font-size: 1rem;
   font-weight: 600;
-}
-
-.admin-role-options button:hover:not(:disabled) strong {
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .admin-role-options button:disabled {
@@ -2104,33 +2400,37 @@ select {
   color: var(--muted);
 }
 
-/* ---------- Settings drawer ---------- */
+/* ---------- Settings drawer: a floating sheet ---------- */
 
 .settings-panel {
-  width: min(440px, 100%);
-  height: 100%;
+  width: min(440px, calc(100% - 1.25rem));
+  height: calc(100% - 1.25rem);
+  margin: 0.625rem;
   overflow-y: auto;
   background: var(--surface);
-  border-left: 1px solid var(--rule);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-xl);
+  box-shadow: var(--lift-3);
   padding: 1.5rem 1.75rem 3rem;
 }
 
-/* Nothing in Settings is the app's verb, so nothing here is a solid slab. */
+/* Nothing in Settings is the app's verb, so nothing here is ember. */
 .settings-panel button:not(.link-button) {
   font: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.8125rem;
+  font-weight: 600;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--rule-strong);
-  background: transparent;
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--lift);
   color: var(--text);
   cursor: pointer;
 }
 
 .settings-panel button:not(.link-button):hover:not(:disabled) {
-  border-color: var(--text);
+  background: var(--surface-hover);
+  box-shadow: var(--lift-2);
 }
 
 .settings-panel button:not(.link-button):disabled {
@@ -2142,8 +2442,8 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  border-bottom: 1px solid var(--rule);
   padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule-hair);
 }
 
 .settings-panel h2 {
@@ -2171,7 +2471,7 @@ select {
 
 .settings-row {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   align-items: flex-end;
 }
 
@@ -2184,10 +2484,9 @@ select {
   font-size: 0.875rem;
 }
 
-/* Stacked consistently: label above a full-width select. The old side-by-side
-   flex wrapped unpredictably per label length, so rows looked mismatched.
-   Scoped past `.settings-panel label { display: block }`, which is more
-   specific than a bare `.settings-row` and would otherwise win. */
+/* Stacked consistently: label above a full-width select. Scoped past
+   `.settings-panel label { display: block }`, which is more specific than a
+   bare `.settings-row` and would otherwise win. */
 .settings-panel label.settings-model-row {
   display: flex;
   flex-direction: column;
@@ -2206,10 +2505,9 @@ select {
 
 .settings-panel label {
   display: block;
-  font-size: 0.625rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
   margin-bottom: 1rem;
 }
 
@@ -2221,15 +2519,20 @@ select {
   width: 100%;
   font: inherit;
   font-size: 0.875rem;
+  font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
   margin-top: 0.375rem;
-  padding: 0.4375rem 0;
-  border: none;
-  border-bottom: 1px solid var(--rule);
-  background: transparent;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background-color: var(--field);
   color: var(--text);
   outline: none;
+}
+
+.settings-panel select {
+  padding-right: 1.75rem;
 }
 
 .settings-panel textarea {
@@ -2242,7 +2545,8 @@ select {
 .settings-panel textarea:focus,
 .settings-panel input:focus,
 .settings-panel select:focus {
-  border-bottom-color: var(--ember);
+  border-color: var(--rule-strong);
+  background-color: var(--surface-hover);
 }
 
 .settings-panel textarea::placeholder {
@@ -2267,23 +2571,45 @@ select {
     font-size: 16px !important;
   }
 
-  /* …except the hand-drawn category squares, which are not text. */
+  /* …except the hand-drawn category boxes, which are not text. */
   .category-filter input[type='checkbox'] {
     font-size: 0 !important;
   }
 
   .app {
-    padding: 0 1.1rem 2.5rem;
+    padding: 0 1rem 2.5rem;
+  }
+
+  /* Brand and account on the first row, the sections across the second. */
+  .app-header {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'brand actions'
+      'tabs tabs';
+    gap: 0.5rem;
+    padding: 0.875rem 0;
+  }
+
+  .app-brand {
+    padding: 0.55rem 0.875rem;
+  }
+
+  .app-tabs {
+    justify-self: stretch;
+  }
+
+  .app-tabs .tab {
+    flex: 1;
+  }
+
+  .budget-chip-label {
+    display: none;
   }
 
   .auth-panel,
   .admin-dialog {
     margin: 6vh auto 2rem;
     padding: 1.5rem 1.25rem 1.25rem;
-  }
-
-  .app-header-actions {
-    gap: 0.875rem;
   }
 
   .app-body {
@@ -2296,9 +2622,8 @@ select {
     width: 100%;
     flex: none;
     max-height: none;
-    border-top: 1px solid var(--rule-soft);
-    border-bottom: 1px solid var(--rule-soft);
     overflow: hidden;
+    padding: 0.375rem;
   }
 
   .category-filter-mobile-toggle {
@@ -2307,7 +2632,7 @@ select {
     font: inherit;
     font-size: 0.8125rem;
     text-align: left;
-    padding: 0.75rem 0;
+    padding: 0.5rem 0.625rem;
     border: none;
     background: none;
     color: var(--text);
@@ -2316,7 +2641,7 @@ select {
 
   .category-filter-body {
     display: none;
-    padding-bottom: 1rem;
+    padding: 0.5rem 0.25rem 0.5rem;
   }
 
   .category-filter-open .category-filter-body {
@@ -2327,12 +2652,16 @@ select {
     max-height: 45vh;
   }
 
-  /* Recent-searches rail collapses to a full-width, toggle-able panel that
+  /* Recent-searches rail collapses to a full-width, toggle-able card that
      sits ABOVE the results (order:-1) so it never pushes content down when
      closed. Mirrors the category-filter mobile pattern. */
   .discover-layout {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .discover {
+    width: 100%;
   }
 
   .recent-panel {
@@ -2342,8 +2671,7 @@ select {
     position: static;
     max-height: none;
     overflow: visible;
-    border-top: 1px solid var(--rule-soft);
-    border-bottom: 1px solid var(--rule-soft);
+    padding: 0.375rem;
   }
 
   .recent-panel-toggle {
@@ -2352,7 +2680,7 @@ select {
 
   .recent-panel-body {
     display: none;
-    padding-bottom: 0.75rem;
+    padding: 0.25rem 0 0.25rem;
   }
 
   .recent-panel-body.recent-open {
@@ -2369,12 +2697,11 @@ select {
 
   .search-box textarea {
     flex: 1 0 100%;
-    border-bottom: 1px solid var(--rule-soft);
   }
 
   .search-box .time-gate {
-    border-left: none;
-    padding: 0.625rem 1rem;
+    flex: 1;
+    padding: 0.5rem 0.875rem;
   }
 
   .search-box .primary-button {
@@ -2395,10 +2722,11 @@ select {
     justify-content: flex-start;
   }
 
-  /* Tighter gutters: the numerals still lead the row, with less air. */
+  /* Tighter gutters: the numerals still lead the card, with less air. */
   .paper-card {
     --paper-gutter: 46px;
     gap: 0 0.875rem;
+    padding: 1rem 1rem 1rem 0.75rem;
   }
 
   .paper-list-ranked {
@@ -2409,25 +2737,43 @@ select {
     font-size: 1.1875rem;
   }
 
-  .paper-rank,
-  .discover-step-number {
+  .paper-rank {
     font-size: 1.375rem;
   }
 
-  .results-fuse-grid,
-  .discover-intro {
-    gap: 0 0.875rem;
+  .results-fuse-grid {
+    gap: 0 0.75rem;
+  }
+
+  /* The hero leads, above the recent-searches toggle (order: -1). */
+  .discover-hero {
+    order: -2;
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .discover-hero .campfire {
+    order: -1;
+    height: 270px;
+    min-height: 0;
+    margin: 0 0 -0.5rem;
+  }
+
+  .hero-copy {
+    padding-bottom: 1rem;
+  }
+
+  .hero-lede {
+    font-size: 1.0625rem;
   }
 
   .analysis-grid {
     grid-template-columns: 1fr;
   }
 
-  .app-brand p {
-    display: none;
-  }
-
-  .invite-banner {
-    padding-left: 0.75rem;
+  .settings-panel {
+    padding: 1.25rem 1.25rem 2.5rem;
   }
 }
