@@ -69,6 +69,8 @@ flowchart LR
 4. **Analysis is opt-in and costs a call per paper.** It's cached per paper ×
    profile, and the UI shows a dollar estimate before you spend anything.
 
+New to BM25, embeddings or nDCG? See [Terminology](#terminology).
+
 ## Every ranking change is measured
 
 An offline eval harness scores the ranker against 54 frozen queries and
@@ -88,6 +90,82 @@ xychart-beta
 Hybrid search shipped with a **+17%** gain. The cross-encoder reranker
 didn't ship, because it was a wash. The full methodology and campaign history
 are in [docs/search-quality.md](docs/search-quality.md).
+
+## Terminology
+
+### Search
+
+**arXiv** — A free, public site where researchers post papers, often before
+formal publication. All of Fatwood's papers come from it.
+
+**Embedding** — A list of numbers that represents the *meaning* of a piece
+of text. Texts about similar things get similar numbers, even when they use
+different words. "Detecting fraud in transactions" and "anomaly detection
+for payments" end up close together. Fatwood embeds every paper's title and
+abstract ahead of time, and your search plan at query time, then looks for
+the papers closest to your plan.
+
+**bge-small / ONNX** — bge-small is the small, free embedding model Fatwood
+uses. Each text becomes 384 numbers. ONNX is a portable model format that
+lets it run inside the .NET app, so embedding costs nothing and needs no
+external API.
+
+**int8 quantization** — Storing each of those 384 numbers in 1 byte
+instead of 4. You lose a little precision, but 925k papers fit in memory
+and comparisons get much faster.
+
+**BM25** — The classic keyword-search formula, essentially what search
+engines used before embeddings. It scores a paper higher when it contains
+your exact words, especially rare ones. It also stops rewarding a word after
+it appears enough times, and adjusts for document length. It catches what
+embeddings blur: acronyms, model names, exact jargon like "LoRA" or "SLAM".
+
+**Hybrid search** — Running embedding search and BM25 side by side, then
+combining the two rankings. Each covers the other's blind spots. In
+Fatwood, this was the single biggest measured improvement.
+
+**Reciprocal Rank Fusion (RRF)** — The simple rule that combines those two
+rankings. Each paper scores `1 / (60 + its rank)` in each list, and the
+scores are added. A paper near the top of both lists wins. Because it only
+uses rank positions, the two systems' very different raw scores never need
+to be compared directly.
+
+**Cross-encoder / reranker** — A slower, more careful model that reads your
+query and a paper *together* and scores how well they match. It usually
+re-sorts only the top results. Fatwood tested one, measured no gain, and
+left it off.
+
+**Wildcard** — Fatwood's own term. Two result slots are reserved for highly
+relevant papers that are furthest from your stated experience, so results
+don't only reflect what you already know.
+
+### Measurement
+
+**Eval harness** — A test suite for search quality instead of code. It
+runs a fixed set of queries through the ranker and scores the results
+against known-good answers.
+
+**Relevance judgment** — One graded answer: "for query X, paper Y is a 0
+(irrelevant) to 3 (great match)." Fatwood's ~8,200 judgments were graded by
+an LLM against a written rubric and are stored in the repo.
+
+**nDCG@10** — The headline score. It looks at the top 10 results and asks
+how close they are to the best possible top 10. Great papers count more,
+and so do results ranked higher. 1.0 is perfect; 0 means nothing relevant.
+Fatwood's 0.628 means the top 10 captures about 63% of the ideal.
+
+**Recall@50** — Of all the papers known to be relevant, the share that
+appear anywhere in the top 50.
+
+**MRR (Mean Reciprocal Rank)** — How high the *first* good result lands,
+averaged across queries. First place scores 1, second place ½, third ⅓,
+and so on.
+
+**Interleaving** — A live A/B test for rankers. Results from two rankers
+are mixed into one list, and each user action on a result, such as a
+bookmark or an analysis, counts as a vote for the ranker that supplied it.
+Fatwood supports this but keeps it off by default, and a human decides
+whether the winner ships.
 
 ## Tech stack
 
