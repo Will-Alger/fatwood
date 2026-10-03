@@ -61,15 +61,20 @@ export function HowItWorks() {
             <dd>0.628</dd>
           </div>
         </dl>
-        <ul className="how-legend" aria-label="Legend">
-          <li>
-            <span className="flow-kind flow-kind-llm">{KIND_LABEL.llm}</span> costs money, logged to
-            your budget
-          </li>
-          <li>
-            <span className="flow-kind">{KIND_LABEL.local}</span> runs on our server, free
-          </li>
-        </ul>
+        <div className="how-legend-row">
+          <ul className="how-legend" aria-label="Legend">
+            <li>
+              <span className="flow-kind flow-kind-llm">{KIND_LABEL.llm}</span> costs money, logged
+              to your budget
+            </li>
+            <li>
+              <span className="flow-kind">{KIND_LABEL.local}</span> runs on our server, free
+            </li>
+          </ul>
+          <a className="how-repo" href={REPO} target="_blank" rel="noopener noreferrer">
+            View the source on GitHub <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </header>
 
       {LANES.map((lane, i) => (
@@ -84,6 +89,14 @@ export function HowItWorks() {
       ))}
     </div>
   )
+}
+
+const REPO = 'https://github.com/Will-Alger/fatwood'
+
+/** A code chip's path, as a GitHub link (backend paths drop their project prefix). */
+function sourceUrl(path: string) {
+  const full = /^(web|eval|infra|\.github)\//.test(path) ? path : `src/ResearchDiscovery.${path}`
+  return `${REPO}/${/\.[a-z]+$/i.test(path) ? 'blob' : 'tree'}/main/${full}`
 }
 
 const TRACE_MS = 620
@@ -411,7 +424,15 @@ function FlowLane({
                   <div className="flow-code">
                     <span className="flow-code-label">In the code</span>
                     {step.code.map((c) => (
-                      <code key={c}>{c}</code>
+                      <a
+                        key={c}
+                        href={sourceUrl(c)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open on GitHub"
+                      >
+                        <code>{c}</code>
+                      </a>
                     ))}
                   </div>
                 )}
