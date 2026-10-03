@@ -5,6 +5,7 @@ import { AdminPanel } from './components/AdminPanel'
 import { AuthPanel } from './components/AuthPanel'
 import { CategoryFilter } from './components/CategoryFilter'
 import { Discover } from './components/Discover'
+import { HowItWorks } from './components/HowItWorks'
 import { Logo } from './components/Logo'
 import { Pagination } from './components/Pagination'
 import { PaperList } from './components/PaperList'
@@ -18,7 +19,7 @@ import './App.css'
 
 const PAGE_SIZE = 25
 
-type Tab = 'discover' | 'browse' | 'admin'
+type Tab = 'discover' | 'browse' | 'how' | 'admin'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('discover')
@@ -117,6 +118,14 @@ export default function App() {
           >
             Browse
           </button>
+          <button
+            type="button"
+            className={tab === 'how' ? 'tab tab-active' : 'tab'}
+            aria-current={tab === 'how' ? 'page' : undefined}
+            onClick={() => setTab('how')}
+          >
+            How it works
+          </button>
           {me && me.role !== 'Member' && (
             <button
               type="button"
@@ -199,6 +208,11 @@ export default function App() {
           categories={categories}
         />
       </div>
+      {tab === 'how' && (
+        <div className="app-body app-body-single">
+          <HowItWorks />
+        </div>
+      )}
       {tab === 'admin' && me && me.role !== 'Member' && (
         <div className="app-body app-body-single">
           <AdminPanel me={me} />

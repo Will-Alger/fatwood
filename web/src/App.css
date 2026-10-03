@@ -171,7 +171,12 @@ button:active:not(:disabled) {
 
 /* ---------- Header: three islands, the mark centred ---------- */
 
+/* The header floats over the page as it scrolls: the islands stay put, and a
+   wash of paper behind them fades out so content slides under cleanly. */
 .app-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 40;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   grid-template-areas: 'tabs brand actions';
@@ -179,6 +184,18 @@ button:active:not(:disabled) {
   gap: 0.75rem;
   padding: 1.25rem 0;
   margin-bottom: 1rem;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: calc(-1 * env(safe-area-inset-top, 0px));
+  bottom: -1rem;
+  left: -2.5rem; /* the .app gutter: content never reaches past it */
+  right: -2.5rem;
+  background: linear-gradient(var(--bg) 60%, rgba(231, 228, 220, 0));
+  pointer-events: none;
 }
 
 .app-brand {
@@ -396,8 +413,8 @@ button:active:not(:disabled) {
 .category-filter {
   flex: 0 0 260px;
   position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
+  top: 5.75rem; /* clear of the sticky header */
+  max-height: calc(100vh - 6.75rem);
   display: flex;
   flex-direction: column;
   padding: 0.875rem 0.625rem 0.375rem;
@@ -1315,8 +1332,8 @@ select:disabled {
 .recent-panel {
   flex: 0 0 230px;
   position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
+  top: 5.75rem; /* clear of the sticky header */
+  max-height: calc(100vh - 6.75rem);
   overflow-y: auto;
   padding: 0.875rem 0.5rem 0.5rem;
   background: var(--surface);
@@ -2022,6 +2039,596 @@ select:disabled {
   line-height: 1.6;
 }
 
+/* ---------- How it works (the architecture, as four flows) ---------- */
+
+.how {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+
+/* Inset like the Discover hero, so the two pages share a left edge. */
+.how-intro {
+  padding: 2.5rem clamp(0rem, 4vw, 3.5rem) 1.75rem;
+}
+
+.how-intro h2 {
+  margin: 0 0 1.125rem;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 4.6vw, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+.how-intro h2 em {
+  font-style: italic;
+}
+
+.how-lede {
+  margin: 0 0 2rem;
+  max-width: 46ch;
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.how-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, max-content));
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+}
+
+.how-stats div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.2rem;
+  padding: 0.875rem 1.25rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--lift);
+}
+
+.how-stats dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.how-stats dt {
+  font-size: 0.75rem;
+  color: var(--faint);
+}
+
+.how-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.how-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* A lane: one flow on its own card. */
+.flow-lane {
+  padding: 1.375rem 1.5rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-xl);
+  box-shadow: var(--lift);
+}
+
+.flow-lane-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.flow-lane-number {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-xs);
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.flow-lane-head h3 {
+  margin: 0 0 0.125rem;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.flow-lane-head p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.flow-trace {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font: 500 0.8125rem var(--font-sans);
+  padding: 0.55rem 0.95rem 0.55rem 0.8rem;
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.flow-trace:hover:not(:disabled) {
+  background: var(--surface-hover);
+  box-shadow: var(--lift);
+}
+
+.flow-trace:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.flow-trace:disabled {
+  cursor: default;
+  color: var(--muted);
+}
+
+.flow-trace-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--ember);
+  box-shadow: 0 0 0 3px var(--ember-wash);
+}
+
+.flow-trace:disabled .flow-trace-dot {
+  animation: flow-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes flow-pulse {
+  to {
+    box-shadow: 0 0 0 6px var(--ember-wash);
+  }
+}
+
+/* The steps sit in a grid; the connectors are an SVG laid under them. */
+.flow-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--flow-cols), minmax(0, 1fr));
+  column-gap: 2.5rem;
+  align-items: center;
+}
+
+.flow-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.flow-edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+}
+
+/* The fuse: an ember stroke over the connector, drawn by its dash offset. */
+.flow-fuse {
+  fill: none;
+  stroke: var(--ember);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dashoffset: 100000;
+  stroke-dasharray: 100000;
+}
+
+.flow-arrow {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.flow-arrow-lit {
+  stroke: var(--ember);
+  transition: stroke 200ms ease;
+}
+
+.flow-spark {
+  fill: var(--ember);
+  opacity: 0;
+  filter: drop-shadow(0 0 4px rgba(168, 42, 23, 0.55));
+}
+
+.flow-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.flow-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 7.25rem;
+  padding: 0.75rem 0.875rem 0.875rem;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface-hover);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift);
+  cursor: pointer;
+  transition:
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    opacity 300ms ease,
+    transform 200ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.flow-col-stack .flow-step {
+  min-height: 0;
+}
+
+.flow-step:hover {
+  box-shadow: var(--lift-2);
+  transform: translateY(-2px);
+}
+
+/* While a lane traces, the steps it has not reached yet sit back. */
+.flow-lane-tracing .flow-step:not(.flow-step-lit) {
+  opacity: 0.55;
+}
+
+.flow-step:active {
+  transform: scale(0.98);
+}
+
+.flow-step-open {
+  border-color: var(--text);
+  box-shadow: var(--lift-2);
+}
+
+/* Caught by a trace: the same ember as the fuse. */
+.flow-step-lit {
+  border-color: var(--ember);
+  box-shadow:
+    0 0 0 3px var(--ember-wash),
+    var(--lift);
+  animation: flow-catch 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+@keyframes flow-catch {
+  40% {
+    transform: scale(1.025);
+  }
+}
+
+.flow-step-title {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.flow-step-blurb {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.flow-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.flow-kind::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--rule-strong);
+}
+
+.flow-kind-llm {
+  color: var(--ember-text);
+}
+
+.flow-kind-llm::before {
+  background: var(--ember);
+}
+
+/* The open step, under its lane. */
+.flow-panel {
+  interpolate-size: allow-keywords;
+  overflow: hidden;
+  margin-top: 1.25rem;
+  padding: 1.125rem 1.25rem 1rem;
+  background: var(--bg);
+  border-radius: calc(var(--r-xl) - 0.5rem);
+  animation: flow-open 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes flow-open {
+  from {
+    height: 0;
+    margin-top: 0;
+    padding-block: 0;
+    opacity: 0;
+  }
+}
+
+.flow-panel-inner {
+  animation: flow-fade 320ms ease-out;
+}
+
+@keyframes flow-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.flow-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.flow-panel-head h4 {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.flow-panel-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.flow-panel-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.flow-panel-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.flow-panel-prose p {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.flow-facts {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.flow-facts li {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-3);
+}
+
+.flow-facts li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--rule-strong);
+}
+
+.flow-code {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.flow-code-label {
+  flex: 0 0 100%;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--faint);
+}
+
+.flow-code code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r-xs);
+}
+
+.flow-panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule-hair);
+}
+
+.flow-nav {
+  font: 500 0.8125rem var(--font-sans);
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.flow-nav:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.flow-nav:disabled {
+  color: var(--faint);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.flow-nav-jump {
+  background: var(--surface);
+  box-shadow: var(--lift);
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-panel,
+  .flow-panel-inner,
+  .flow-step-lit,
+  .flow-trace:disabled .flow-trace-dot {
+    animation: none;
+  }
+
+  .flow-step:hover {
+    transform: none;
+  }
+}
+
+/* Phones: each flow runs down the screen; a stacked pair sits side by side. */
+@media (max-width: 860px) {
+  .how-intro {
+    padding: 1.25rem 0 0.75rem;
+  }
+
+  .how-lede {
+    font-size: 1.0625rem;
+  }
+
+  .how-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .flow-lane {
+    padding: 1.125rem 1rem 1rem;
+    border-radius: var(--r-lg);
+  }
+
+  .flow-lane-head {
+    grid-template-columns: auto 1fr;
+    row-gap: 0.875rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .flow-trace {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .flow-grid {
+    grid-template-columns: 1fr;
+    row-gap: 1.75rem;
+  }
+
+  .flow-col-stack {
+    flex-direction: row;
+  }
+
+  .flow-step {
+    min-height: 0;
+  }
+
+  .flow-panel {
+    margin: 1.25rem -0.25rem 0;
+    padding: 1rem 1rem 0.75rem;
+    border-radius: calc(var(--r-lg) - 0.75rem);
+  }
+
+  .flow-panel-body {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .flow-panel-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .flow-nav {
+    text-align: left;
+  }
+
+  .flow-nav-jump {
+    order: -1;
+  }
+}
+
 /* ---------- Admin ---------- */
 
 .admin-panel {
@@ -2221,7 +2828,7 @@ select:disabled {
   backdrop-filter: blur(6px);
   display: flex;
   justify-content: flex-end;
-  z-index: 10;
+  z-index: 45; /* over the sticky header (40), under the grain (50) */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
     env(safe-area-inset-left);
 }
@@ -2582,6 +3189,11 @@ select:disabled {
   .app {
     padding: env(safe-area-inset-top) max(1rem, env(safe-area-inset-right))
       calc(2.5rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  }
+
+  .app-header::before {
+    left: -1rem;
+    right: -1rem;
   }
 
   /* Brand and account on the first row, the sections across the second. */
