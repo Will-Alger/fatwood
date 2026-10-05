@@ -101,6 +101,43 @@ jobs:
             --image "${{ vars.ACR_NAME }}.azurecr.io/$IMAGE_REPO:${{ github.sha }}" \
             --output none
 
+      # Mirrors the daytime cron rule in infra/main.bicep (keep the values in
+      # sync): one warm replica by day, scale-to-zero at night. Re-asserted on
+      # every deploy so an imperative --min-replicas can't silently drift it.
+      # `az containerapp update --scale-rule-*` would replace the http rule,
+      # so this edits only the 'daytime' rule and merge-PATCHes template.scale.
+      - name: Apply API day/night scale schedule
+        run: |
+          set -euo pipefail
+          APP_ID=$(az containerapp show \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.CONTAINERAPP_NAME }}" \
+            --query id -o tsv)
+          SCALE=$(az rest --method GET --url "https://management.azure.com${APP_ID}?api-version=2024-03-01" \
+            --query properties.template.scale -o json)
+          BODY=$(jq -c '{properties: {template: {scale: (
+              .minReplicas = 0
+              | .rules = ([(.rules // [])[] | select(.name != "daytime")] + [{
+                  name: "daytime",
+                  custom: {
+                    type: "cron",
+                    metadata: {
+                      timezone: "America/New_York",
+                      start: "0 7 * * *",
+                      end: "0 23 * * *",
+                      desiredReplicas: "1"
+                    }
+                  }
+                }])
+            )}}}' <<< "$SCALE")
+          echo "Scale: $BODY"
+          az rest --method PATCH --url "https://management.azure.com${APP_ID}?api-version=2024-03-01" \
+            --headers "Content-Type=application/json" --body "$BODY" --output none
+          az containerapp show \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ vars.CONTAINERAPP_NAME }}" \
+            --query properties.template.scale -o json
+
       - name: Roll ingest cron job to new image
         if: vars.INGEST_JOB_NAME != ''
         run: |

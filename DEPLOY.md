@@ -32,11 +32,12 @@ with `az acr build` — ACR Tasks are not permitted on free/MSDN subscriptions.
 
 **Cost — two honest numbers:**
 
-- **Template defaults** (scale-to-zero, B1ms): roughly **$25–30/month** — ACR
-  ~$5, Postgres ~$17, storage/Key Vault/logs a few dollars, API ~$0 while idle.
-- **As production actually runs today**: roughly **$70–95/month.** Two
-  deliberate departures from the defaults were applied *imperatively* and are
-  documented in "Drift you should know about" below.
+- **Template defaults** (warm by day, scale-to-zero at night, B1ms): ACR
+  ~$5, Postgres ~$17, storage/Key Vault/logs a few dollars, plus the API's
+  ~16 warm hours a day (it costs ~$0 while idle overnight).
+- **As production actually runs today**: one deliberate departure from the
+  defaults (the Postgres SKU) was applied *imperatively* and is documented in
+  "Drift you should know about" below.
 
 ## What you do vs what's automated
 
@@ -205,11 +206,17 @@ Ops HTTP routes (`/api/admin/**`) require signing in as an account with the
   `analysis-jobs` Storage queue; the `analyze-worker` job is KEDA-scaled on
   queue depth. The first few papers run in-process (hot lane) so results start
   appearing immediately.
-- **Scale to zero** is the template default (`apiMinReplicas 0`), so the
+- **Always on by day, scale to zero at night.** A KEDA `cron` scale rule
+  holds `apiDaytimeReplicas` (1) warm from 07:00 to 23:00 `America/New_York`
+  (`apiDaytimeStart` / `apiDaytimeEnd` / `apiDaytimeTimezone`); outside that
+  window `apiMinReplicas 0` applies, so the API drops to zero once idle and a
+  night request still wakes it. Because the app can be at zero, the
   in-process daily scheduler is disabled and a Container Apps **cron job**
   (`ingest-delta`, 06:30 UTC) runs the delta on the same image. Trade-off:
-  a cold start re-downloads the ~130 MB embedding model (it is not baked into
-  the image) and reloads index snapshots. Set `apiMinReplicas 1` to avoid it.
+  a night cold start re-downloads the ~130 MB embedding model (it is not
+  baked into the image) and reloads index snapshots. Set `apiMinReplicas 1`
+  for always-on around the clock, or `apiDaytimeReplicas 0` for pure
+  scale-to-zero.
 - **Secrets** live in Key Vault; the app and jobs read them through Container
   Apps secret references using a user-assigned managed identity
   (`Key Vault Secrets User`, `AcrPull`, plus Storage Queue/Blob Data
@@ -229,17 +236,20 @@ Ops HTTP routes (`/api/admin/**`) require signing in as an account with the
 
 ## Drift you should know about
 
-Two production settings were applied **imperatively** and are intentionally
-*not* the template defaults, so that an infra re-deploy reverts to the cheap
+One production setting was applied **imperatively** and is intentionally
+*not* the template default, so that an infra re-deploy reverts to the cheap
 configuration when the free-credit era ends:
 
 | Setting | Template default | Production today | Undo |
 |---|---|---|---|
 | Postgres SKU | `Standard_B1ms` | `Standard_B2ms` (~$50/mo) — B1ms burst credits were exhausted by the embed backfill | `az postgres flexible-server update -g rg-researchdiscovery -n <server> --sku-name Standard_B1ms --tier Burstable --yes` |
-| API min replicas | `0` (scale-to-zero) | `1` (always warm, indexes stay in RAM) | `az containerapp update -g rg-researchdiscovery -n rdisc-api --min-replicas 0` |
 
-Re-running `az deployment group create` **will** reset these to the template
-defaults. That is deliberate; re-apply them afterwards if you still want them.
+Re-running `az deployment group create` **will** reset it to the template
+default. That is deliberate; re-apply it afterwards if you still want it.
+
+The API's replica schedule is no longer drift: the template's daytime cron
+rule replaces the old imperative `--min-replicas 1`. Don't re-apply that
+flag, or the API stops scaling to zero at night.
 
 ## Teardown
 

@@ -68,9 +68,21 @@ param pgVersion string = '16'
 param pgAdminLogin string = 'research'
 param pgDatabaseName string = 'researchdb'
 
-@description('0 = scale to zero when idle (cold starts re-download the ~90 MB embedding model; set 1 to keep warm).')
+@description('Floor outside the daytime window. 0 = scale to zero when idle at night (cold starts re-download the ~90 MB embedding model and reload index snapshots).')
 param apiMinReplicas int = 0
 param apiMaxReplicas int = 2
+
+@description('Replicas held warm during the daytime window (a KEDA cron rule). 0 disables the window, leaving plain scale-to-zero.')
+param apiDaytimeReplicas int = 1
+
+@description('IANA timezone the daytime window is evaluated in (DST-aware).')
+param apiDaytimeTimezone string = 'America/New_York'
+
+@description('Cron (in apiDaytimeTimezone) at which the daytime window opens.')
+param apiDaytimeStart string = '0 7 * * *'
+
+@description('Cron (in apiDaytimeTimezone) at which the daytime window closes; the API then scales to zero once idle.')
+param apiDaytimeEnd string = '0 23 * * *'
 
 @description('vCPU per API replica, as a string for json() (e.g. \'0.5\', \'1\'). The packed search indexes over the ~1M-paper corpus need ~1.3 GB resident, so 4Gi is a functional floor, not a tuning knob.')
 param apiCpu string = '2'
@@ -404,12 +416,29 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
       scale: {
         minReplicas: apiMinReplicas
         maxReplicas: apiMaxReplicas
-        rules: [
+        // Always on by day, scale-to-zero by night: the cron rule holds
+        // apiDaytimeReplicas warm inside the window; outside it only the http
+        // rule applies, so the app drops to minReplicas once idle and a night
+        // request still wakes it (with a cold start).
+        rules: concat([
           {
             name: 'http'
             http: { metadata: { concurrentRequests: '20' } }
           }
-        ]
+        ], apiDaytimeReplicas > 0 ? [
+          {
+            name: 'daytime'
+            custom: {
+              type: 'cron'
+              metadata: {
+                timezone: apiDaytimeTimezone
+                start: apiDaytimeStart
+                end: apiDaytimeEnd
+                desiredReplicas: string(apiDaytimeReplicas)
+              }
+            }
+          }
+        ] : [])
       }
     }
   }

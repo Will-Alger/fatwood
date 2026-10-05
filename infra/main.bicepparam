@@ -14,10 +14,14 @@ param pgSkuName = 'Standard_B1ms'
 param pgSkuTier = 'Burstable'
 param pgStorageGb = 32
 
-// API: scale to zero when idle. Production: apiMinReplicas 1+ (also avoids
-// re-downloading the ~90 MB local embedding model on cold starts).
+// API: one warm replica 07:00–23:00 US Eastern, scale to zero when idle
+// overnight. Always-on around the clock: apiMinReplicas 1.
 param apiMinReplicas = 0
 param apiMaxReplicas = 2
+param apiDaytimeReplicas = 1
+param apiDaytimeTimezone = 'America/New_York'
+param apiDaytimeStart = '0 7 * * *'
+param apiDaytimeEnd = '0 23 * * *'
 param apiCpu = '0.5'
 param apiMemory = '1Gi'
 
