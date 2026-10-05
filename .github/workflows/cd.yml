@@ -133,10 +133,18 @@ jobs:
           echo "Scale: $BODY"
           az rest --method PATCH --url "https://management.azure.com${APP_ID}?api-version=2024-03-01" \
             --headers "Content-Type=application/json" --body "$BODY" --output none
-          az containerapp show \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "${{ vars.CONTAINERAPP_NAME }}" \
-            --query properties.template.scale -o json
+          # The PATCH is async; wait for provisioning, then fail the deploy if
+          # the cron rule didn't stick (the app would scale to zero by day).
+          for i in $(seq 1 30); do
+            STATE=$(az rest --method GET --url "https://management.azure.com${APP_ID}?api-version=2024-03-01" -o json)
+            PROV=$(jq -r .properties.provisioningState <<< "$STATE")
+            echo "  provisioning: $PROV"
+            [ "$PROV" = "InProgress" ] || break
+            sleep 10
+          done
+          jq .properties.template.scale <<< "$STATE"
+          jq -e '.properties.template.scale.rules[] | select(.name == "daytime")' <<< "$STATE" > /dev/null \
+            || { echo "daytime scale rule missing after PATCH"; exit 1; }
 
       - name: Roll ingest cron job to new image
         if: vars.INGEST_JOB_NAME != ''
